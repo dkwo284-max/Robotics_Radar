@@ -24,12 +24,13 @@ RSS = {
     "en": "https://news.google.com/rss/search?q={q}+when:{d}d&hl=en-US&gl=US&ceid=US:en",
     "ko": "https://news.google.com/rss/search?q={q}+when:{d}d&hl=ko&gl=KR&ceid=KR:ko",
 }
-TYPES = ["funding", "ipo", "production", "product", "deploy", "partner", "supply", "policy", "org", "other"]
+TYPES = ["funding", "ipo", "production", "product", "deploy", "partner", "supply", "policy", "org", "patent", "other"]
 ROLES = ["exec", "strategy", "engineer"]
 LAYERS = ["actuator", "hand", "battery", "sensor", "ai", "safety", "cost", "none"]
 # AI 를 못 쓴 기사의 역할 추정(유형 기준)
 ROLE_BY_TYPE = {"funding": ["exec"], "ipo": ["exec"], "policy": ["exec"], "org": ["exec"], "production": ["exec", "strategy"],
-                "product": ["strategy", "engineer"], "deploy": ["strategy"], "partner": ["exec", "strategy"], "supply": ["exec", "engineer"], "other": []}
+                "product": ["strategy", "engineer"], "deploy": ["strategy"], "partner": ["exec", "strategy"], "supply": ["exec", "engineer"],
+                "patent": ["exec", "strategy", "engineer"], "other": []}
 FIELDS = {  # 추출 대상 필드 → 단위
     "valuation": "USD_M", "funding_total": "USD_M", "revenue": "USD_M", "orders": "USD_M",
     "cum_units": "units", "capacity": "units", "target_2026": "units", "price": "USD",
@@ -84,7 +85,7 @@ SCHEMA = {
 SYSTEM = """당신은 휴머노이드·피지컬 AI 산업을 한국 제조·부품사 경영진에게 브리핑하는 애널리스트입니다. 각 기사(id)마다:
 - relevant: 아래 추적 기업이나 휴머노이드 산업(시장·정책·공급망)에 대한 실질적 소식이면 true. 홍보성 행사 사진, 주가 단순 등락, 동명이인·무관한 회사면 false.
 - companies: 기사가 다루는 추적 기업 id 목록(목록에 있는 id 만). 산업 전반이면 빈 배열.
-- type: funding(투자 유치) / ipo(상장) / production(양산·생산능력) / product(제품·모델 공개) / deploy(현장 배치·고객) / partner(제휴) / supply(부품·공급망) / policy(정책·규제) / org(경영진·조직) / other.
+- type: funding(투자 유치) / ipo(상장) / production(양산·생산능력) / product(제품·모델 공개) / deploy(현장 배치·고객) / partner(제휴) / supply(부품·공급망) / policy(정책·규제) / org(경영진·조직) / patent(특허 소송·분쟁·라이선스·대형 출원·등록) / other.
 - title_ko: 자연스러운 한국어 제목(45자 이내).
 - summary_ko: 한국 부품사·투자 관점에서 왜 중요한지 한 문장(80자 이내). 주어진 제목·설명에 있는 사실만 쓰고 없는 수치를 지어내지 마세요.
 - title_ko·summary_ko 는 한글로만 쓰세요. 중국어·영어·스페인어 단어를 섞지 말고 고유명사도 한글로 표기합니다(예: Boston Dynamics → 보스턴 다이나믹스, 固态电池 → 전고체 배터리).

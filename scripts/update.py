@@ -2,6 +2,8 @@
 
     python scripts/update.py              # 뉴스 + 주가 + 빌드 (+ 다이제스트 날이면 다이제스트)
     python scripts/update.py --no-news    # 주가 + 빌드
+    python scripts/update.py --patents probe   # EPO OPS 키·검색식 점검만 (수집·빌드 안 함)
+    python scripts/update.py --patents skip    # 특허 수집 건너뜀 (기본 auto: 키가 있으면 이어서 수집)
 """
 from __future__ import annotations
 
@@ -11,6 +13,7 @@ import sys
 from datetime import datetime, timezone
 
 import build
+import patents
 import usage
 from common import OUT, SRC, load_config, log, read_json, write_json
 from digest import due, update_digest
@@ -22,8 +25,11 @@ from prices import update_prices
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-news", action="store_true")
+    ap.add_argument("--patents", choices=["auto", "probe", "skip"], default="auto")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    if args.patents == "probe":
+        return patents.main(["--probe"])
     cfg = load_config()
     companies = read_json(SRC / "companies.json", {})["companies"]
     signposts = read_json(SRC / "strategy.json", {}).get("signposts", [])
@@ -44,6 +50,11 @@ def main(argv: list[str] | None = None) -> int:
         requests += llm.requests
 
     write_json(OUT / "prices.json", update_prices(cfg, read_json(OUT / "prices.json", {})))
+    if args.patents == "auto":  # 키가 없으면 건너뜀. 실패해도 나머지 파이프라인은 계속
+        try:
+            patents.main([])
+        except Exception as e:  # noqa: BLE001
+            log.warning("특허 수집 실패(무시하고 계속): %s", e)
     rc = build.main([])  # 변화 로그(data/changes.json)를 먼저 갱신
 
     # 주간 다이제스트: 오늘 남은 AI 한도가 있을 때만 Gemini, 아니면 규칙 기반

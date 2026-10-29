@@ -14,7 +14,8 @@ import math
 import sys
 from datetime import date, datetime, timedelta, timezone
 
-from changes import diff, state_of
+from changes import diff, keep_baseline, state_of
+import patent_calc
 from common import OUT, SRC, plausible, read_json, write_json
 
 # 경쟁력 점수 축과 만점. 합계 100 → Tier
@@ -242,13 +243,15 @@ def signpost_moves(strategy: dict, news: list[dict], today: str) -> dict:
     return out
 
 
-def change_log(companies: list[dict], strategy: dict, specs: dict, today: str) -> tuple[dict, list[dict], list[dict]]:
+def change_log(companies: list[dict], strategy: dict, specs: dict, today: str, patents: dict | None = None,
+               layer_labels: dict | None = None) -> tuple[dict, list[dict], list[dict]]:
     """(현재 상태, 오늘 새로 생긴 변화, 화면용 변화 목록 최근 120일)."""
-    cur = state_of(companies, strategy, specs)
+    cur = state_of(companies, strategy, specs, patents)
     prev = read_json(SRC / "state.json", None)
     ctx = {"names": {c["id"]: c["name_ko"] for c in companies}, "stages": IPO_STAGES,
            "signposts": {s["id"]: s["trigger"] for s in strategy["signposts"]},
            "models": {m["id"]: (m["model"], m["company"]) for m in specs["models"]},
+           "layers": layer_labels or {},
            "spec_labels": {**{f["id"]: f["label"] for f in specs["fields"]}, "actuator": "구동 방식"}}
     new = diff(prev, cur, ctx, today)
     log_items = read_json(SRC / "changes.json", {"items": []})["items"]
@@ -261,6 +264,8 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     market = load("market.json")
     strategy = load("strategy.json")
     specs = load("specs.json")
+    pcfg = load("patents_cfg.json")
+    pblock = patent_calc.block(pcfg, read_json(OUT / "patents.json", {}), market["bom"]["items"])
     news = read_json(OUT / "news.json", {})
     prices = read_json(OUT / "prices.json", {})
     # 검증 대기: 큐레이션 값이 이미 반영됐거나 단위 착오로 보이는 제안은 뺀다
@@ -277,6 +282,18 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     for m in specs["models"]:
         if m["company"] not in known or m["actuator"] not in specs["actuators"]:
             warnings.append(f"스펙 {m['id']}: 기업 id 또는 구동 방식 잘못됨")
+    layer_ids = {l["id"] for l in pcfg["layers"]}
+    for a in pcfg["applicants"]:
+        if a.get("company") and a["company"] not in known:
+            warnings.append(f"특허 설정: 기업 id {a['company']} 없음")
+        for lid in a.get("only", []):
+            if lid not in layer_ids:
+                warnings.append(f"특허 설정 {a['id']}: 층 {lid} 없음")
+    bom_ids = {i["id"] for i in market["bom"]["items"]}
+    for l in pcfg["layers"]:
+        for part in l.get("parts", []):
+            if part not in bom_ids:
+                warnings.append(f"특허 층 {l['id']}: BOM 품목 {part} 없음")
     if len({s.get("id") for s in strategy["signposts"]}) != len(strategy["signposts"]) or not all(s.get("id") for s in strategy["signposts"]):
         warnings.append("신호 id 가 비었거나 중복")
     moves = score_moves(companies, history)
@@ -287,7 +304,8 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     events = sorted(market["events"], key=lambda e: e["date"], reverse=True)
     k = kpis(companies, market)
     today = datetime.now(timezone.utc).date().isoformat()
-    state, new_changes, changes = change_log(companies, strategy, specs, today)
+    state, new_changes, changes = change_log(companies, strategy, specs, today, patent_calc.state(pblock),
+                                             {l["id"]: l["label"] for l in pcfg["layers"]})
     nb = news_block(news)
     digest = read_json(OUT / "digest.json", {}).get("items", [])
     out = {
@@ -310,6 +328,7 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "signpost_moves": signpost_moves(strategy, nb, today),
         "digest": digest[0] if digest else None,
         "specs": specs,
+        "patents": pblock,
         "news_meta": {"generated_at": news.get("generated_at"), "ai": news.get("ai"), "warnings": news.get("warnings", [])},
         "proposals": news.get("proposals", []),
         "quotes": prices.get("quotes", {}),
@@ -363,8 +382,10 @@ def main(argv: list[str] | None = None) -> int:
     if new or not (SRC / "changes.json").exists():
         cutoff = (date.fromisoformat(today) - timedelta(days=365)).isoformat()
         write_json(SRC / "changes.json", {"items": [x for x in new + log_items if x["date"] >= cutoff]}, indent=0)
-    if new or not (SRC / "state.json").exists():
-        write_json(SRC / "state.json", state)
+    prev_state = read_json(SRC / "state.json", None)
+    keep = keep_baseline(prev_state, state, new)
+    if keep != prev_state:  # 처음이거나 변화가 있거나 특허 기준값이 새로 생겼을 때
+        write_json(SRC / "state.json", keep)
     write_usage(today)
     record_history(out["companies"], today)
     tiers = {t: sum(1 for c in out["companies"] if c["calc"]["tier"] == t) for t in (1, 2, 3)}

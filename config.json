@@ -7,7 +7,7 @@
     "per_company": 3,
     "max_ai_items": 60,
     "queries": {
-      "_market": [["humanoid robot", "en"], ["휴머노이드 로봇", "ko"]],
+      "_market": [["humanoid robot", "en"], ["휴머노이드 로봇", "ko"], ["humanoid robot patent OR lawsuit OR licensing", "en"]],
       "tesla": [["\"Tesla Optimus\" OR \"Optimus robot\"", "en"]],
       "figure": [["\"Figure AI\" OR \"Figure 03\" robot", "en"]],
       "unitree": [["Unitree robot", "en"]],

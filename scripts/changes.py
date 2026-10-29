@@ -6,6 +6,8 @@
 """
 from __future__ import annotations
 
+import copy
+
 FACTS = {  # 필드 → (한국어, 단위, 보는 사람)
     "valuation": ("밸류", "USD_M", ["exec"]), "funding_total": ("누적 조달", "USD_M", ["exec"]),
     "revenue": ("매출", "USD_M", ["exec"]), "orders": ("수주", "USD_M", ["exec"]),
@@ -14,6 +16,8 @@ FACTS = {  # 필드 → (한국어, 단위, 보는 사람)
 }
 STATUS = {"done": "완료", "planned": "계획", "delayed": "지연·변경"}
 SIGN = {"watch": "주시", "progress": "진행 중", "happened": "발생"}
+from patent_calc import changed as patent_changed  # noqa: E402
+
 SPEC_LAYER = {"hand_dof": "hand", "runtime_h": "battery", "actuator": "actuator", "payload_kg": "actuator", "price_usd": "cost"}
 
 
@@ -33,7 +37,7 @@ def rm_key(r: dict) -> str:
     return f"{r['type']}|{r['title']}"
 
 
-def state_of(companies: list[dict], strategy: dict, specs: dict) -> dict:
+def state_of(companies: list[dict], strategy: dict, specs: dict, patents: dict | None = None) -> dict:
     comp = {}
     for c in companies:
         calc = c["calc"]
@@ -46,7 +50,21 @@ def state_of(companies: list[dict], strategy: dict, specs: dict) -> dict:
         "companies": comp,
         "signposts": {s["id"]: s["status"] for s in strategy.get("signposts", [])},
         "specs": {m["id"]: {k: m.get(k) for k in [f["id"] for f in specs.get("fields", [])] + ["actuator"]} for m in specs.get("models", [])},
+        "patents": patents or {},
     }
+
+
+def keep_baseline(prev: dict | None, cur: dict, new: list[dict]) -> dict:
+    """저장할 상태. 특허 건수는 새로 생긴 칸이거나 변화로 기록된 칸만 기준값을 갱신한다 —
+    작은 변화가 조금씩 쌓여 임계값을 한 번도 못 넘은 채 기준이 따라 움직이는 일을 막기 위해서."""
+    out = copy.deepcopy(cur)
+    old = (prev or {}).get("patents") or {}
+    logged = {(c["company"], c["layer"]) for c in new if c.get("kind") == "patent"}
+    for cid, layers in cur.get("patents", {}).items():
+        for lid in layers:
+            if lid in old.get(cid, {}) and (cid, lid) not in logged:
+                out["patents"][cid][lid] = old[cid][lid]
+    return out
 
 
 def diff(prev: dict, cur: dict, ctx: dict, today: str) -> list[dict]:
@@ -89,6 +107,15 @@ def diff(prev: dict, cur: dict, ctx: dict, today: str) -> list[dict]:
         old = prev["signposts"].get(sid)
         if old and old != status:
             add(kind="signpost", ref=sid, title=f"신호 '{ctx['signposts'].get(sid, sid)}': {SIGN[old]} → {SIGN[status]}", roles=["exec", "strategy"], frm=old, to=status)
+    for cid, layers in (cur.get("patents") or {}).items():  # 특허: 기술 층별 최근 3년 건수가 크게 바뀐 곳
+        before = (prev.get("patents") or {}).get(cid)
+        if not before:
+            continue
+        for lid, n in layers.items():
+            if lid in before and patent_changed(before[lid], n):
+                lab = ctx.get("layers", {}).get(lid, lid)
+                add(kind="patent", company=cid, layer=lid, title=f"{names.get(cid, cid)} 특허({lab}) 최근 3년 {before[lid]} → {n}건",
+                    roles=["engineer", "strategy"], frm=before[lid], to=n)
     for mid, spec in cur["specs"].items():
         old = prev.get("specs", {}).get(mid)
         model, cid = ctx["models"].get(mid, (mid, None))
