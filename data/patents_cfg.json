@@ -5,17 +5,17 @@
   "windows": {"years": 3},
   "budget": {"max_searches": 220, "max_minutes": 45, "pause_seconds": 7, "weekly_cap_mb": 2000, "daily_cap_mb": 400, "cell_ttl_days": 28, "recent_ttl_days": 6, "recent_days": 60, "quality_months": 12},
   "layers": [
-    {"id": "sw", "paper": null, "news_layer": "actuator", "label": "하모닉 감속기", "cpc": "cpc=F16H49", "parts": ["reducer"], "note": "파동기어(스트레인 웨이브) — F16H49"},
-    {"id": "planetary", "paper": "qdd", "news_layer": "actuator", "label": "행성기어(QDD)", "cpc": "cpc=F16H1/28", "parts": ["reducer"], "note": "행성기어 — 준직접구동(QDD) 액추에이터의 핵심"},
-    {"id": "screw", "paper": null, "news_layer": "actuator", "label": "롤러스크류", "cpc": "cpc=F16H25/22", "parts": ["screw"], "note": "볼·롤러 나사 기구 — 리니어 액추에이터"},
-    {"id": "motor", "paper": "actuator", "news_layer": "actuator", "label": "모터(로봇용)", "cpc": "cpc=H02K and cpc=B25J", "parts": ["motor"], "note": "전기기기와 매니퓰레이터를 함께 분류한 특허"},
-    {"id": "hand", "paper": "hand", "news_layer": "hand", "label": "다지 손", "cpc": "cpc=B25J15/0009", "parts": ["hand"], "note": "사람 손을 닮은 다관절 손가락 — B25J15/0009"},
-    {"id": "force", "paper": "force", "news_layer": "sensor", "label": "힘·토크 센서", "cpc": "cpc=B25J13/085", "parts": ["ftsensor"], "note": "매니퓰레이터용 힘·토크 센서"},
-    {"id": "tactile", "paper": "tactile", "news_layer": "sensor", "label": "촉각 센서", "cpc": "cpc=B25J13/084", "parts": ["tactile"], "note": "매니퓰레이터용 촉각 센서"},
-    {"id": "battery", "paper": null, "news_layer": "battery", "label": "배터리", "cpc": "cpc=H01M and cpc=B25J", "parts": ["battery"], "note": "배터리와 매니퓰레이터를 함께 분류한 특허"},
-    {"id": "control", "paper": "vla", "news_layer": "ai", "label": "AI·제어", "cpc": "cpc=B25J9/16 and cpc=G06N", "parts": ["compute"], "note": "프로그램 제어 + 신경망·학습"},
-    {"id": "safety", "paper": null, "news_layer": "safety", "label": "안전", "cpc": "cpc=B25J19/06", "parts": [], "note": "매니퓰레이터 안전 장치"},
-    {"id": "legs", "paper": "wbc", "news_layer": null, "label": "보행(다리)", "cpc": "cpc=B62D57/032", "parts": [], "note": "다리로 움직이는 이동체"}
+    {"id": "sw", "kw": "harmonic|strain wave|wave gear|하모닉|파동기어|감속기|reducer", "paper": null, "news_layer": "actuator", "label": "하모닉 감속기", "cpc": "cpc=F16H49", "parts": ["reducer"], "note": "파동기어(스트레인 웨이브) — F16H49"},
+    {"id": "planetary", "kw": "planetary|quasi.?direct|QDD|행성기어|감속기", "paper": "qdd", "news_layer": "actuator", "label": "행성기어(QDD)", "cpc": "cpc=F16H1/28", "parts": ["reducer"], "note": "행성기어 — 준직접구동(QDD) 액추에이터의 핵심"},
+    {"id": "screw", "kw": "roller screw|ball screw|롤러스크류|볼스크류|linear actuator|리니어", "paper": null, "news_layer": "actuator", "label": "롤러스크류", "cpc": "cpc=F16H25/22", "parts": ["screw"], "note": "볼·롤러 나사 기구 — 리니어 액추에이터"},
+    {"id": "motor", "kw": "\bmotors?\b|actuator|모터|액추에이터|관절", "paper": "actuator", "news_layer": "actuator", "label": "모터(로봇용)", "cpc": "cpc=H02K and cpc=B25J", "parts": ["motor"], "note": "전기기기와 매니퓰레이터를 함께 분류한 특허"},
+    {"id": "hand", "kw": "\bhands?\b|finger|dexterous|gripper|로봇 ?손|다지 ?손|손가락|핸드|그리퍼", "paper": "hand", "news_layer": "hand", "label": "다지 손", "cpc": "cpc=B25J15/0009", "parts": ["hand"], "note": "사람 손을 닮은 다관절 손가락 — B25J15/0009"},
+    {"id": "force", "kw": "\bforce\b|torque|tactile|e-?skin|힘 ?센서|토크|촉각", "paper": "force", "news_layer": "sensor", "label": "힘·토크 센서", "cpc": "cpc=B25J13/085", "parts": ["ftsensor"], "note": "매니퓰레이터용 힘·토크 센서"},
+    {"id": "tactile", "kw": "tactile|touch|e-?skin|skin|촉각|전자 ?피부|터치", "paper": "tactile", "news_layer": "sensor", "label": "촉각 센서", "cpc": "cpc=B25J13/084", "parts": ["tactile"], "note": "매니퓰레이터용 촉각 센서"},
+    {"id": "battery", "kw": "batter|배터리|전고체|이차전지|2차전지", "paper": null, "news_layer": "battery", "label": "배터리", "cpc": "cpc=H01M and cpc=B25J", "parts": ["battery"], "note": "배터리와 매니퓰레이터를 함께 분류한 특허"},
+    {"id": "control", "kw": "\bAI\b|VLA|neural|learning|autonomous|인공지능|인공신경망|제어|행동 ?판단|자연어", "paper": "vla", "news_layer": "ai", "label": "AI·제어", "cpc": "cpc=B25J9/16 and cpc=G06N", "parts": ["compute"], "note": "프로그램 제어 + 신경망·학습"},
+    {"id": "safety", "kw": "safety|standard|\bISO\b|regulat|안전|표준|규제|인증", "paper": null, "news_layer": "safety", "label": "안전", "cpc": "cpc=B25J19/06", "parts": [], "note": "매니퓰레이터 안전 장치"},
+    {"id": "legs", "kw": "\blegs?\b|walk|gait|biped|locomotion|보행|다리|이족|사족|웨어러블", "paper": "wbc", "news_layer": null, "label": "보행(다리)", "cpc": "cpc=B62D57/032", "parts": [], "note": "다리로 움직이는 이동체"}
   ],
   "total": {"id": "total", "label": "로봇 전체", "cpc": "cpc=B25J"},
   "applicants": [

@@ -84,3 +84,14 @@ def test_hub_exposes_layer_links_without_any_collected_data():
     assert [(l["id"], l["paper"], l["news_layer"]) for l in h["layers"]] == [("sw", "qdd", "actuator"), ("screw", None, None)]
     assert h["total"]["cpc"] == "cpc=B25J"
     assert h["rows"][0]["q"] == 'pa="ubtech"' and h["rows"][0]["assignee"] == "ubtech" and h["rows"][1]["only"] == ["sw"]
+
+
+def test_every_real_layer_has_a_valid_news_keyword_regex():
+    import json
+    import re
+    from pathlib import Path
+    cfg = json.loads((Path(__file__).resolve().parent.parent / "data" / "patents_cfg.json").read_text(encoding="utf-8"))
+    hub = patent_calc.hub(cfg)
+    for layer in hub["layers"]:
+        assert layer["kw"], layer["id"]  # 화면에서 층을 누를 때 분류 전 특허 소식을 거르는 키워드
+        re.compile(layer["kw"], re.I)

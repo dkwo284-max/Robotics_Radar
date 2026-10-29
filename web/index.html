@@ -288,6 +288,11 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
 .themebtn { border: 1px solid var(--line); background: var(--surface); border-radius: 50%; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer; flex: none; }
 .themebtn svg.i { width: 18px; height: 18px; }
 .subnav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 54px); z-index: 5; background: var(--bg); padding: 8px 0; margin: -8px 0 -12px; overflow-x: auto; flex-wrap: nowrap; }
+details.more > summary { cursor: pointer; list-style: none; padding: 11px 14px; border-top: 1px solid var(--line); color: var(--accent); font-size: 0.84rem; font-weight: 600; }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::after { content: " ▾"; }
+details.more[open] > summary { color: var(--muted); font-weight: 400; }
+details.more[open] > summary::after { content: " ▴"; }
 details.fold > summary { list-style: none; cursor: pointer; }
 details.fold > summary::-webkit-details-marker { display: none; }
 details.fold > summary::after { content: "펼치기"; float: right; font-size: 0.74rem; color: var(--muted); font-weight: 400; }
@@ -475,7 +480,7 @@ details.fold[open] > summary::after { content: "접기"; }
       <section id="pref-sec" class="full">
         <h2>특허 지형 <span class="b estimate">분기 큐레이션</span></h2>
         <p class="sub" id="pref-sub"></p>
-        <div class="ins" id="pref-dots"></div>
+        <div class="ins" id="pref-dots" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))"></div>
         <h3 style="margin:14px 0 8px;font-size:0.9rem">이벤트 타임라인</h3>
         <div id="pref-timeline"></div>
         <h3 style="margin:14px 0 8px;font-size:0.9rem">근거 커버리지</h3>
@@ -752,11 +757,17 @@ const newsTitle = (x) => esc(x.title_ko || x.title);
 function newsRow(x, chips = true) {
   const imp = x.importance >= 3 ? '<span class="imp3">핵심</span>' : x.importance === 2 ? '<span class="b reported">주목</span>' : "";
   return `<div class="ev"><span class="d">${esc(x.date.slice(2).replace(/-/g, "."))}</span><span class="t">${newB(x.date)} ${newsTitle(x)}${x.summary_ko ? `<small>${esc(x.summary_ko)}</small>` : ""}</span>
-    <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${link(x.url, "원문")}</span></div>`;
+    <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${x.ai ? "" : '<span class="b t3" title="AI 가 아직 분류하지 않은 기사 — 하루 AI 한도 안에서 며칠에 걸쳐 분류됩니다">분류 전</span>'}${link(x.url, "원문")}</span></div>`;
 }
 const ROLE_BY_TYPE = { funding: ["exec"], ipo: ["exec"], policy: ["exec"], org: ["exec"], production: ["exec", "strategy"],
   product: ["strategy", "engineer"], deploy: ["strategy"], partner: ["exec", "strategy"], supply: ["exec", "engineer"], other: [] };
-const roleOf = (x) => (x.ai ? (x.audience?.length ? x.audience : ROLE_BY_TYPE[x.type] || []) : ["exec"]);
+const ALL_ROLES = ["exec", "strategy", "engineer"];
+const roleOf = (x) => (x.ai ? (x.audience?.length ? x.audience : ROLE_BY_TYPE[x.type] || []) : ALL_ROLES);  // AI 분류 전에는 대상을 모르므로 모두에게
+// 목록이 한쪽만 길어지지 않게 n건만 보이고 나머지는 펼쳐 본다
+function foldRows(rows, n = 10) {
+  if (rows.length <= n) return rows.join("");
+  return `${rows.slice(0, n).join("")}<details class="more"><summary>나머지 ${rows.length - n}건 ${"펼쳐 보기"}</summary>${rows.slice(n).join("")}</details>`;
+}
 const ROLE_NAME = { exec: "경영진", strategy: "기술전략", engineer: "엔지니어" };
 const ROLE_SUBJ = { exec: "경영진이", strategy: "기술전략팀이", engineer: "엔지니어가" };
 const LAYER = { actuator: "액추에이터", hand: "손", battery: "배터리", sensor: "센서", ai: "AI·칩", safety: "안전·표준", cost: "원가" };
@@ -913,33 +924,42 @@ async function copyText(t) {
 // ---- 특허·지재권 소식 (기술 층 필터 연동) ----
 function renderPatentNews(listSel, subSel) {
   const sel = selLayer(), l = sel ? layerById(sel) : null;
-  let items = (D.news || []).filter(isPat).sort((a, b) => b.date.localeCompare(a.date));
-  if (l) items = items.filter((x) => l.news_layer && x.layer === l.news_layer);
-  items = items.slice(0, 10);
+  const all = (D.news || []).filter(isPat).sort((a, b) => b.date.localeCompare(a.date));
+  let items = all;
+  const re = l?.kw ? new RegExp(l.kw, "i") : null;
+  // AI 가 붙인 층 태그가 있으면 그것으로, 아직 분류 전인 기사는 층 키워드가 제목·요약에 있는지로 거른다
+  if (l) items = all.filter((x) => (x.ai && l.news_layer && x.layer === l.news_layer) || (re && re.test(`${x.title} ${x.title_ko || ""} ${x.summary_ko || ""}`)));
   const m = D.news_meta || {};
   $(subSel).innerHTML = (items.length || l
     ? `기업별 특허 키워드로 매일 수집한 소식 중 ${m.ai === "gemini" ? "AI 가 특허·지재권 소식으로 분류한 것" : "특허 검색어로 모은 기사(AI 분류 전)"} — 소송·라이선스·대형 출원·등록처럼 기사로 나온 큰 사건만 잡힙니다. 건수·추이는 조회 허브로 직접 확인하세요.`
     : "아직 특허·지재권 소식이 수집되지 않았습니다. 다음 자동 수집(매일)부터 채워집니다")
-    + (l ? ` <button class="chip" data-plclear aria-pressed="true">필터: ${esc(l.label)} ✕ 해제</button>${l.news_layer ? "" : " (이 층에는 대응하는 소식 태그가 없습니다)"}` : "");
-  $(listSel).innerHTML = items.map((x) => newsRow(x)).join("") || '<div class="empty">조건에 맞는 소식이 없습니다</div>';
+    + (l ? ` <button class="chip" data-plclear aria-pressed="true">필터: ${esc(l.label)} ✕ 해제</button><span class="muted"> · 전체 ${all.length}건 중 ${items.length}건</span>` : "");
+  $(listSel).innerHTML = foldRows(items.map((x) => newsRow(x)))
+    || `<div class="empty">${l ? `최근 수집한 특허 소식 ${all.length}건 중 '${esc(l.label)}' 키워드가 나온 기사가 없습니다. 특허 소식은 기사로 보도된 큰 사건만 잡혀서 비어 있는 것이 정상일 수 있어요 — 건수는 조회 허브(에스페이스넷·구글 특허)로 직접 확인하세요. 필터를 해제하면 전체 ${all.length}건을 볼 수 있습니다` : "조건에 맞는 소식이 없습니다"}</div>`;
 }
 
 // ---- 5) 특허 지형: 점도표·타임라인·커버리지 ----
-function dotStrip(points, w = 340, h = 62) {
+function dotStrip(points, w = 380) {
   if (!points.length) return "";
-  const lo = Math.log10(60), hi = Math.log10(4000), x = (v) => 8 + ((Math.log10(v) - lo) / (hi - lo)) * (w - 16);
-  const sorted = [...points].sort((a, b) => a.v - b.v), boxes = [];
-  let g = `<line x1="8" x2="${w - 8}" y1="${h - 16}" y2="${h - 16}" style="stroke:var(--line)"/>`;
-  for (const t of [100, 300, 1000, 3000]) g += `<line x1="${x(t)}" x2="${x(t)}" y1="${h - 19}" y2="${h - 13}" style="stroke:var(--muted)"/><text x="${x(t)}" y="${h - 3}" text-anchor="middle" style="fill:var(--muted);font-size:9px">${t.toLocaleString("ko-KR")}</text>`;
-  for (const p of sorted) {
-    const cx = x(p.v), label = `${p.name} ${p.v.toLocaleString("ko-KR")}`, tw = label.length * 6.2;
+  const lo = Math.log10(60), hi = Math.log10(4000), x = (v) => 10 + ((Math.log10(v) - lo) / (hi - lo)) * (w - 20);
+  const FS = 10, LH = 12;  // 글자 크기·줄 간격 (svg 폭을 제한해 화면에서 더 커지지 않게 한다)
+  const tw = (t) => [...t].reduce((n, c) => n + (/[ㄱ-힝]/.test(c) ? 10 : 5.8), 0) + 6;
+  const placed = [], boxes = [];
+  for (const p of [...points].sort((a, b) => a.v - b.v)) {
+    const cx = x(p.v), label = `${p.name} ${p.v.toLocaleString("ko-KR")}`, wd = tw(label), lx = Math.min(Math.max(cx, wd / 2 + 2), w - wd / 2 - 2);
     let row = 0;
-    while (row < 3 && boxes.some((b) => b.row === row && cx - tw / 2 < b.x1 && cx + tw / 2 > b.x0)) row++;
-    boxes.push({ row, x0: cx - tw / 2, x1: cx + tw / 2 });
-    const ty = 12 + row * 11;
-    g += `<g ${p.company ? `data-co="${esc(p.company)}" style="cursor:pointer"` : ""}><circle cx="${cx}" cy="${h - 16}" r="5" style="fill:var(--accent);opacity:0.85"><title>${esc(label)} — ${esc(p.basis || "")}</title></circle><text x="${Math.min(Math.max(cx, tw / 2 + 2), w - tw / 2 - 2)}" y="${ty}" text-anchor="middle" style="fill:var(--ink);font-size:9.5px;font-weight:600">${esc(label)}</text></g>`;
+    while (boxes.some((q) => q.row === row && lx - wd / 2 < q.x1 && lx + wd / 2 > q.x0)) row++;
+    boxes.push({ row, x0: lx - wd / 2, x1: lx + wd / 2 });
+    placed.push({ p, cx, lx, label, row });
   }
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto" role="img" aria-label="출원·보유 특허 수 점도표(로그 눈금)">${g}</svg>`;
+  const rows = Math.max(...placed.map((q) => q.row)) + 1, dotY = rows * LH + 12, h = dotY + 20;
+  let g = `<line x1="8" x2="${w - 8}" y1="${dotY}" y2="${dotY}" style="stroke:var(--line)"/>`;
+  for (const t of [100, 300, 1000, 3000]) g += `<line x1="${x(t)}" x2="${x(t)}" y1="${dotY - 3}" y2="${dotY + 3}" style="stroke:var(--muted)"/><text x="${x(t)}" y="${dotY + 14}" text-anchor="middle" style="fill:var(--muted);font-size:9px">${t.toLocaleString("ko-KR")}</text>`;
+  for (const q of placed) {
+    const ty = dotY - 9 - q.row * LH;  // 줄 0 이 점에 가장 가깝다
+    g += `<g ${q.p.company ? `data-co="${esc(q.p.company)}" style="cursor:pointer"` : ""}>${q.row || Math.abs(q.lx - q.cx) > 6 ? `<line x1="${q.lx}" x2="${q.cx}" y1="${ty + 2}" y2="${dotY - 5}" style="stroke:var(--muted);stroke-width:0.7;opacity:0.6"/>` : ""}<circle cx="${q.cx}" cy="${dotY}" r="4.5" style="fill:var(--accent);opacity:0.9"><title>${esc(q.label)} — ${esc(q.p.basis || "")}</title></circle><text x="${q.lx}" y="${ty}" text-anchor="middle" style="fill:var(--ink);font-size:${FS}px;font-weight:600">${esc(q.label)}</text></g>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;max-width:${w + 40}px;height:auto;display:block" role="img" aria-label="출원·보유 특허 수 점도표(로그 눈금)">${g}</svg>`;
 }
 function renderPatentRef() {
   const R = PREF(), lanes = R.lanes || {};
@@ -950,7 +970,7 @@ function renderPatentRef() {
   for (const it of R.sector?.items || []) if (!it.company) points.push({ lane: it.lane || "greyb", v: it.value, name: it.name, company: "", basis: lanes[it.lane || "greyb"]?.label });
   $("#pref-dots").innerHTML = Object.entries(lanes).map(([id, ln]) => {
     const pts = points.filter((p) => p.lane === id);
-    return pts.length ? `<div class="card" style="padding:10px 12px"><b style="font-size:0.86rem">${esc(ln.label)}</b><div class="sub" style="margin:0 0 4px;font-size:0.74rem">${esc(ln.note)}</div>${dotStrip(pts)}</div>` : "";
+    return pts.length ? `<div class="card" style="padding:10px 12px"><b style="font-size:0.82rem">${esc(ln.label)}</b><div class="sub" style="margin:0 0 6px;font-size:0.72rem">${esc(ln.note)}</div>${dotStrip(pts)}</div>` : "";
   }).join("");
   // 타임라인: 소송·합의·등록·출원 급증 같은 이벤트
   const events = Object.entries(R.companies).flatMap(([cid, c]) => (c.notable || []).map((n) => ({ ...n, company: cid }))).sort((a, b) => String(b.date).localeCompare(String(a.date)));
@@ -1015,17 +1035,25 @@ function renderPaperSignals(chartSel, subSel) {
   const lo = Math.log10(Math.max(1, Math.min(...vals))), hi = Math.log10(Math.max(...vals)), DW = 132;
   const pos = (v) => 6 + ((Math.log10(Math.max(v, 1)) - lo) / (hi - lo || 1)) * (DW - 12);
   const pl = Object.fromEntries(HUB().layers.filter((l) => l.paper).map((l) => [l.paper, l.id]));
+  const ticks = [10, 100, 1000, 10000].filter((v) => v >= Math.pow(10, lo) && v <= Math.pow(10, hi));
+  const cols = `minmax(0,1fr) ${DW}px 70px 54px`;
+  const axis = `<svg viewBox="0 0 ${DW} 14" width="${DW}" height="14" aria-hidden="true">${ticks.map((v) => `<text x="${pos(v)}" y="10" text-anchor="middle" style="fill:var(--muted);font-size:9px">${v.toLocaleString("ko-KR")}편</text>`).join("")}</svg>`;
+  const head = `<div style="display:grid;grid-template-columns:${cols};gap:8px;align-items:end;padding:0 8px 4px;font-size:0.7rem;color:var(--muted)"><span>기술 층 · 직전 → 최근 12개월 논문 수</span><span>${axis}</span><span style="white-space:nowrap">월별 추이</span><span style="text-align:right">증가 배수</span></div>`;
   const list = rows.map((r) => {
     const cls = growthCls(r.growth, base), col = cls === "up" ? "var(--good)" : cls === "down" ? "var(--bad)" : "var(--accent)", lid = pl[r.id];
-    const dumb = `<svg viewBox="0 0 ${DW} 18" width="${DW}" height="18" role="img" aria-label="${esc(r.label)}: ${r.b}편에서 ${r.a}편"><line x1="${pos(r.b)}" x2="${pos(r.a)}" y1="9" y2="9" style="stroke:${col};stroke-width:2"/><circle cx="${pos(r.b)}" cy="9" r="4" style="fill:var(--surface);stroke:${col};stroke-width:1.6"/><circle cx="${pos(r.a)}" cy="9" r="4.5" style="fill:${r.small ? "var(--surface)" : col};stroke:${col};stroke-width:1.6;${r.small ? "stroke-dasharray:2 2" : ""}"/></svg>`;
+    const grid = ticks.map((v) => `<line x1="${pos(v)}" x2="${pos(v)}" y1="0" y2="18" style="stroke:var(--line)"/>`).join("");
+    const dumb = `<svg viewBox="0 0 ${DW} 18" width="${DW}" height="18" role="img" aria-label="${esc(r.label)}: ${r.b}편에서 ${r.a}편">${grid}<line x1="${pos(r.b)}" x2="${pos(r.a)}" y1="9" y2="9" style="stroke:${col};stroke-width:2"/><circle cx="${pos(r.b)}" cy="9" r="4" style="fill:var(--surface);stroke:${col};stroke-width:1.6"/><circle cx="${pos(r.a)}" cy="9" r="4.5" style="fill:${r.small ? "var(--surface)" : col};stroke:${col};stroke-width:1.6;${r.small ? "stroke-dasharray:2 2" : ""}"/></svg>`;
     const inner = `<span class="n" style="min-width:0"><b style="font-size:0.82rem">${esc(r.label)}</b>${r.small ? " ⚠" : ""}<br><span class="muted" style="font-size:0.72rem">${r.b} → ${r.a}편</span></span>${dumb}${sparkSvg(r.series, col, 70, 24)}
       <span class="v ${cls}" style="text-align:right;font-size:0.8rem">×${r.growth ?? "–"}<br><span style="font-size:0.7rem">${growthArrow(r.growth, base)} ${growthWord(r.growth, base)}</span></span>`;
-    const st = `display:grid;grid-template-columns:minmax(0,1fr) ${DW}px 70px 54px;gap:8px;align-items:center;padding:6px 8px;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:${lid && lid === sel ? "color-mix(in oklab, var(--accent) 10%, transparent)" : "transparent"}`;
+    const st = `display:grid;grid-template-columns:${cols};gap:8px;align-items:center;padding:6px 8px;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:${lid && lid === sel ? "color-mix(in oklab, var(--accent) 10%, transparent)" : "transparent"}`;
     return lid ? `<button data-pl="${lid}" style="${st};cursor:pointer;color:inherit">${inner}</button>` : `<div style="${st}">${inner}</div>`;
   }).join("");
   $(chartSel).innerHTML = `${paperScatter(P, sel)}
-    <div style="margin-top:8px;font-size:0.7rem;color:var(--muted);padding:0 4px">아래 줄: 속 빈 점 = 직전 12개월, 채운 점 = 최근 12개월(로그 눈금) · 오른쪽 작은 선 = 24개월 월별 추이 · 색: 휴머노이드 논문 전체(×${base})보다 빠르면 초록▲, 느리면 빨강▼, 비슷하면 ▬</div>
-    <div style="margin-top:4px">${list}</div>
+    <div style="margin-top:10px;font-size:0.76rem;color:var(--muted);padding:0 4px;line-height:1.55"><b style="color:var(--ink)">읽는 법</b> — 가운데 가로 그림은 논문 수가 얼마나 늘었는지입니다.
+      <svg width="40" height="12" viewBox="0 0 40 12" style="width:40px;height:12px;display:inline-block;vertical-align:middle" aria-hidden="true"><line x1="6" x2="34" y1="6" y2="6" style="stroke:var(--muted);stroke-width:2"/><circle cx="6" cy="6" r="4" style="fill:var(--surface);stroke:var(--muted);stroke-width:1.6"/><circle cx="34" cy="6" r="4.5" style="fill:var(--muted);stroke:var(--muted)"/></svg>
+      속 빈 점(○)=직전 12개월, 채운 점(●)=최근 12개월. 두 점이 멀수록, ●가 오른쪽일수록 많이 늘어난 것이고 가로 눈금은 편수(로그)입니다.
+      점선 테두리(⚠)는 30편 미만이라 참고만. 색: 휴머노이드 논문 전체(×${base})보다 빠르면 초록 ▲, 느리면 빨강 ▼, 비슷하면 ▬.</div>
+    <div style="margin-top:8px">${head}${list}</div>
     <p class="sub" style="margin:8px 4px 0">출처: ${esc(P.source || "arXiv")} ${link("https://info.arxiv.org/help/api/tou.html", "이용 약관")}</p>`;
 }
 function paperQddLine() {
@@ -1162,7 +1190,7 @@ function renderHome() {
     { id: "chg", label: "데이터 변화", items: chg, row: chgRow,
       help: "큐레이션 기준값이 이 기간에 바뀐 기록입니다. 점수·Tier·상장 단계·핵심 수치(밸류·출하 등)·로드맵 상태·신호 상태·로봇 스펙이 바뀌면 하루 단위로 쌓입니다." },
     { id: "news", label: "소식", items: news, row: (x) => newsRow(x),
-      help: `이 기간 자동 수집된 기사 중 ${ROLE_SUBJ[role]} 볼 것으로 분류된 기사입니다. AI 가 대상(경영진·기술전략·엔지니어)을 붙이고, AI 분류 전 기사는 유형으로 추정합니다.` },
+      help: `이 기간 자동 수집된 기사 중 ${ROLE_SUBJ[role]} 볼 것으로 분류된 기사입니다. AI 가 대상(경영진·기술전략·엔지니어)을 붙이고, 아직 분류되지 않은 기사는 대상을 알 수 없어 세 화면 모두에 들어갑니다(하루 AI 한도 안에서 며칠에 걸쳐 분류).` },
     ...(role === "exec" ? [{ id: "key", label: "핵심 소식", items: key, row: (x) => newsRow(x),
       help: "위 소식 중 AI 가 중요도 3(의사결정에 영향 — 1억 달러 이상 조달, 상장 단계 변화, 양산 일정 변경, 대형 고객 계약, 규제 통과)으로 매긴 기사입니다." }] : []),
     ...(role === "engineer" ? [{ id: "spec", label: "스펙 변화", items: specChg, row: chgRow,
@@ -1194,22 +1222,25 @@ function renderHome() {
       ${dr.action ? `<div class="act"><b>다음 주</b>${esc(dr.action)}</div>` : ""}`;
   }
 
-  $("#chg-list").innerHTML = chg.slice(0, 15).map((c) => {
+  $("#chg-list").innerHTML = foldRows(chg.map((c) => {
     const open = c.company ? `button class="row" data-co="${esc(c.company)}"` : 'div class="row"';
     return `<${open}><span class="t">${newB(c.date)} ${esc(c.title)}</span><span class="r"><span class="b t3">${CHG_KIND[c.kind] || c.kind}</span></span>
       <span class="s">${esc(c.date)}</span></${c.company ? "button" : "div"}>`;
-  }).join("") || `<div class="empty">이 기간에 ${ROLE_NAME[role]} 관점의 데이터 변화가 없습니다. 큐레이션 값(점수·수치·로드맵·스펙)이 바뀌면 여기에 기록됩니다</div>`;
+  })) || `<div class="empty">이 기간에 ${ROLE_NAME[role]} 관점의 데이터 변화가 없습니다. 큐레이션 값(점수·수치·로드맵·스펙)이 바뀌면 여기에 기록됩니다</div>`;
 
   // 역할별 소식
   const m = D.news_meta || {};
   $("#rnews-title").textContent = `${ROLE_SUBJ[role]} 볼 소식`;
   $("#news-sub").textContent = `${m.ai === "gemini" ? "Gemini 가 대상·중요도를 분류" : "AI 분류 없이 제목만"} · 매일 아침 자동 수집${(m.warnings || []).length ? " · " + m.warnings.join(" ") : ""}`;
-  const nf = store.get(`nf-${role}`, "all");
-  const filters = role === "engineer" ? [["all", "전체"], ...Object.entries(LAYER)] : [["all", "전체"], ["imp", "주목 이상"]];
+  const nf = store.get(`nf2-${role}`, "imp");
+  const filters = [["imp", "주목 이상"], ["all", "전체"], ...(role === "engineer" ? Object.entries(LAYER) : [])];
   $("#news-filter").innerHTML = filters.map(([id, l]) => `<button class="chip" data-nf="${id}" aria-pressed="${id === nf}">${l}</button>`).join("");
   const shown = news.filter((x) => nf === "all" || (nf === "imp" ? x.importance >= 2 : x.layer === nf))
-    .sort((a, b) => b.importance - a.importance || b.date.localeCompare(a.date)).slice(0, 15);
-  $("#news").innerHTML = shown.map((x) => newsRow(x)).join("") || '<div class="empty">이 기간·조건에 맞는 소식이 없습니다</div>';
+    .sort((a, b) => b.importance - a.importance || b.date.localeCompare(a.date));
+  const waiting = news.filter((x) => !x.ai).length;
+  $("#news-sub").textContent += ` · ${news.length}건 중 ${shown.length}건 표시${waiting ? ` (AI 분류 대기 ${waiting}건 — 분류되면 '주목 이상'에 반영)` : ""}`;
+  $("#news").innerHTML = foldRows(shown.map((x) => newsRow(x)))
+    || `<div class="empty">${nf === "imp" && news.length ? `이 기간에 주목 이상으로 분류된 소식이 없습니다. '전체'를 누르면 ${news.length}건을 볼 수 있어요` : "이 기간·조건에 맞는 소식이 없습니다"}</div>`;
 
   if (role === "exec") renderExec();
   if (role === "strategy") renderStrategyBrief();
@@ -1272,7 +1303,7 @@ function renderStrategyBrief() {
   renderPatentDirection();
   renderPaperSignals("#pp-chart", "#pp-sub");
   renderPatentNews("#pip2", "#pip2-sub");
-  $("#next12").innerHTML = next.map((r) => `<button class="row" data-co="${esc(r.c.id)}"><span class="t ${r.status === "delayed" ? "st-delayed" : ""}">${esc(r.title)}</span><span class="r mono muted" style="font-size:.74rem">${esc(r.when)}</span><span class="s">${esc(r.c.name_ko)} · ${TYPE_RM[r.type] || r.type}</span></button>`).join("");
+  $("#next12").innerHTML = foldRows(next.map((r) => `<button class="row" data-co="${esc(r.c.id)}"><span class="t ${r.status === "delayed" ? "st-delayed" : ""}">${esc(r.title)}</span><span class="r mono muted" style="font-size:.74rem">${esc(r.when)}</span><span class="s">${esc(r.c.name_ko)} · ${TYPE_RM[r.type] || r.type}</span></button>`));
 }
 
 function renderEngineerBrief(start) {
@@ -1769,7 +1800,7 @@ document.addEventListener("click", (e) => {
   if (t.dataset.sort) { const s = store.get("specSort", { k: "hand_dof", d: -1 }); store.set("specSort", { k: t.dataset.sort, d: s.k === t.dataset.sort ? -s.d : -1 }); renderSpecs(); return; }
   if (t.dataset.role) { store.set("role", t.dataset.role); renderHome(); }
   if (t.dataset.period) { store.set("period", t.dataset.period); renderHome(); }
-  if (t.dataset.nf) { store.set(`nf-${store.get("role", "exec")}`, t.dataset.nf); renderHome(); }
+  if (t.dataset.nf) { store.set(`nf2-${store.get("role", "exec")}`, t.dataset.nf); renderHome(); }
   if (t.dataset.opt) saveStrat({ opt: t.dataset.opt, capex: null, margin: null });
   if (t.dataset.cty) { const s = new Set(store.get("cty", ["KR", "CN", "US"])); s.has(t.dataset.cty) ? s.delete(t.dataset.cty) : s.add(t.dataset.cty); store.set("cty", [...s]); renderStrat(); }
   if (t.dataset.rmf) { store.set("rmf", t.dataset.rmf); renderStrat(); }
