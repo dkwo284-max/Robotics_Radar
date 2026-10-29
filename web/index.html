@@ -754,6 +754,13 @@ const CONF = { H: "신뢰 높음", M: "신뢰 보통", L: "신뢰 낮음" };
 const BARRIER = { H: "진입 난도 상", M: "진입 난도 중", L: "진입 난도 하" };
 const COUNTRY = { US: "미국", CN: "중국", KR: "한국", DE: "독일", UK: "영국", NO: "노르웨이", CA: "캐나다" };
 const cColor = (c) => ({ US: "var(--cat-1)", CN: "var(--cat-2)", KR: "var(--cat-3)" }[c] || "var(--cat-4)");
+// 소유 기준 국가: 모회사(parent)가 다른 나라 기업이면 그 나라 — 예: 보스턴 다이나믹스(미국 본사)는 현대차그룹(한국) 소유.
+// 위치 기준 색 위에 소유 국가 색을 섞은 그라데이션으로 표시한다.
+const ownerCountry = (c) => { const o = c.parent && byId[c.parent]?.country; return o && o !== c.country ? o : null; };
+const coBg = (c) => { const o = ownerCountry(c); return o ? `linear-gradient(135deg, ${cColor(o)} 0%, ${cColor(o)} 40%, ${cColor(c.country)} 100%)` : cColor(c.country); };
+const ownId = (c) => `own-${ownerCountry(c)}-${c.country}`;
+const coFill = (c) => (ownerCountry(c) ? `url(#${ownId(c)})` : cColor(c.country));
+const ownDefs = (cs) => `<defs>${[...new Map(cs.filter(ownerCountry).map((c) => [ownId(c), c])).values()].map((c) => `<linearGradient id="${ownId(c)}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:${cColor(ownerCountry(c))}"/><stop offset="0.4" style="stop-color:${cColor(ownerCountry(c))}"/><stop offset="1" style="stop-color:${cColor(c.country)}"/></linearGradient>`).join("")}</defs>`;
 const usdM = (m) => (m == null ? "-" : m >= 1000 ? `$${(m / 1000).toFixed(m >= 10000 ? 0 : 1)}B` : `$${Math.round(m)}M`);
 const usd = (n) => (n == null ? "-" : n >= 1e9 ? `$${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}M` : n >= 1e3 ? `$${Math.round(n / 1e3)}K` : `$${Math.round(n)}`);
 const units = (n) => (n == null ? "-" : n >= 1e4 ? `${(n / 1e4).toFixed(n >= 1e5 ? 0 : 1)}만 대` : `${n.toLocaleString("ko-KR")}대`);
@@ -1421,7 +1428,7 @@ function renderActMix(sel) {
 const GROUPS = [
   { id: "all", label: "전체", f: () => true },
   { id: "body", label: "하드웨어", f: (c) => c.group === "body" && !c.kr_watch },
-  { id: "kr", label: "한국 워치", f: (c) => c.kr_watch },
+  { id: "kr", label: "한국 워치", f: (c) => c.kr_watch || ownerCountry(c) === "KR" },
   { id: "brain", label: "두뇌·칩", f: (c) => c.group === "brain" },
 ];
 function renderMap() {
@@ -1460,7 +1467,8 @@ function renderMap() {
   const Q = attract ? ["접근 쉬움 · 물량 적음", "핵심 고객", "후순위", "물량 많음 · 접근 어려움"] : ["기술 선도", "리더", "추격", "양산 선도"];
   g += `<text class="quad" x="${L + 4}" y="${T + 10}">${Q[0]}</text><text class="quad" x="${W - R - 4}" y="${T + 10}" text-anchor="end">${Q[1]}</text>`
     + `<text class="quad" x="${L + 4}" y="${H - B - 4}">${Q[2]}</text><text class="quad" x="${W - R - 4}" y="${H - B - 4}" text-anchor="end">${Q[3]}</text>`;
-  g += pts.map((p) => `<circle class="bub${p.c.group === "brain" ? " brain" : ""}" data-co="${esc(p.c.id)}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}" style="fill:${cColor(p.c.country)};${p.c.group === "brain" ? `stroke:${cColor(p.c.country)}` : ""};opacity:.85"><title>${esc(p.c.name_ko)}</title></circle>`).join("");
+  g = ownDefs(list) + g;
+  g += pts.map((p) => `<circle class="bub${p.c.group === "brain" ? " brain" : ""}" data-co="${esc(p.c.id)}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}" style="fill:${coFill(p.c)};${p.c.group === "brain" ? `stroke:${cColor(p.c.country)}` : ownerCountry(p.c) ? `stroke:${cColor(ownerCountry(p.c))};stroke-width:2.5` : ""};opacity:.9"><title>${esc(p.c.name_ko)}${ownerCountry(p.c) ? ` — 소유 기준 ${COUNTRY[ownerCountry(p.c)]} 계열(${esc(byId[p.c.parent].name_ko)})` : ""}</title></circle>`).join("");
   // 라벨: 오른쪽 → 왼쪽 → 위 → 아래 순으로 빈 자리를 찾고, 없으면 생략(아래 순위 목록에 모두 있음)
   const boxes = [];
   const hit = (b) => b.x0 < L || b.x1 > W || b.y0 < T - 4 || b.y1 > H - B
@@ -1482,7 +1490,9 @@ function renderMap() {
   }).join("");
   $("#bubble").innerHTML = g;
   const cs = [...new Set(list.map((c) => (["US", "CN", "KR"].includes(c.country) ? c.country : "EU")))];
-  $("#bubble-legend").innerHTML = cs.map((k) => `<span><i class="dot" style="background:${cColor(k)}"></i>${k === "EU" ? "유럽·기타" : COUNTRY[k]}</span>`).join("");
+  const own = list.filter(ownerCountry);
+  $("#bubble-legend").innerHTML = cs.map((k) => `<span><i class="dot" style="background:${cColor(k)}"></i>${k === "EU" ? "유럽·기타" : COUNTRY[k]}</span>`).join("")
+    + own.map((c) => `<span title="본사·개발은 ${COUNTRY[c.country]}, 지분은 ${esc(byId[c.parent].name_ko)}(${COUNTRY[ownerCountry(c)]})"><i class="dot" style="background:${coBg(c)}"></i>${COUNTRY[ownerCountry(c)]} 계열(소유 기준) · ${esc(c.name_ko)}</span>`).join("");
 
   // 순위
   const key = attract ? (c) => c.calc.attract : (c) => c.calc.total;
@@ -1494,7 +1504,7 @@ function renderMap() {
   $("#rank").innerHTML = ranked.map((c, i) => `
     <button class="row rank" data-co="${esc(c.id)}">
       <span class="no">${i + 1}</span>
-      <span class="nm"><i class="dot" style="background:${cColor(c.country)}"></i><b>${esc(c.name_ko)}</b>${tierB(c)}</span>
+      <span class="nm"><i class="dot" style="background:${coBg(c)}"></i><b>${esc(c.name_ko)}</b>${tierB(c)}${ownerCountry(c) ? `<span class="b M" title="본사·개발은 ${COUNTRY[c.country]}, 소유는 ${esc(byId[c.parent].name_ko)}(${COUNTRY[ownerCountry(c)]})">${COUNTRY[ownerCountry(c)]} 계열</span>` : ""}</span>
       <span class="r num"><b>${key(c)}</b>${(() => { const mv = c.calc.move, d = mv && (attract ? mv.d_attract : mv.d_total); return d ? ` <small class="${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}</small>` : ""; })()}</span>
       <span class="s" style="grid-column:2/-1">${esc(c.one_liner)}</span>
       <span class="bar"><i style="width:${key(c)}%"></i></span>
@@ -1674,7 +1684,7 @@ function renderCapital() {
 
   const vpu = D.companies.filter((c) => c.calc.val_per_unit).sort((a, b) => b.calc.val_per_unit - a.calc.val_per_unit);
   const lmax = Math.log10(vpu[0]?.calc.val_per_unit || 10), lmin = Math.log10(Math.min(...vpu.map((c) => c.calc.val_per_unit))) - 0.3;
-  $("#vpu").innerHTML = vpu.map((c) => `<div class="hbar" data-co="${esc(c.id)}" style="cursor:pointer"><span class="n"><i class="dot" style="background:${cColor(c.country)}"></i> ${esc(c.name_ko)}</span><span class="track"><i style="width:${((Math.log10(c.calc.val_per_unit) - lmin) / (lmax - lmin)) * 100}%;background:${cColor(c.country)}"></i></span><span class="v">${usd(c.calc.val_per_unit)}</span></div>`).join("")
+  $("#vpu").innerHTML = vpu.map((c) => `<div class="hbar" data-co="${esc(c.id)}" style="cursor:pointer"><span class="n"><i class="dot" style="background:${coBg(c)}"></i> ${esc(c.name_ko)}</span><span class="track"><i style="width:${((Math.log10(c.calc.val_per_unit) - lmin) / (lmax - lmin)) * 100}%;background:${cColor(c.country)}"></i></span><span class="v">${usd(c.calc.val_per_unit)}</span></div>`).join("")
     + (() => {
       const ticks = [1e5, 1e6, 1e7, 1e8].filter((t) => Math.log10(t) >= lmin && Math.log10(t) <= lmax + 0.01);
       return `<div style="display:grid;grid-template-columns:128px minmax(0,1fr) 64px;gap:10px;padding:0 4px"><span></span><span style="position:relative;height:14px;font-size:.68rem;color:var(--muted)">${ticks.map((t) => `<span style="position:absolute;left:${((Math.log10(t) - lmin) / (lmax - lmin)) * 100}%;translate:-50% 0">${usd(t)}</span>`).join("")}</span><span></span></div>`;
@@ -1683,7 +1693,7 @@ function renderCapital() {
 
   const vals = D.companies.filter((c) => c.valuation?.v).sort((a, b) => b.valuation.v - a.valuation.v);
   const vmax = vals[0].valuation.v;
-  $("#vals").innerHTML = vals.map((c) => `<div class="hbar" data-co="${esc(c.id)}" style="cursor:pointer"><span class="n"><i class="dot" style="background:${cColor(c.country)}"></i> ${esc(c.name_ko)}</span><span class="track"><i style="width:${(c.valuation.v / vmax) * 100}%;background:${cColor(c.country)}"></i></span><span class="v">${usdM(c.valuation.v)}</span></div>`).join("");
+  $("#vals").innerHTML = vals.map((c) => `<div class="hbar" data-co="${esc(c.id)}" style="cursor:pointer"><span class="n"><i class="dot" style="background:${coBg(c)}"></i> ${esc(c.name_ko)}</span><span class="track"><i style="width:${(c.valuation.v / vmax) * 100}%;background:${cColor(c.country)}"></i></span><span class="v">${usdM(c.valuation.v)}</span></div>`).join("");
 
   const asOf = new Date(D.as_of);
   const rounds = D.companies.flatMap((c) => (c.funding || []).map((r) => ({ ...r, c })))
@@ -1769,6 +1779,12 @@ function renderStrat() {
   $("#cty").innerHTML = C.items.filter((c) => sel.includes(c.id)).map((c) => `
     <article class="card" style="display:grid;gap:6px"><b><i class="dot" style="background:${CTY_COLOR[c.id]}"></i> ${esc(c.name)} <span class="muted num" style="font-weight:400">${Object.values(c.scores).reduce((a, b) => a + b, 0)}/60</span></b>
       <p style="margin:0;font-size:.84rem;color:var(--muted)">${esc(c.why)}</p>
+      ${(() => {
+        const mine = D.companies.filter((x) => ownerCountry(x) === c.id), away = D.companies.filter((x) => x.country === c.id && ownerCountry(x));
+        const chip = (x) => `<button class="chip co" data-co="${esc(x.id)}"><i class="dot" style="background:${coBg(x)}"></i> ${esc(x.name_ko)}</button>`;
+        return (mine.length ? `<div style="font-size:.82rem"><b>${esc(c.name)} 계열(소유 기준)</b> ${mine.map(chip).join(" ")}<br><span class="muted">본사·개발은 ${mine.map((x) => COUNTRY[x.country]).join("·")}이지만 지분은 ${mine.map((x) => esc(byId[x.parent].name_ko)).join("·")} 소유입니다. 위 점수는 본사 위치 기준 큐레이션 값이라 이 기업을 합산하지 않았습니다.</span></div>` : "")
+          + (away.length ? `<div style="font-size:.82rem" class="muted">위치 기준으로는 ${esc(c.name)} 기업이지만 소유는 다른 나라(${away.map((x) => `${esc(x.name_ko)} → ${COUNTRY[ownerCountry(x)]}`).join(", ")})입니다.</div>` : "");
+      })()}
       <div style="font-size:.84rem;padding:8px 10px;border-radius:10px;background:color-mix(in oklab, var(--accent) 9%, var(--surface))"><b style="color:var(--accent);margin-right:6px">한국 부품사에</b>${esc(c.for_kr)}</div></article>`).join("");
 
   // 용도
@@ -1812,7 +1828,7 @@ function openSheet(id) {
   const nws = (D.news || []).filter((x) => (x.companies || []).includes(id) || (!x.companies?.length && x.query === id)).slice(0, 6);
   const props = (D.proposals || []).filter((p) => p.company === id);
   const srcs = [...new Set([c.src, c.listing.src, c.sourcing?.src, ...FACTS.map(([k]) => c[k]?.src), ...(c.funding || []).map((r) => r.src)].filter(safeUrl))];
-  $("#sh-title").innerHTML = `${esc(c.name_ko)} ${tierB(c)}<small>${esc(c.name)} · ${esc(COUNTRY[c.country] || c.country)} · ${esc(c.listing.label)}${c.listing.ticker ? ` (${esc(c.listing.ticker)})` : ""}</small>`;
+  $("#sh-title").innerHTML = `${esc(c.name_ko)} ${tierB(c)}<small>${esc(c.name)} · ${esc(COUNTRY[c.country] || c.country)}${ownerCountry(c) ? ` (소유 기준 ${esc(COUNTRY[ownerCountry(c)])} 계열 — ${esc(byId[c.parent].name_ko)})` : ""} · ${esc(c.listing.label)}${c.listing.ticker ? ` (${esc(c.listing.ticker)})` : ""}</small>`;
   const order = D.companies.map((x) => x.id), at = order.indexOf(id);
   const prev = byId[order[(at - 1 + order.length) % order.length]], next = byId[order[(at + 1) % order.length]];
   const keyFact = ["cum_units", "valuation", "capacity", "funding_total"].find((k) => c[k]?.v != null);
