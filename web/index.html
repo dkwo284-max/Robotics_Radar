@@ -376,6 +376,7 @@ details.fold[open] > summary::after { content: "접기"; }
       <p class="sub" id="chg-sub"></p>
       <div class="chips" id="period" style="margin-bottom:6px"></div>
       <p class="sub" id="period-note" style="margin:0 0 10px" hidden></p>
+      <div class="chips" style="margin-bottom:10px"><button class="chip" data-share>링크 복사 · 지금 선택한 화면 그대로 공유</button></div>
       <div class="kpis" id="chg-kpis"></div>
       <div id="tile-detail" style="margin-top:10px" hidden></div>
     </section>
@@ -415,6 +416,11 @@ details.fold[open] > summary::after { content: "접기"; }
         <p class="sub" id="ins-sub"></p>
         <div class="ins" id="insights"></div>
       </section>
+      <section id="sales-sec">
+        <h2>영업 우선순위 보드 <span class="b estimate">규칙 기반 추정</span></h2>
+        <p class="sub" id="sales-sub"></p>
+        <div class="list" id="sales"></div>
+      </section>
       <section id="props-sec" hidden>
         <h2>검증 대기 수치</h2>
         <p class="sub">AI 가 기사에서 뽑은 값이 큐레이션 기준값과 10% 넘게 다르거나 기준값이 없는 경우. 확인 후 data/companies.json 에 반영합니다</p>
@@ -429,6 +435,11 @@ details.fold[open] > summary::after { content: "접기"; }
         <h2>정책 동향</h2>
         <p class="sub">미국의 중국산 로봇 제한은 비중국 부품 수요로, 한국 예산은 국산 실증 수요로 이어집니다</p>
         <div class="list" id="policies"></div>
+      </section>
+      <section id="fresh-sec" hidden>
+        <h2>큐레이션 값 신선도 <span class="b M" id="fresh-n"></span></h2>
+        <p class="sub" id="fresh-sub"></p>
+        <details class="card fold"><summary><h3 style="display:inline">갱신 대기 목록</h3></summary><div class="list" id="fresh-list" style="margin-top:8px"></div></details>
       </section>
     </div>
 
@@ -470,6 +481,16 @@ details.fold[open] > summary::after { content: "접기"; }
         <h2>앞으로 12개월 마일스톤</h2>
         <p class="sub">양산·배치·제품·상장 계획</p>
         <div class="list" id="next12"></div>
+      </section>
+      <section id="cal-sec">
+        <h2>앞으로 90일 마일스톤</h2>
+        <p class="sub" id="cal-sub"></p>
+        <div class="list" id="cal"></div>
+      </section>
+      <section id="track-sec">
+        <h2>발표 대비 실제 이력 <span class="b estimate">로드맵 상태 기준</span></h2>
+        <p class="sub" id="track-sub"></p>
+        <div class="list" id="track"></div>
       </section>
     </div>
 
@@ -560,6 +581,13 @@ details.fold[open] > summary::after { content: "접기"; }
       <h2 id="rank-title"></h2>
       <p class="sub" id="rank-sub"></p>
       <div class="list" id="rank"></div>
+    </section>
+    <section id="sens-sec">
+      <h2>점수 민감도 <span class="b estimate">가중치 시험</span></h2>
+      <p class="sub" id="sens-sub"></p>
+      <div class="chips" id="sens-presets" style="margin-bottom:8px"></div>
+      <div id="sens-sliders" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;margin-bottom:10px"></div>
+      <div class="list" id="sens"></div>
     </section>
   </div>
 
@@ -774,6 +802,8 @@ let byId = {};
 const coChip = (id) => (byId[id] ? `<button class="chip co" data-co="${esc(id)}">${esc(byId[id].name_ko)}</button>` : "");
 const tierB = (c) => `<span class="b t${c.calc.tier}">T${c.calc.tier}</span>`;
 
+const monthsOld = (stamp) => { if (!stamp || !D.as_of) return 0; const t = new Date(D.as_of), y = +String(stamp).slice(0, 4), m = String(stamp).length >= 7 ? +String(stamp).slice(5, 7) : 12; return Math.max(0, (t.getFullYear() - y) * 12 + (t.getMonth() + 1 - m)); };
+const staleB = (stamp) => (monthsOld(stamp) >= (D.freshness?.threshold || 6) ? `<span class="b M" title="기준일이 ${monthsOld(stamp)}개월 전입니다 — 갱신이 필요할 수 있어요">오래됨 ${monthsOld(stamp)}개월</span>` : "");
 const FIELD = { valuation: "밸류", funding_total: "누적 조달", revenue: "매출", orders: "수주", cum_units: "누적 출하", capacity: "생산능력", target_2026: "2026 목표", price: "판매가" };
 const fmtUnit = (v, u) => (v == null ? "없음" : u === "USD_M" ? usdM(v) : u === "units" ? units(v) : usd(v));
 const TYPE = { funding: "투자", ipo: "상장", production: "양산", product: "제품", deploy: "배치", partner: "제휴", supply: "공급망", policy: "정책", org: "조직", patent: "특허", other: "기타" };
@@ -788,7 +818,7 @@ const newsTitle = (x) => esc(x.title_ko || x.title);
 function newsRow(x, chips = true) {
   const imp = x.importance >= 3 ? '<span class="imp3">핵심</span>' : x.importance === 2 ? '<span class="b reported">주목</span>' : "";
   return `<div class="ev"><span class="d">${esc(x.date.slice(2).replace(/-/g, "."))}</span><span class="t">${newB(x.date)} ${newsTitle(x)}${x.summary_ko ? `<small>${esc(x.summary_ko)}</small>` : ""}</span>
-    <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${x.ai ? "" : '<span class="b t3" title="AI 가 아직 분류하지 않은 기사 — 하루 AI 한도 안에서 며칠에 걸쳐 분류됩니다">분류 전</span>'}${link(x.url, "원문")}</span></div>`;
+    <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${x.n_src > 1 ? `<span class="b t3" title="같은 내용을 보도한 매체: ${esc((x.also || []).join(", "))}${x.n_src - 1 > (x.also || []).length ? " 외" : ""}">외 ${x.n_src - 1}곳 보도</span>` : ""}${x.ai ? "" : '<span class="b t3" title="AI 가 아직 분류하지 않은 기사 — 하루 AI 한도 안에서 며칠에 걸쳐 분류됩니다">분류 전</span>'}${link(x.url, "원문")}</span></div>`;
 }
 const ROLE_BY_TYPE = { funding: ["exec"], ipo: ["exec"], policy: ["exec"], org: ["exec"], production: ["exec", "strategy"],
   product: ["strategy", "engineer"], deploy: ["strategy"], partner: ["exec", "strategy"], supply: ["exec", "engineer"], other: [] };
@@ -1364,9 +1394,21 @@ function renderExec() {
       <p style="margin-top:8px">${esc(i.body)}</p>
       <div class="foot" style="margin-top:8px"><span class="b ${i.conf}">${CONF[i.conf]}</span>${i.evidence.map(coChip).join("")}</div>
     </details>`).join("");
+  // 영업 우선순위: 어떤 고객에게 어떤 부품을 어떤 방식으로 먼저 접근할까 (부품사 관점에서만)
+  $("#sales-sec").hidden = lens !== "parts" || !(D.sales_board || []).length;
+  $("#sales-sub").textContent = "고객 매력도 × 부품 원가 비중 × 국내 공백 가산(후보 없으면 선점) × 비중국 대체 수요 가산 − 자체 생산 감점. 고객당 2개까지, 점수는 1위=100. 규칙에 따른 추정이므로 영업 판단의 출발점으로 쓰세요.";
+  $("#sales").innerHTML = (D.sales_board || []).map((r, i) => `<button class="row" data-co="${esc(r.company)}" style="align-items:start">
+    <span class="t"><span class="muted num">${i + 1}.</span> <b>${esc(byId[r.company]?.name_ko || r.company)}</b> · ${esc(r.part_name.replace(/\(.*\)/, ""))} ${r.gap ? '<span class="b gap">국내 공백</span>' : ""}${r.swap ? '<span class="b official">비중국 대체</span>' : ""}</span>
+    <span class="r"><span class="b ${r.how.startsWith("접근") ? "t3" : "reported"}">${esc(r.how)}</span> <b class="num">${r.score}</b></span>
+    <span class="s" style="grid-column:1/-1">${r.why.map(esc).join(" · ")}</span></button>`).join("");
   $("#events").innerHTML = D.events.slice(0, 10).map((e) => `
     <div class="ev"><span class="d">${esc(e.date.slice(2).replace(/-/g, "."))}</span><span class="t">${esc(e.title)}</span>
       <span class="m">${kindB(e.kind)}${e.ids.map(coChip).join("")}${link(e.src)}</span></div>`).join("");
+  const fr = D.freshness || { stale: [], total: 0 };
+  $("#fresh-sec").hidden = !fr.total;
+  $("#fresh-n").textContent = `${fr.stale.length}/${fr.total}건 오래됨`;
+  $("#fresh-sub").textContent = `밸류·누적 조달·출하·생산능력처럼 사람이 갱신하는 값 ${fr.total}건 중 기준일이 ${fr.threshold}개월 넘은 것이 ${fr.stale.length}건입니다. 오래된 값은 기업 상세에서도 '오래됨'으로 표시됩니다. 갱신하려면 data/companies.json 의 값과 as_of 를 고치세요.`;
+  $("#fresh-list").innerHTML = fr.stale.map((x) => `<button class="row" data-co="${esc(x.company)}"><span class="t">${esc(byId[x.company]?.name_ko || x.company)} · ${esc(FIELD[x.field] || x.field)}</span><span class="r"><span class="b M">${x.months}개월</span></span><span class="s">기준일 ${esc(x.as_of)}</span></button>`).join("") || '<div class="empty">오래된 값이 없습니다</div>';
   $("#policies").innerHTML = D.policies.map((p) => `
     <div class="ev"><span class="d">${esc(p.date.slice(2).replace("-", "."))} ${esc(p.country)}</span><span class="t">${esc(p.title)}</span>
       <span class="m"><span class="muted">${esc(p.note)}</span>${link(p.src)}</span></div>`).join("");
@@ -1392,6 +1434,16 @@ function renderStrategyBrief() {
   renderPatentDirection();
   renderPaperSignals("#pp-chart", "#pp-sub");
   renderPatentNews("#pip2", "#pip2-sub");
+  const T = D.track || { rows: [], upcoming: [], overdue: [] };
+  $("#cal-sub").textContent = `${T.as_of} 기준 · 계획 상태인 마일스톤 중 90일 안에 시점이 끝나거나(연·분기·반기 단위는 마감일 기준) 월 단위로 시작하는 것. D-숫자는 시점 마감까지 남은 일수입니다.${T.overdue.length ? ` 시점이 지났는데 아직 '계획'인 항목 ${T.overdue.length}건은 확인이 필요합니다.` : ""}`;
+  $("#cal").innerHTML = foldRows(T.overdue.map((x) => ({ ...x, late: true })).concat(T.upcoming).map((x) => `<button class="row" data-co="${esc(x.company)}"><span class="t">${esc(x.title)}</span><span class="r">${x.late ? '<span class="b H">시점 경과</span>' : `<span class="b ${x.now ? "M" : "t3"}">D-${x.days}</span>`} <span class="mono muted" style="font-size:.74rem">${esc(x.when)}</span></span><span class="s">${esc(byId[x.company]?.name_ko || x.company)} · ${TYPE_RM[x.type] || x.type}${x.now && !x.late ? " · 진행 중 구간" : ""}</span></button>`))
+    || '<div class="empty">90일 안에 끝나는 계획 마일스톤이 없습니다</div>';
+  const trMax = Math.max(1, ...T.rows.map((r) => r.done + r.delayed + r.overdue + r.planned));
+  const seg = (n, col) => (n ? `<i style="flex:${n};background:${col}" title="${n}"></i>` : "");
+  $("#track-sub").innerHTML = `기업이 내놓은 로드맵 항목이 실제로 ${tipBtn("달성 = 로드맵 상태가 완료. 지연 = 일정 변경·연기로 표시. 시점 경과 = 시점이 지났는데 아직 계획 상태(확인 필요). 예정 = 아직 시점 전. 큐레이션된 로드맵 상태를 세며, 건수가 적은 기업은 참고만 하세요.")} 어떻게 진행됐는지 — <span style="color:var(--good)">■</span>달성 <span style="color:var(--bad)">■</span>지연 <span style="color:var(--warn)">■</span>시점 경과 <span class="muted">■</span>예정. 숫자 옆 점수는 실행 신뢰도(20점 만점).`;
+  $("#track").innerHTML = foldRows(T.rows.map((r) => `<button class="row" data-co="${esc(r.company)}"><span class="t"><b>${esc(byId[r.company]?.name_ko || r.company)}</b> <span class="muted" style="font-size:.78rem">${esc(r.exec_note || "")}</span></span>
+    <span class="r"><span class="num">${r.exec}/20</span>${r.target_pct != null ? ` <span class="b reported" title="누적 출하 ÷ 2026 목표">목표 대비 ${r.target_pct}%</span>` : ""}</span>
+    <span class="s" style="grid-column:1/-1;display:flex;align-items:center;gap:8px"><span style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--raised);width:${Math.round(((r.done + r.delayed + r.overdue + r.planned) / trMax) * 100)}%;min-width:40px">${seg(r.done, "var(--good)")}${seg(r.delayed, "var(--bad)")}${seg(r.overdue, "var(--warn)")}${seg(r.planned, "var(--muted)")}</span><span>달성 ${r.done} · 지연 ${r.delayed} · 시점 경과 ${r.overdue} · 예정 ${r.planned}</span></span></button>`)) || '<div class="empty">로드맵이 있는 기업이 없습니다</div>';
   $("#next12").innerHTML = foldRows(next.map((r) => `<button class="row" data-co="${esc(r.c.id)}"><span class="t ${r.status === "delayed" ? "st-delayed" : ""}">${esc(r.title)}</span><span class="r mono muted" style="font-size:.74rem">${esc(r.when)}</span><span class="s">${esc(r.c.name_ko)} · ${TYPE_RM[r.type] || r.type}</span></button>`));
 }
 
@@ -1432,6 +1484,34 @@ const GROUPS = [
   { id: "kr", label: "한국 워치", f: (c) => c.kr_watch || ownerCountry(c) === "KR" },
   { id: "brain", label: "두뇌·칩", f: (c) => c.group === "brain" },
 ];
+// ---------- 점수 민감도: 경쟁력 점수의 축 가중치를 바꾸면 순위·Tier 가 어떻게 달라지는지 ----------
+const SENS_AX = [["tech", "기술"], ["scale", "양산"], ["capital", "자본"], ["execution", "실행 신뢰도"]];
+const SENS_PRESETS = [["base", "기본 30·30·20·20", { tech: 30, scale: 30, capital: 20, execution: 20 }], ["tech", "기술 중시", { tech: 45, scale: 20, capital: 15, execution: 20 }],
+  ["scale", "양산 중시", { tech: 20, scale: 45, capital: 15, execution: 20 }], ["capital", "자본 중시", { tech: 20, scale: 20, capital: 40, execution: 20 }],
+  ["exec", "실행 중시", { tech: 20, scale: 20, capital: 15, execution: 45 }]];
+const sensScore = (c, w) => { const sum = Object.values(w).reduce((a, b) => a + b, 0) || 1; return (100 * SENS_AX.reduce((t, [k]) => t + w[k] * (c.scores[k][0] / D.axes[k]), 0)) / sum; };
+const sensRanks = (list, w) => { const o = [...list].sort((a, b) => sensScore(b, w) - sensScore(a, w)); return Object.fromEntries(o.map((c, i) => [c.id, i + 1])); };
+const tierOf = (v) => (v >= 70 ? 1 : v >= 50 ? 2 : 3);
+function renderSens() {
+  const list = D.companies.filter((c) => c.group === "body"), base = SENS_PRESETS[0][2];
+  const w = { ...base, ...store.get("sensW", {}) };
+  const baseRank = sensRanks(list, base), nowRank = sensRanks(list, w);
+  const presetRanks = SENS_PRESETS.map(([, , pw]) => sensRanks(list, pw));
+  $("#sens-sub").innerHTML = `경쟁력 점수 = 기술·양산·자본·실행 신뢰도 점수를 가중 평균한 값입니다. 가중치를 바꿔도 상위권이 그대로인 기업이 <b>가정에 덜 민감한(견고한) 선택</b>입니다. 표의 순위 범위는 위 5가지 가중치(기본·기술·양산·자본·실행 중시) 전체에서의 최고~최저 순위입니다. 하드웨어 기업 ${list.length}곳 기준.`;
+  const sel = store.get("sensP", "base");
+  $("#sens-presets").innerHTML = SENS_PRESETS.map(([id, l]) => `<button class="chip" data-sensp="${id}" aria-pressed="${id === sel && !store.get("sensW", null)}">${l}</button>`).join("");
+  if (document.activeElement?.dataset?.sensw) SENS_AX.forEach(([k]) => { $(`[data-sensw="${k}"]`).parentElement.querySelector("b").textContent = w[k]; });  // 끄는 중에는 슬라이더를 다시 그리지 않는다
+  else $("#sens-sliders").innerHTML = SENS_AX.map(([k, l]) => `<label style="font-size:.8rem;display:grid;gap:2px"><span>${l} <b class="num">${w[k]}</b></span><input type="range" min="0" max="60" step="5" value="${w[k]}" data-sensw="${k}"></label>`).join("");
+  const rows = [...list].sort((a, b) => nowRank[a.id] - nowRank[b.id]).slice(0, 15);
+  $("#sens").innerHTML = foldRows(rows.map((c) => {
+    const v = sensScore(c, w), b = c.calc.total, rs = presetRanks.map((r) => r[c.id]), lo = Math.min(...rs), hi = Math.max(...rs);
+    const d = baseRank[c.id] - nowRank[c.id], tierNow = tierOf(v), tierBase = tierOf(sensScore(c, base));
+    const robust = hi - lo <= 2 ? '<span class="b official" title="가중치를 바꿔도 순위가 ±2위 안에서 유지">견고</span>' : hi - lo >= 5 ? '<span class="b M" title="가중치에 따라 순위가 크게 변함">민감</span>' : "";
+    return `<button class="row" data-co="${esc(c.id)}"><span class="t"><span class="muted num">${nowRank[c.id]}.</span> <b>${esc(c.name_ko)}</b> ${robust}</span>
+      <span class="r"><b class="num">${v.toFixed(0)}</b>점${d ? ` <small class="${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}</small>` : ""}${tierNow !== tierBase ? ` <span class="b t${tierNow}">T${tierBase}→T${tierNow}</span>` : ` <span class="b t${tierNow}">T${tierNow}</span>`}</span>
+      <span class="s">기본 ${baseRank[c.id]}위(${b}점) · 5가지 가중치에서 ${lo === hi ? `${lo}위 고정` : `${lo}~${hi}위`}</span></button>`;
+  }), 10);
+}
 function renderMap() {
   const preset = store.get("preset", "power");
   let group = store.get("group", "all");
@@ -1498,6 +1578,7 @@ function renderMap() {
   // 순위
   const key = attract ? (c) => c.calc.attract : (c) => c.calc.total;
   const ranked = [...list].sort((a, b) => key(b) - key(a));
+  renderSens();
   $("#rank-title").textContent = attract ? "고객 매력도 순위" : "경쟁력 순위 (Tier)";
   $("#rank-sub").textContent = attract
     ? "양산 규모 30 + 조달 개방성 25 + 지정학 접근성 25 + 지불 능력 20 = 100점"
@@ -1831,7 +1912,7 @@ function openSheet(id) {
   const s = c.scores, top = D.axes;
   const scoreRows = (keys) => keys.map((k) => `<div class="score"><span>${AX[k]}</span><span class="track"><i style="width:${(s[k][0] / top[k]) * 100}%"></i></span><span class="num" style="text-align:right">${s[k][0]}/${top[k]}</span>${s[k][1] ? `<span class="why">${esc(s[k][1])}</span>` : ""}</div>`).join("");
   const facts = FACTS.filter(([k]) => c[k] && (c[k].v != null || c[k].note)).map(([k, l, f]) => `
-    <div class="fact"><span class="k">${l}</span><span class="v"><b>${c[k].v != null ? f(c[k].v) : "미공개"}</b> ${kindB(c[k].kind)} ${c[k].as_of ? `<span class="muted mono" style="font-size:.74rem">${esc(c[k].as_of)}</span>` : ""} ${link(c[k].src)}</span>${c[k].note ? `<span class="n">${esc(c[k].note)}</span>` : ""}</div>`).join("");
+    <div class="fact"><span class="k">${l}</span><span class="v"><b>${c[k].v != null ? f(c[k].v) : "미공개"}</b> ${kindB(c[k].kind)} ${c[k].as_of ? `<span class="muted mono" style="font-size:.74rem">${esc(c[k].as_of)}</span> ${staleB(c[k].as_of)}` : ""} ${link(c[k].src)}</span>${c[k].note ? `<span class="n">${esc(c[k].note)}</span>` : ""}</div>`).join("");
   const evs = D.events.filter((e) => e.ids.includes(id));
   const q = (D.quotes || {})[id];
   const nws = (D.news || []).filter((x) => (x.companies || []).includes(id) || (!x.companies?.length && x.query === id)).slice(0, 6);
@@ -1890,8 +1971,32 @@ function closeSheet() { $("#scrim").hidden = true; $("#sheet").hidden = true; do
 
 // ---------- 라우팅 · 이벤트 ----------
 const PANELS = { home: renderHome, map: renderMap, parts: renderParts, prod: renderProd, capital: renderCapital, strat: renderStrat };
+// ---------- 화면 상태 링크 ----------
+// 역할·기간·기업·기술 층 같은 선택을 주소에 담아 팀에 그대로 보낼 수 있게 한다: #home?role=engineer&period=30&patCo=bd
+const SHARE_KEYS = ["role", "period", "lens", "patView", "patCo", "patCoF", "patLayer", "hubTool", "preset", "group", "cty"];
+function applyShared(qs) {
+  const q = new URLSearchParams(qs);
+  for (const k of SHARE_KEYS) {
+    if (!q.has(k)) continue;
+    const v = q.get(k);
+    store.set(k, k === "cty" ? v.split(",").filter(Boolean) : v === "" ? null : v);
+  }
+  if (q.has("role") || q.has("period")) store.set("tile", null);
+}
+function shareUrl() {
+  const id = (location.hash || "#home").slice(1).split("?")[0], q = new URLSearchParams();
+  for (const k of SHARE_KEYS) {
+    let v = store.get(k, null);
+    if (v == null || (Array.isArray(v) && !v.length)) continue;
+    if (k === "period" && v === "since") v = "7";  // '지난 방문 이후'는 받는 사람 기준이라 공유하지 않는다
+    q.set(k, Array.isArray(v) ? v.join(",") : String(v));
+  }
+  return `${location.origin}${location.pathname}#${PANELS[id] ? id : "home"}?${q}`;
+}
 function route() {
-  const id = (location.hash || "#home").slice(1);
+  const [hid, qs] = (location.hash || "#home").slice(1).split("?");
+  if (qs) { applyShared(qs); history.replaceState(null, "", `${location.pathname}#${hid}`); }
+  const id = hid;
   const key = PANELS[id] ? id : "home";
   document.querySelectorAll("[data-panel]").forEach((p) => (p.hidden = p.id !== `p-${key}`));
   document.querySelectorAll(".tabbar a").forEach((a) => (a.getAttribute("href") === `#${key}` ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
@@ -1899,9 +2004,11 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-kpi],[data-hubtool],[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-pview],[data-hm],[data-lmsort],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
+  const t = e.target.closest("[data-sensp],[data-share],[data-kpi],[data-hubtool],[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-pview],[data-hm],[data-lmsort],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
   if (!t) return;
   if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
+  if (t.dataset.share !== undefined) { copyText(shareUrl()).then(() => { const o = t.textContent; t.textContent = "복사됨 ✓ — 붙여넣어 공유하세요"; setTimeout(() => (t.textContent = o), 2200); }); return; }
+  if (t.dataset.sensp) { const p = SENS_PRESETS.find(([id]) => id === t.dataset.sensp); store.set("sensP", p[0]); store.set("sensW", p[0] === "base" ? null : p[2]); renderSens(); return; }
   if (t.dataset.kpi) return openKpi(t.dataset.kpi);
   if (t.dataset.co) return openSheet(t.dataset.co);
   if (t.dataset.tile) { store.set("tile", store.get("tile", null) === t.dataset.tile ? null : t.dataset.tile); renderHome(); return; }
@@ -1950,6 +2057,12 @@ $("#hb-co").addEventListener("change", updateHubBuilder);
 $("#hb-ly").addEventListener("change", updateHubBuilder);
 $("#c-exc").addEventListener("change", (e) => saveCalc({ exc: e.target.checked }));
 for (const [id, k] of [["#n-capex", "capex"], ["#n-margin", "margin"], ["#n-rate", "rate"]]) $(id).addEventListener("input", (e) => saveStrat({ [k]: Number(e.target.value) }));
+document.addEventListener("input", (e) => {
+  const k = e.target.dataset?.sensw;
+  if (!k) return;
+  store.set("sensW", { ...SENS_PRESETS[0][2], ...store.get("sensW", {}), [k]: Number(e.target.value) });
+  renderSens();
+});
 $("#scrim").addEventListener("click", closeSheet);
 $("#sh-x").addEventListener("click", closeSheet);
 document.addEventListener("keydown", (e) => {

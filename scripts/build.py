@@ -15,6 +15,7 @@ import sys
 from datetime import date, datetime, timedelta, timezone
 
 from changes import diff, keep_baseline, state_of
+import news_cluster
 import paper_calc
 import patent_calc
 from common import OUT, SRC, plausible, read_json, write_json
@@ -78,6 +79,131 @@ def months_back(as_of: str, ym: str) -> float:
     d0 = date.fromisoformat(as_of)
     y, m = int(ym[:4]), int(ym[5:7])
     return (d0.year - y) * 12 + (d0.month - m)
+
+
+STALE_MONTHS = 6  # 기준일이 이만큼 지난 큐레이션 값은 '오래됨'으로 표시
+
+
+def age_months(as_of: str, stamp: str) -> int:
+    """기준일(YYYY 또는 YYYY-MM[-DD])이 오늘 기준 몇 달 전인지. 연도만 있으면 그해 12월로 봐서 과대 판정을 피한다."""
+    d0 = date.fromisoformat(as_of)
+    y = int(stamp[:4])
+    m = int(stamp[5:7]) if len(stamp) >= 7 else 12
+    return max(0, (d0.year - y) * 12 + (d0.month - m))
+
+
+def freshness(companies: list[dict], as_of: str) -> dict:
+    """큐레이션 값(밸류·누적 조달·출하·생산능력 등)의 기준일 노후도 — 갱신 대기열."""
+    items = [{"company": c["id"], "field": k, "as_of": v["as_of"], "months": age_months(as_of, str(v["as_of"]))}
+             for c in companies for k, v in c.items() if isinstance(v, dict) and v.get("as_of")]
+    items.sort(key=lambda x: -x["months"])
+    return {"threshold": STALE_MONTHS, "total": len(items), "stale": [x for x in items if x["months"] >= STALE_MONTHS]}
+
+
+CN_MARKERS = ("Leaderdrive", "Shuanghuan", "Sanhua", "Tuopu", "Wolong", "Hengli", "Xinchun", "중국")
+PART_KEYS = {"reducer": ("감속기",), "screw": ("롤러스크류", "스크류"), "motor": ("모터",), "actuator": ("액추에이터",)}
+INHOUSE_RE = ("수직계열화", "내재화", "자체 액추에이터", "자체 손", "자체 관절", "자체 개발")
+INHOUSE_PARTS = {"reducer", "screw", "motor", "driver", "actuator", "hand"}
+
+
+def sales_board(companies: list[dict], bom: list[dict], limit: int = 12) -> list[dict]:
+    """한국 부품사 영업 우선순위: 고객 매력도 × 부품 비중 × (국내 후보 없음이면 선점 가산) × (고객이 자체 생산하는 부품은 감점)
+    × (중국 공급사를 쓰는 고객의 해당 부품은 비중국 대체 수요 가산). 접근 방식은 고객의 조달 개방성·지정학 접근성으로 정한다."""
+    rows = []
+    for c in companies:
+        if c["group"] != "body":
+            continue
+        mode = c["sourcing"].get("mode", "")
+        suppliers = c["sourcing"].get("suppliers", [])
+        in_house = any(k in mode for k in INHOUSE_RE)
+        openness, geo = c["scores"]["open"][0], c["scores"]["geo"][0]
+        for part in bom:
+            if part["share"] < 0.03:
+                continue
+            gap = not part["kr"]
+            f = (1.25 if gap else 1.0) * (0.35 if in_house and part["id"] in INHOUSE_PARTS else 1.0)
+            swap = part["id"] in PART_KEYS and c["country"] != "CN" and any(
+                any(k in sp for k in PART_KEYS[part["id"]]) and any(m in sp for m in CN_MARKERS) for sp in suppliers)
+            f *= 1.15 if swap else 1.0
+            score = c["calc"]["attract"] * (part["share"] / 0.16) * f
+            if swap:
+                how = "공급 계약(비중국 대체)"
+            elif openness >= 18:
+                how = "공급 계약"
+            elif geo >= 20:
+                how = "공동 개발(JDA)"
+            else:
+                how = "접근 어려움 — 관찰"
+            why = [f"고객 매력도 {c['calc']['attract']}점(개방성 {openness}/25·지정학 {geo}/25)", f"{part['name']} 원가 비중 {part['share'] * 100:.0f}%",
+                   "국내 후보 없음 → 선점 기회" if gap else "국내 후보: " + ", ".join(k["name"] for k in part["kr"])]
+            if in_house and part["id"] in INHOUSE_PARTS:
+                why.append(f"고객 조달 방식 '{mode}' — 자체 생산 가능성이 커 감점")
+            if swap:
+                why.append("현재 중국 공급사를 쓰는 품목 — 비중국 대체 수요")
+            rows.append({"company": c["id"], "part": part["id"], "part_name": part["name"], "score": score, "how": how, "why": why,
+                         "gap": gap, "swap": swap, "in_house": in_house and part["id"] in INHOUSE_PARTS})
+    rows.sort(key=lambda r: -r["score"])
+    top = rows[0]["score"] if rows else 1
+    out = []
+    per_company: dict[str, int] = {}
+    for r in rows:  # 한 고객이 목록을 독점하지 않게 고객당 2개까지
+        if per_company.get(r["company"], 0) >= 2:
+            continue
+        per_company[r["company"]] = per_company.get(r["company"], 0) + 1
+        out.append({**r, "score": round(r["score"] / top * 100)})
+        if len(out) >= limit:
+            break
+    return out
+
+
+def when_range(when: str) -> tuple[date, date] | None:
+    """로드맵 시점 문자열(2026-10 · 2026-Q4 · 2027-H1 · 2027 · 2029~30) → (시작일, 끝일)."""
+    import calendar
+    w = str(when).strip()
+    try:
+        if "~" in w:
+            a, b = w.split("~")
+            return date(int(a), 1, 1), date(int(a[:2] + b) if len(b) == 2 else int(b), 12, 31)
+        if len(w) == 4:
+            return date(int(w), 1, 1), date(int(w), 12, 31)
+        y, rest = int(w[:4]), w[5:]
+        if rest.startswith("Q"):
+            q = int(rest[1])
+            return date(y, 3 * q - 2, 1), date(y, 3 * q, calendar.monthrange(y, 3 * q)[1])
+        if rest.startswith("H"):
+            return (date(y, 1, 1), date(y, 6, 30)) if rest[1] == "1" else (date(y, 7, 1), date(y, 12, 31))
+        m = int(rest)
+        return date(y, m, 1), date(y, m, calendar.monthrange(y, m)[1])
+    except (ValueError, IndexError):
+        return None
+
+
+def track_record(companies: list[dict], as_of: str, horizon: int = 90) -> dict:
+    """발표 대비 실제 이력(로드맵 항목의 달성·지연·시점 경과)과 앞으로 90일 마일스톤. 큐레이션된 로드맵 상태만 쓴다."""
+    today = date.fromisoformat(as_of)
+    rows, upcoming, overdue = [], [], []
+    for c in companies:
+        if c["group"] != "body" or not c["roadmap"]:
+            continue
+        done = sum(r["status"] == "done" for r in c["roadmap"])
+        delayed = sum(r["status"] == "delayed" for r in c["roadmap"])
+        late = []
+        for r in c["roadmap"]:
+            rng = when_range(r["when"])
+            if r["status"] == "planned" and rng:
+                item = {"company": c["id"], "when": r["when"], "title": r["title"], "type": r["type"], "end": rng[1].isoformat()}
+                if rng[1] < today:
+                    late.append(item)
+                elif rng[1] <= today + timedelta(days=horizon) or ((rng[1] - rng[0]).days <= 31 and rng[0] <= today + timedelta(days=horizon)):  # 90일 안에 끝나거나, 월 단위 시점이 90일 안에 시작
+                    upcoming.append({**item, "days": max(0, (rng[1] - today).days), "now": rng[0] <= today})
+        overdue += late
+        tgt, cum = (c.get("target_2026") or {}).get("v"), (c.get("cum_units") or {}).get("v")
+        rows.append({"company": c["id"], "done": done, "delayed": delayed, "overdue": len(late), "planned": len(c["roadmap"]) - done - delayed - len(late),
+                     "exec": c["scores"]["execution"][0], "exec_note": c["scores"]["execution"][1],
+                     "target_pct": round(cum / tgt * 100) if tgt and cum else None})
+    rows.sort(key=lambda r: (-(r["done"] - r["delayed"] - r["overdue"]), -r["exec"]))
+    upcoming.sort(key=lambda x: x["days"])
+    return {"as_of": as_of, "horizon": horizon, "rows": rows, "upcoming": upcoming, "overdue": overdue}
 
 
 def kpis(companies: list[dict], market: dict) -> dict:
@@ -261,7 +387,7 @@ def news_block(news: dict, days: int = 45) -> list[dict]:
     newest = max(x["date"] for x in news["items"])
     cutoff = (date.fromisoformat(newest) - timedelta(days=days)).isoformat()
     keep = ("id", "date", "title", "title_ko", "summary_ko", "source", "url", "companies", "type", "importance", "ai", "query",
-            "audience", "layer", "signpost", "topic")
+            "audience", "layer", "signpost", "topic", "also", "n_src")
     return [{k: x.get(k) for k in keep} for x in news["items"] if x["date"] >= cutoff][:600]
 
 
@@ -333,6 +459,7 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     papers_blk = paper_calc.block(pcfg2, read_json(OUT / "papers.json", {}))
     pblock = patent_calc.block(pcfg, read_json(OUT / "patents.json", {}), market["bom"]["items"])
     news = read_json(OUT / "news.json", {})
+    news["items"] = news_cluster.tidy(news.get("items", []))  # 같은 사건은 한 건으로, 무관한 시장 기사는 제외(원본 news.json 은 그대로)
     prices = read_json(OUT / "prices.json", {})
     # 검증 대기: 큐레이션 값이 이미 반영됐거나 단위 착오로 보이는 제안은 뺀다
     by_id = {c["id"]: c for c in raw["companies"]}
@@ -404,6 +531,9 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "scenarios": market["scenarios"],
         "bom": {**{k: v for k, v in market["bom"].items() if k != "items"}, "items": bom_items(market["bom"])},
         "news": nb,
+        "freshness": freshness(companies, market["as_of"]),
+        "track": track_record(companies, market["as_of"]),
+        "sales_board": sales_board(companies, market["bom"]["items"]),
         "coverage": {"news_from": min((x["date"] for x in nb), default=None), "news_to": max((x["date"] for x in nb), default=None),
                      "news_covered_from": news.get("covered_from"),
                      "tracking_since": ((history.get("snapshots") or [{}])[0] or {}).get("date")},

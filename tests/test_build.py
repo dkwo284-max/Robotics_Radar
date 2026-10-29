@@ -58,3 +58,28 @@ def test_owner_basis_raises_only_axes_where_the_subsidiary_scores_higher():
     owner = strategy["countries"]["items"][0]["owner"]
     assert owner["scores"] == {"ai": 6, "cost": 5, "policy": 7}  # 9.0 환산 → 4+(9-4)*0.3=5.5→6, 원가는 내리지 않음, 매핑 없는 축은 그대로
     assert [a["axis"] for a in owner["adjust"]] == ["ai"] and not warnings
+
+
+def test_when_range_parses_roadmap_periods():
+    from datetime import date
+    assert build.when_range("2026-Q4") == (date(2026, 10, 1), date(2026, 12, 31))
+    assert build.when_range("2027-H1") == (date(2027, 1, 1), date(2027, 6, 30))
+    assert build.when_range("2026-02") == (date(2026, 2, 1), date(2026, 2, 28))
+    assert build.when_range("2029~30") == (date(2029, 1, 1), date(2030, 12, 31))
+    assert build.when_range("언젠가") is None
+
+
+def test_freshness_flags_old_values_and_treats_bare_year_as_december():
+    cs = [{"id": "a", "valuation": {"v": 1, "as_of": "2025-01"}, "capacity": {"v": 1, "as_of": "2026"}, "cum_units": {"v": 1, "as_of": "2026-10"}}]
+    fr = build.freshness(cs, "2026-10-29")
+    assert [(x["field"], x["months"]) for x in fr["stale"]] == [("valuation", 21)] and fr["total"] == 3
+
+
+def test_sales_board_prefers_gap_parts_and_penalises_in_house_parts():
+    out, _ = build.build()
+    board = out["sales_board"]
+    assert board and board[0]["score"] == 100 and len({r["company"] for r in board}) >= 4
+    assert all(sum(1 for r in board if r["company"] == c) <= 2 for c in {r["company"] for r in board})
+    assert all(not r["in_house"] or r["score"] < 100 for r in board)
+    track = out["track"]
+    assert track["rows"] and all(x["days"] >= 0 for x in track["upcoming"])
