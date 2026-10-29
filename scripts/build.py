@@ -210,7 +210,7 @@ def news_block(news: dict, days: int = 45) -> list[dict]:
     cutoff = (date.fromisoformat(newest) - timedelta(days=days)).isoformat()
     keep = ("id", "date", "title", "title_ko", "summary_ko", "source", "url", "companies", "type", "importance", "ai", "query",
             "audience", "layer", "signpost", "topic")
-    return [{k: x.get(k) for k in keep} for x in news["items"] if x["date"] >= cutoff][:300]
+    return [{k: x.get(k) for k in keep} for x in news["items"] if x["date"] >= cutoff][:600]
 
 
 RM_NEWS = {"production": {"production", "supply"}, "product": {"product"}, "deploy": {"deploy", "partner"},
