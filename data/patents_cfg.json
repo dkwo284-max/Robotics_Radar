@@ -1,7 +1,7 @@
 {
   "_about": "특허 수집 설정(사람이 관리). layers: 기술 층별 CPC 검색식(EPO CQL). applicants: 추적할 출원인 — pa 는 EPO 출원인명 검색어(영문 표기·약칭), scope 'robot' 이면 모든 층 검색식에 'cpc=B25J'(로봇 매니퓰레이터)를 덧붙여 대기업의 비로봇 특허를 걷어낸다. layers 를 비우면 전체 층, 'only' 는 그 층만. home 은 출원인 본거지 국가(해외 출원 비중 계산용).",
   "windows": {"years": 3},
-  "budget": {"max_searches": 220, "max_minutes": 45, "pause_seconds": 7, "cell_ttl_days": 28, "recent_ttl_days": 6, "recent_days": 60, "quality_months": 12},
+  "budget": {"max_searches": 220, "max_minutes": 45, "pause_seconds": 7, "weekly_cap_mb": 2000, "daily_cap_mb": 400, "cell_ttl_days": 28, "recent_ttl_days": 6, "recent_days": 60, "quality_months": 12},
   "layers": [
     {"id": "sw", "label": "하모닉 감속기", "cpc": "cpc=F16H49", "parts": ["reducer"], "note": "파동기어(스트레인 웨이브) — F16H49"},
     {"id": "planetary", "label": "행성기어(QDD)", "cpc": "cpc=F16H1/28", "parts": ["reducer"], "note": "행성기어 — 준직접구동(QDD) 액추에이터의 핵심"},

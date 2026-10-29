@@ -77,7 +77,11 @@ def block(cfg: dict, data: dict | None, bom_items: list[dict]) -> dict:
         ranked.sort(key=lambda x: -x["a"])
         parts[part] = {"layers": lids, "top": ranked[:7], "kr": [x for x in ranked if x["home"] == "KR"][:4]}
     st = data.get("status", {})
-    return {**base, "ready": True, "generated_at": data.get("generated_at"), "windows": data.get("windows"), "source": data.get("source"),
+    u = data.get("usage") or {}
+    mb = lambda k: round(u.get(k, 0) / 1e6, 1)  # noqa: E731
+    quota = {"week_mb": mb("bytes"), "week_cap_mb": round(mb("week_cap")), "day_mb": mb("day_bytes"), "day_cap_mb": round(mb("day_cap")),
+             "free_mb": round(mb("free_week")), "week": u.get("week")} if u else None
+    return {**base, "ready": True, "quota": quota, "generated_at": data.get("generated_at"), "windows": data.get("windows"), "source": data.get("source"),
             "coverage": {"cells": st.get("cells", 0), "expected": st.get("expected", 0), "pending": st.get("pending", 0)},
             "warnings": data.get("warnings", []), "rows": rows, "industry": industry, "total": {"a": tot_a, "b": tot_b},
             "movers": movers[:8], "parts": parts, "recent": recent[:60]}

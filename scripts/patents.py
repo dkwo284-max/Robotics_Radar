@@ -30,12 +30,58 @@ GRANTED = ("B", "C", "T")  # 등록 공고 종류 코드: US B1·B2, EP B1, CN B
 UTILITY = ("U", "Y")       # 실용신안(중국 U, 독일 U1 …) — 심사가 가벼워 건수 해석에 주의
 
 
+MB = 1_000_000
+FREE_WEEKLY_MB = 4000   # EPO OPS 무료 한도(주 4GB, 월요일 00시~일요일 24시 GMT). EPO 가 바꿀 수 있어 설정으로 더 낮춰 쓴다
+HARD_FRACTION = 0.8     # 설정을 잘못 높여도 무료 한도의 80% 를 넘기지 못하게 하는 절대 상한
+MIN_ROOM = 300_000      # 이만큼의 여유도 없으면 인증조차 보내지 않는다
+
+
 class OPSError(RuntimeError):
     pass
 
 
+class QuotaExceeded(OPSError):
+    """무료 한도 보호: 한도를 넘길 것 같거나 OPS 가 한도 초과로 거부해 즉시 중단."""
+
+
 class OPSQueryError(OPSError):
     """검색식 자체가 거부됨(HTTP 400)."""
+
+
+class Quota:
+    """받은 바이트를 주·일 단위 장부(usage)에 쌓고, 상한을 넘길 것 같으면 요청을 막는다.
+    장부는 patents.json 의 usage 에 저장되어 실행 사이에 이어진다. 주는 EPO 집계와 같이 월요일(GMT)에 시작한다."""
+
+    def __init__(self, usage: dict | None, today: date, week_cap: int, day_cap: int):
+        self.u = usage if isinstance(usage, dict) else {}
+        self.week_cap = min(int(week_cap), int(FREE_WEEKLY_MB * HARD_FRACTION * MB))
+        self.day_cap = min(int(day_cap), self.week_cap)
+        wk, dy = self.week_id(today), today.isoformat()
+        if self.u.get("week") != wk:
+            self.u.update(week=wk, bytes=0)
+        if self.u.get("day") != dy:
+            self.u.update(day=dy, day_bytes=0)
+        self.u.setdefault("bytes", 0)
+        self.u.setdefault("day_bytes", 0)
+        self.u.update(week_cap=self.week_cap, day_cap=self.day_cap, free_week=FREE_WEEKLY_MB * MB)
+
+    @staticmethod
+    def week_id(d: date) -> str:
+        y, w, _ = d.isocalendar()
+        return f"{y}-W{w:02d}"
+
+    def add(self, n: int) -> None:
+        self.u["bytes"] += n
+        self.u["day_bytes"] += n
+
+    def room(self) -> int:
+        return min(self.week_cap - self.u["bytes"], self.day_cap - self.u["day_bytes"])
+
+    def check(self, est: int) -> None:
+        if self.room() < est:
+            raise QuotaExceeded(
+                f"무료 한도 보호 — 이번 주 {self.u['bytes'] / MB:.0f}/{self.week_cap / MB:.0f}MB, 오늘 {self.u['day_bytes'] / MB:.0f}/{self.day_cap / MB:.0f}MB. "
+                "한도를 넘길 수 있어 요청을 보내지 않고 중단합니다(다음 날·다음 주에 이어서 수집)")
 
 
 def listify(x):
@@ -116,8 +162,10 @@ def quality(refs: list[dict], total: int, home: str) -> dict | None:
 
 # ---------- OPS 클라이언트 ----------
 class OPS:
-    def __init__(self, key: str, secret: str, client: httpx.Client | None = None, pause: float = 7.0, sleep=time.sleep):
+    def __init__(self, key: str, secret: str, client: httpx.Client | None = None, pause: float = 7.0, sleep=time.sleep,
+                 quota: Quota | None = None):
         self.key, self.secret = key, secret
+        self.quota = quota
         self.client = client or httpx.Client(timeout=60)
         self.pause, self.sleep = pause, sleep
         self.token, self.exp = None, 0.0
@@ -128,25 +176,36 @@ class OPS:
     def _auth(self) -> None:
         if self.token and time.time() < self.exp - 60:
             return
+        if self.quota:
+            self.quota.check(5_000)
         basic = base64.b64encode(f"{self.key}:{self.secret}".encode()).decode()
         r = self.client.post(AUTH, headers={"Authorization": f"Basic {basic}"}, data={"grant_type": "client_credentials"})
+        if self.quota:
+            self.quota.add(len(r.content))
         if r.status_code >= 400:
             raise OPSError(f"인증 실패 HTTP {r.status_code} — 키·시크릿을 확인하세요")
         js = r.json()
         self.token, self.exp = js["access_token"], time.time() + float(js.get("expires_in", 1200))
 
-    def search(self, q: str, rng: str = "1-1", constituent: str = "") -> tuple[int, dict | None]:
+    def search(self, q: str, rng: str = "1-1", constituent: str = "", est: int = 30_000) -> tuple[int, dict | None]:
         """(전체 건수, 응답 JSON). 결과가 없으면 OPS 는 404 를 주므로 (0, None)."""
         url = SEARCH + (f"/{constituent}" if constituent else "")
         for attempt in range(4):
             wait = self.pause - (time.monotonic() - self._last)
             if wait > 0:
                 self.sleep(wait)
+            if self.quota:
+                self.quota.check(est)  # 응답이 최대 est 바이트라고 가정해도 한도를 넘지 않을 때만 보낸다
             self._auth()
             self._last = time.monotonic()
             self.searches += 1
             r = self.client.get(url, params={"q": q, "Range": rng}, headers={"Authorization": f"Bearer {self.token}", "Accept": "application/json"})
+            if self.quota:
+                self.quota.add(len(r.content))
             head = r.text[:300]
+            reason = f"{r.headers.get('X-Rejection-Reason', '')} {head}".lower()
+            if r.status_code in (403, 429) and "quota" in reason:
+                raise QuotaExceeded(f"OPS 가 한도 초과로 거부했습니다({r.headers.get('X-Rejection-Reason', '') or head[:60]}) — 재시도 없이 중단")
             if r.status_code == 404:
                 return 0, None
             if r.status_code in (400, 401) and "token" in head.lower():
@@ -166,11 +225,11 @@ class OPS:
     def window(self, start: date, end: date) -> str:
         return f'pd within "{start:%Y%m%d}{self.sep}{end:%Y%m%d}"'
 
-    def query(self, base: str, start: date, end: date, rng: str = "1-1", constituent: str = "") -> tuple[int, dict | None]:
+    def query(self, base: str, start: date, end: date, rng: str = "1-1", constituent: str = "", est: int = 30_000) -> tuple[int, dict | None]:
         orig = self.sep
         for attempt in range(2):
             try:
-                return self.search(f"({base}) and {self.window(start, end)}", rng, constituent)
+                return self.search(f"({base}) and {self.window(start, end)}", rng, constituent, est)
             except OPSQueryError:
                 if attempt:
                     self.sep = orig
@@ -229,14 +288,14 @@ def age_days(stamp: str | None, today: date) -> int:
 def refresh_recent(ops: OPS, app: dict, cfg: dict, data: dict, today: date) -> None:
     """최근 공개 특허(60일) + 12개월 품질 지표 — 기업(kind=company)만, 2회 검색."""
     bud = cfg["budget"]
-    rec = data["applicants"].setdefault(app["id"], {})
+    rec = dict(data["applicants"].get(app["id"], {}))  # 검색이 끝까지 성공했을 때만 저장(중간 실패 시 빈 항목을 남기지 않는다)
     base = base_expr(app)
     q_start = today - timedelta(days=int(bud["quality_months"]) * 30)
-    total, js = ops.query(base, q_start, today, "1-100")
+    total, js = ops.query(base, q_start, today, "1-100", est=300_000)
     refs = parse_refs(js)
     rec["quality"] = quality(refs, total, app.get("home", ""))
     r_start = today - timedelta(days=int(bud["recent_days"]))
-    n, js2 = ops.query(base, r_start, today, "1-8", "biblio")
+    n, js2 = ops.query(base, r_start, today, "1-8", "biblio", est=300_000)
     items = parse_biblio(js2)
     if not items and js2:  # biblio 파싱이 안 되면 번호만이라도
         items = [{**r, "date": "", "title": "", "applicant": ""} for r in parse_refs(js2)]
@@ -244,6 +303,7 @@ def refresh_recent(ops: OPS, app: dict, cfg: dict, data: dict, today: date) -> N
     rec["recent_total"] = n
     rec["name"], rec["kind"], rec["company"], rec["home"] = app["name"], app["kind"], app.get("company"), app.get("home")
     rec["fetched"] = today.isoformat()
+    data["applicants"][app["id"]] = rec
 
 
 def collect(cfg: dict, data: dict, ops: OPS, today: date, max_searches: int | None = None, deadline: float | None = None) -> dict:
@@ -258,6 +318,8 @@ def collect(cfg: dict, data: dict, ops: OPS, today: date, max_searches: int | No
     data["windows"] = {k: [v[0].isoformat(), v[1].isoformat()] for k, v in per.items()}
     warnings: list[str] = []
     try:
+        if ops.quota and ops.quota.room() < MIN_ROOM:
+            ops.quota.check(MIN_ROOM)  # 여유가 없으면 인증도 보내지 않고 QuotaExceeded
         for app in cfg["applicants"]:  # 1) 최근 공개 + 품질 (오래된 것만)
             if app["kind"] != "company":
                 continue
@@ -326,7 +388,7 @@ def probe(ops: OPS, today: date) -> int:
             print(f"  {label:32s} 오류: {e}")
             bad += 1
     try:
-        n, js = ops.query('pa="boston dynamics" and cpc=B25J', today - timedelta(days=365), today, "1-3", "biblio")
+        n, js = ops.query('pa="boston dynamics" and cpc=B25J', today - timedelta(days=365), today, "1-3", "biblio", est=300_000)
         items = parse_biblio(js)
         print(f"  biblio 구조 점검: 최근 1년 {n}건 중 해석 {len(items)}건")
         for it in items[:3]:
@@ -336,7 +398,8 @@ def probe(ops: OPS, today: date) -> int:
     except OPSError as e:
         print("  biblio 점검 오류:", e)
         bad += 1
-    print(f"점검 완료: 검색 {ops.searches}회, 문제 {bad}건")
+    used = f", 받은 데이터 약 {ops.quota.u['bytes'] / MB:.2f}MB" if ops.quota else ""
+    print(f"점검 완료: 검색 {ops.searches}회{used}, 문제 {bad}건")
     return 1 if bad >= len(tests) else 0
 
 
@@ -352,18 +415,21 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     cfg = read_json(SRC / "patents_cfg.json", {})
     today = datetime.now(timezone.utc).date()
-    ops = OPS(key, secret, pause=float(cfg["budget"]["pause_seconds"]))
+    bud = cfg["budget"]
+    data = read_json(OUT / "patents.json", {})
+    quota = Quota(data.setdefault("usage", {}) if not args.probe else {}, today, int(bud["weekly_cap_mb"]) * MB, int(bud["daily_cap_mb"]) * MB)
+    ops = OPS(key, secret, pause=float(bud["pause_seconds"]), quota=quota)
     if args.probe:
         return probe(ops, today)
-    data = read_json(OUT / "patents.json", {})
     deadline = time.monotonic() + 60 * float(cfg["budget"]["max_minutes"])
     try:
         collect(cfg, data, ops, today, args.max_searches, deadline)
     finally:
-        if data.get("cells") or data.get("applicants"):
+        if data.get("cells") or data.get("applicants") or (data.get("usage") or {}).get("bytes"):  # 데이터가 없어도 한도 장부는 남긴다
             write_json(OUT / "patents.json", data)
-    st = data.get("status", {})
-    print(f"patents.json: 셀 {st.get('cells', 0)}/{st.get('expected', 0)}, 남은 {st.get('pending', 0)}, 검색 {st.get('searches', 0)}회, 경고 {len(data.get('warnings', []))}")
+    st, u = data.get("status", {}), data.get("usage", {})
+    print(f"patents.json: 셀 {st.get('cells', 0)}/{st.get('expected', 0)}, 남은 {st.get('pending', 0)}, 검색 {st.get('searches', 0)}회, 경고 {len(data.get('warnings', []))}"
+          f" | 데이터 이번 주 {u.get('bytes', 0) / MB:.1f}/{u.get('week_cap', 0) / MB:.0f}MB (무료 {FREE_WEEKLY_MB}MB), 오늘 {u.get('day_bytes', 0) / MB:.1f}/{u.get('day_cap', 0) / MB:.0f}MB")
     return 0
 
 

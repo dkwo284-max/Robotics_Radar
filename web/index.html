@@ -709,7 +709,7 @@ function renderPatentHeat() {
   $("#pat-recent-sec").hidden = !p.ready;
   if (!p.ready) { $("#pat-sub").textContent = "EPO OPS 공개 데이터 기준 · 공개까지 약 18개월 지연"; $("#pat-body").innerHTML = patentNotReady(); return; }
   const cov = p.coverage, w = p.windows?.a;
-  $("#pat-sub").textContent = `최근 3년${w ? `(${w[0].slice(0, 7)}~${w[1].slice(0, 7)})` : ""} 공개 건수 · ▲▼ 는 직전 3년 대비 ±30% · 수집 ${cov.cells}/${cov.expected}칸${cov.pending ? ` (나머지 ${cov.pending}칸은 며칠에 걸쳐 채워집니다)` : ""} · 대기업은 로봇(B25J) 분류만 · 공개까지 약 18개월 지연이라 올해 출원은 거의 안 보입니다 · 건수는 품질이 아닙니다`;
+  $("#pat-sub").textContent = `최근 3년${w ? `(${w[0].slice(0, 7)}~${w[1].slice(0, 7)})` : ""} 공개 건수 · ▲▼ 는 직전 3년 대비 ±30% · 수집 ${cov.cells}/${cov.expected}칸${cov.pending ? ` (나머지 ${cov.pending}칸은 며칠에 걸쳐 채워집니다)` : ""} · 대기업은 로봇(B25J) 분류만 · 공개까지 약 18개월 지연이라 올해 출원은 거의 안 보입니다 · 건수는 품질이 아닙니다${p.quota ? ` · EPO 무료 한도 보호: 이번 주 ${p.quota.week_mb}/${p.quota.week_cap_mb}MB 사용(무료 ${p.quota.free_mb.toLocaleString("ko-KR")}MB의 ${Math.round((p.quota.week_cap_mb / p.quota.free_mb) * 100)}% 이내로 제한)` : ""}`;
   const cols = [{ id: "total", label: "로봇 전체", note: "cpc=B25J" }, ...p.layers];
   const rows = [...p.rows].sort((x, y) => (y.total?.a || 0) - (x.total?.a || 0));
   const max = {};
