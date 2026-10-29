@@ -240,6 +240,10 @@ table.heat tr[data-co] { cursor: pointer; }
 .tr .cells div small { display: block; color: var(--muted); font-size: 0.68rem; margin-bottom: 2px; }
 .sp { display: grid; gap: 4px; }
 .sp .st { font-size: 0.7rem; font-weight: 600; }
+a.chip { text-decoration: none; color: inherit; display: inline-block; }
+table.pheat td.pc a { text-decoration: none; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+table.pheat td.pc a:hover { background: var(--raised); }
+.codebox { display: block; font-family: var(--font-data); font-size: 0.74rem; background: var(--raised); border-radius: 8px; padding: 6px 8px; margin-top: 4px; word-break: break-all; white-space: pre-wrap; }
 table.pheat { border-collapse: collapse; font-size: 0.74rem; min-width: 820px; width: 100%; }
 table.pheat th { font-weight: 600; color: var(--muted); padding: 6px 3px; text-align: center; font-size: 0.7rem; }
 table.pheat td { padding: 3px; text-align: center; border-top: 1px solid var(--line); white-space: nowrap; }
@@ -391,7 +395,12 @@ details.fold[open] > summary::after { content: "접기"; }
         <p class="sub">전략을 바꿔야 할 신호와 최근 30일 관련 소식 (AI 가 짝지음)</p>
         <div class="list" id="sp-moves"></div>
       </section>
-      <section id="pd-sec">
+      <section id="pip2-sec">
+        <h2>특허·지재권 소식 <span class="b reported">보도 기반</span></h2>
+        <p class="sub" id="pip2-sub"></p>
+        <div class="list news" id="pip2"></div>
+      </section>
+      <section id="pd-sec" hidden>
         <h2>특허로 본 기술 방향</h2>
         <p class="sub" id="pd-sub"></p>
         <div class="chart" id="pd-industry"></div>
@@ -406,14 +415,36 @@ details.fold[open] > summary::after { content: "접기"; }
     </div>
 
     <div class="panel" id="role-engineer" hidden>
-      <section id="pat-sec" class="full">
-        <h2>특허 현황</h2>
+      <section id="hub-sec" class="full">
+        <h2>특허 조회 허브 <span class="b t3">링크 전용</span></h2>
+        <p class="sub">칸을 누르면 그 기업·기술 층의 특허 검색 결과가 새 탭에 열립니다(데이터를 저장하지 않는 링크). 대기업은 로봇(B25J) 분류로 좁혀 검색합니다. 에스페이스넷은 처음 열 때 봇 확인 화면이 나올 수 있고, 링크가 열리지 않으면 아래 '검색식 만들기'에서 검색식을 복사해 붙여 넣으세요.</p>
+        <div class="chips" id="hub-site" style="margin-bottom:10px"></div>
+        <div class="card" style="padding:0;overflow-x:auto"><table class="pheat" id="hub-grid"></table></div>
+        <details class="card fold" style="margin-top:10px"><summary><h3 style="display:inline">검색식 만들기·복사</h3></summary>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0"><select id="hb-co" aria-label="출원인"></select><select id="hb-ly" aria-label="기술 층"></select></div>
+          <div id="hb-out"></div></details>
+        <details class="card fold" style="margin-top:10px"><summary><h3 style="display:inline">기술 층 설명(CPC 분류)</h3></summary><div id="hub-gloss" style="margin-top:8px"></div></details>
+      </section>
+      <section id="pip-sec">
+        <h2>특허·지재권 소식 <span class="b reported">보도 기반</span></h2>
+        <p class="sub" id="pip-sub"></p>
+        <div class="list news" id="pip"></div>
+      </section>
+      <section id="pref-sec" class="full">
+        <h2>특허 지형 <span class="b estimate">분기 큐레이션</span></h2>
+        <p class="sub" id="pref-sub"></p>
+        <div class="chart" id="pref-sector"></div>
+        <div class="ins" id="pref-co" style="margin-top:10px"></div>
+        <p class="sub" id="pref-gaps" style="margin-top:8px"></p>
+      </section>
+      <section id="pat-sec" class="full" hidden>
+        <h2>특허 집계 <span class="b official">EPO 집계</span></h2>
         <p class="sub" id="pat-sub"></p>
         <div id="pat-body"></div>
       </section>
       <section id="pat-recent-sec" class="full" hidden>
         <h2>최근 공개 특허</h2>
-        <p class="sub">추적 기업이 최근 60일 안에 공개한 로봇(B25J) 특허 표본(기업당 최대 8건). 제목은 EPO 가 제공하는 영문입니다</p>
+        <p class="sub">EPO 집계가 켜져 있고 개별 레코드 공개가 허용된 경우에만 표시됩니다</p>
         <div class="list news" id="pat-recent"></div>
       </section>
       <section>
@@ -678,7 +709,7 @@ const roleOf = (x) => (x.ai ? (x.audience?.length ? x.audience : ROLE_BY_TYPE[x.
 const ROLE_NAME = { exec: "경영진", strategy: "기술전략", engineer: "엔지니어" };
 const ROLE_SUBJ = { exec: "경영진이", strategy: "기술전략팀이", engineer: "엔지니어가" };
 const LAYER = { actuator: "액추에이터", hand: "손", battery: "배터리", sensor: "센서", ai: "AI·칩", safety: "안전·표준", cost: "원가" };
-const CHG_KIND = { tier: "Tier", score: "점수", attract: "매력도", listing: "상장", fact: "수치", roadmap: "로드맵", signpost: "신호", spec: "스펙", patent: "특허" };
+const CHG_KIND = { tier: "Tier", score: "점수", attract: "매력도", listing: "상장", fact: "수치", roadmap: "로드맵", signpost: "신호", spec: "스펙", patent: "특허", pref: "특허·IP" };
 const TYPE_RM = { product: "제품", production: "양산", deploy: "배치", ipo: "상장", funding: "자금", partner: "제휴", org: "조직" };
 // 방문 기록: 오늘 처음 열면 지난 방문일을 prev 로 옮긴다 → '지난 방문 이후' 기준
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -690,26 +721,93 @@ function periodStart(p) {
 const newB = (date) => (VISIT.prev && date > VISIT.prev ? '<span class="b H">새</span>' : "");
 
 // ---------- 특허 ----------
-const P0 = () => D.patents || { ready: false, layers: [], ref: [] };
-const espace = (q) => `https://worldwide.espacenet.com/patent/search?q=${encodeURIComponent(q)}`;
+// 기본(계정·키 없음): ① 조회 허브(검색 링크) ② 특허·지재권 소식(구글 뉴스 RSS + AI 분류) ③ 분기 큐레이션 지형.
+// EPO 집계(D.patents.ready)는 꺼져 있는 선택 기능 — 켜져 있을 때만 히트맵·방향 패널이 나타난다.
+const P0 = () => D.patents || { ready: false, layers: [] };
+const HUB = () => D.patent_hub;
+const PREF = () => D.patent_ref || { companies: {}, sector: { items: [] } };
+const enc = encodeURIComponent;
+const espace = (q) => `https://worldwide.espacenet.com/patent/search?q=${enc(q)}`;
 const pnum = (x) => `${x.country}${x.number}${x.kind}`;
 const ptrend = (a, b) => (b === 0 ? (a >= 5 ? '<span class="up">▲</span>' : "") : a / b >= 1.3 ? '<span class="up">▲</span>' : a / b <= 0.7 ? '<span class="down">▼</span>' : "");
+const isPat = (x) => x.type === "patent" || (x.topic === "patent" && !x.ai);
+const SRC_B = { hub: ["링크 전용", "t3"], news: ["보도 기반", "reported"], cur: ["분기 큐레이션", "estimate"], epo: ["EPO 집계", "official"] };
+const srcB = (k) => `<span class="b ${SRC_B[k][1]}">${SRC_B[k][0]}</span>`;
+
+// 검색 링크: 에스페이스넷(CQL)·구글 특허. 데이터를 저장하지 않고 주소만 만든다.
+const cpcOf = (lid) => (lid === "total" ? HUB().total.cpc : HUB().layers.find((l) => l.id === lid)?.cpc || "");
+const needsRobot = (row, lid) => row && row.scope === "robot" && lid !== "total" && !cpcOf(lid).includes("B25J");
+const cqlFor = (row, lid) => `${row ? `${row.q} and ` : ""}${cpcOf(lid)}${needsRobot(row, lid) ? " and cpc=B25J" : ""}`;
+const gTerms = (row, lid) => [...cpcOf(lid).split(" and "), ...(needsRobot(row, lid) ? ["cpc=B25J"] : [])].map((t) => `(CPC=${t.replace(/^cpc=/i, "")})`).join(" ");
+const searchUrl = (row, lid, site = store.get("patSite", "espacenet")) => (site === "google"
+  ? `https://patents.google.com/?${row ? `assignee=${enc(row.assignee)}&` : ""}q=${enc(gTerms(row, lid))}`
+  : espace(cqlFor(row, lid)));
+const hubRow = (id) => HUB().rows.find((r) => r.company === id);
+const extA = (href, text, cls = "") => `<a${cls ? ` class="${cls}"` : ""} href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
+
+function renderPatentHub() {
+  const H = HUB(), site = store.get("patSite", "espacenet");
+  $("#hub-site").innerHTML = [["espacenet", "에스페이스넷"], ["google", "구글 특허"]].map(([id, l]) => `<button class="chip" data-psite="${id}" aria-pressed="${id === site}">${l}</button>`).join("");
+  const cols = [{ id: "total", label: "로봇 전체", note: H.total.cpc }, ...H.layers];
+  const rows = H.rows.filter((r) => r.kind === "company");
+  $("#hub-grid").innerHTML = `<tr><th>기업</th>${cols.map((c) => `<th title="${esc(c.note || "")}">${esc(c.label)}</th>`).join("")}</tr>`
+    + rows.map((r) => { const nm = byId[r.company]?.name_ko || r.name; return `<tr><td><b>${esc(nm)}</b></td>${cols.map((c) => `<td class="pc">${extA(searchUrl(r, c.id), "↗")}</td>`).join("")}</tr>`; }).join("");
+  const co = $("#hb-co"), ly = $("#hb-ly");
+  if (!co.options.length) {
+    co.innerHTML = '<option value="">(출원인 지정 안 함)</option>' + H.rows.map((r) => `<option value="${esc(r.id)}">${esc(r.name)}${r.kind === "company" ? "" : r.kind === "incumbent" ? " (부품 경쟁사)" : " (국내 부품사)"}</option>`).join("");
+    ly.innerHTML = [{ id: "total", label: "로봇 전체" }, ...H.layers].map((l) => `<option value="${l.id}">${esc(l.label)}</option>`).join("");
+  }
+  $("#hub-gloss").innerHTML = H.layers.map((l) => `<div class="rm"><span class="w" style="width:auto">${esc(l.label)}</span><span>${esc(l.note)}</span><code class="codebox" style="grid-column:1/-1">${esc(l.cpc)}</code></div>`).join("");
+  updateHubBuilder();
+}
+function updateHubBuilder() {
+  const row = HUB().rows.find((r) => r.id === $("#hb-co").value) || null, lid = $("#hb-ly").value || "total";
+  const cql = cqlFor(row, lid), gu = searchUrl(row, lid, "google"), eu = searchUrl(row, lid, "espacenet");
+  $("#hb-out").innerHTML = `<div><b>에스페이스넷 검색식</b> <button class="chip" data-copy="${esc(cql)}">복사</button> ${extA(eu, "열기 ↗")}<code class="codebox">${esc(cql)}</code></div>
+    <div style="margin-top:8px"><b>구글 특허</b> <button class="chip" data-copy="${esc(gTerms(row, lid))}">검색어 복사</button> ${extA(gu, "열기 ↗")}<code class="codebox">${row ? `출원인: ${esc(row.assignee)} · ` : ""}${esc(gTerms(row, lid))}</code></div>
+    <p class="sub" style="margin:8px 0 0">KIPRIS(한국)는 검색식 직접 링크를 지원하지 않습니다 — 사이트에서 출원인과 IPC(CPC 와 같은 분류 체계)를 직접 입력하세요. 침해·회피 판단은 특허팀 확인이 필요합니다.</p>`;
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch { window.prompt("복사해서 사용하세요", t); return false; }
+}
+
+// 특허·지재권 소식: 구글 뉴스 RSS(특허 키워드) + AI 분류(type=patent)
+function renderPatentNews(listSel, subSel) {
+  const items = (D.news || []).filter(isPat).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+  const m = D.news_meta || {};
+  $(subSel).textContent = items.length
+    ? `기업별 특허 키워드로 매일 수집한 소식 중 ${m.ai === "gemini" ? "AI 가 특허·지재권 소식으로 분류한 것" : "특허 검색어로 모은 기사(AI 분류 전)"} — 소송·라이선스·대형 출원·등록처럼 기사로 나온 큰 사건만 잡힙니다. 건수·추이는 조회 허브로 직접 확인하세요`
+    : "아직 특허·지재권 소식이 수집되지 않았습니다. 다음 자동 수집(매일)부터 채워집니다";
+  $(listSel).innerHTML = items.map((x) => newsRow(x)).join("") || '<div class="empty">없음</div>';
+}
+
+// 분기 큐레이션 지형
+function renderPatentRef() {
+  const R = PREF(), sec = R.sector?.items || [];
+  const max = Math.max(1, ...sec.map((x) => x.value));
+  const cos = Object.entries(R.companies).filter(([, c]) => c.portfolio?.length || c.notable?.length);
+  $("#pref-sub").textContent = `공개된 보도·분석사 자료를 우리가 요약해 출처와 함께 적었습니다(기준일 ${R.as_of}, 분기마다 갱신). 건수는 집계 기준이 출처마다 달라 서로 비교하지 마세요.`;
+  $("#pref-sector").innerHTML = `<p class="sub" style="margin:0 4px 6px">${esc(R.sector?.note || "")}</p>` + sec.map((x) => `<div class="hbar" ${x.company ? `data-co="${esc(x.company)}" style="cursor:pointer"` : ""}><span class="n">${esc(x.name)}</span><span class="track"><i style="width:${(x.value / max) * 100}%"></i></span><span class="v">${x.value}</span></div>`).join("");
+  $("#pref-co").innerHTML = cos.map(([id, c]) => `
+    <article class="card" style="display:grid;gap:6px"><b>${coChip(id) || esc(id)}</b>
+      ${(c.portfolio || []).map((p) => `<div style="font-size:0.84rem"><b class="num">${p.v.toLocaleString("ko-KR")}${esc(p.unit || "")}</b> ${kindB(p.kind)} <span class="muted">${esc(p.basis)} (${esc(p.as_of)})</span> ${link(p.src)}</div>`).join("")}
+      ${(c.notable || []).map((n) => `<div style="font-size:0.84rem"><span class="mono muted" style="font-size:0.74rem">${esc(n.date)}</span> ${esc(n.title)} ${n.layer ? `<span class="b t3">${esc(HUB().layers.find((l) => l.id === n.layer)?.label || n.layer)}</span>` : ""} ${kindB(n.kind)} ${link(n.src)}</div>`).join("")}
+    </article>`).join("");
+  $("#pref-gaps").textContent = R.gaps || "";
+}
+
+// ---- EPO 집계(선택 기능, 기본 꺼짐) ----
 function patentRow(x) {
   return `<div class="ev"><span class="d">${esc((x.date || "").slice(2).replace(/-/g, "."))}</span><span class="t">${esc(x.title || pnum(x))}<small>${esc(x.applicant || "")} · ${esc(pnum(x))}</small></span>
-    <span class="m">${x.company ? coChip(x.company) : ""}${link(espace(`pn=${x.country}${x.number}`), "특허 보기")}</span></div>`;
-}
-function patentNotReady() {
-  const p = P0();
-  return `<div class="card" style="display:grid;gap:6px"><b>아직 수집 전입니다</b>
-    <span class="muted" style="font-size:0.84rem">EPO OPS 키를 등록하면 매일 조금씩 자동으로 채워집니다(출원인 × 기술 층 건수, 최근 공개 특허, 출원 품질). 아래는 보도·분석사의 참고 수치입니다. ${esc(p.ref_note || "")}</span></div>
-    <div class="list" style="margin-top:10px">${(p.ref || []).map((r) => `<div class="row"><span class="t">${esc(r.name)}</span><span class="r num"><b>${r.value.toLocaleString("ko-KR")}</b></span><span class="s">${esc(r.basis)} ${link(r.src)}</span></div>`).join("")}</div>`;
+    <span class="m">${x.company ? coChip(x.company) : ""}${extA(espace(`pn=${x.country}${x.number}`), "특허 보기")}</span></div>`;
 }
 function renderPatentHeat() {
   const p = P0();
-  $("#pat-recent-sec").hidden = !p.ready;
-  if (!p.ready) { $("#pat-sub").textContent = "EPO OPS 공개 데이터 기준 · 공개까지 약 18개월 지연"; $("#pat-body").innerHTML = patentNotReady(); return; }
+  $("#pat-sec").hidden = !p.ready;
+  $("#pat-recent-sec").hidden = !(p.ready && (p.recent || []).length);
+  if (!p.ready) return;
   const cov = p.coverage, w = p.windows?.a;
-  $("#pat-sub").textContent = `최근 3년${w ? `(${w[0].slice(0, 7)}~${w[1].slice(0, 7)})` : ""} 공개 건수 · ▲▼ 는 직전 3년 대비 ±30% · 수집 ${cov.cells}/${cov.expected}칸${cov.pending ? ` (나머지 ${cov.pending}칸은 며칠에 걸쳐 채워집니다)` : ""} · 대기업은 로봇(B25J) 분류만 · 공개까지 약 18개월 지연이라 올해 출원은 거의 안 보입니다 · 건수는 품질이 아닙니다${p.quota ? ` · EPO 무료 한도 보호: 이번 주 ${p.quota.week_mb}/${p.quota.week_cap_mb}MB 사용(무료 ${p.quota.free_mb.toLocaleString("ko-KR")}MB의 ${Math.round((p.quota.week_cap_mb / p.quota.free_mb) * 100)}% 이내로 제한)` : ""}`;
+  $("#pat-sub").textContent = `최근 3년${w ? `(${w[0].slice(0, 7)}~${w[1].slice(0, 7)})` : ""} 공개 건수 · ▲▼ 는 직전 3년 대비 ±30% · 수집 ${cov.cells}/${cov.expected}칸${cov.pending ? ` (나머지 ${cov.pending}칸은 며칠에 걸쳐 채워집니다)` : ""} · 대기업은 로봇(B25J) 분류만 · 공개까지 약 18개월 지연 · 건수는 품질이 아닙니다${p.quota ? ` · EPO 무료 한도 보호: 이번 주 ${p.quota.week_mb}/${p.quota.week_cap_mb}MB 사용` : ""}`;
   const cols = [{ id: "total", label: "로봇 전체", note: "cpc=B25J" }, ...p.layers];
   const rows = [...p.rows].sort((x, y) => (y.total?.a || 0) - (x.total?.a || 0));
   const max = {};
@@ -722,11 +820,12 @@ function renderPatentHeat() {
       return `<td class="pc" title="직전 3년 ${v.b}건 → 최근 3년 ${v.a}건"><b style="background:color-mix(in oklab, var(--accent) ${pct}%, transparent)">${v.a.toLocaleString("ko-KR")}</b>${ptrend(v.a, v.b)}</td>`;
     }).join("")}</tr>`).join("")}</table></div>
     ${(p.warnings || []).length ? `<p class="sub" style="margin:8px 0 0">수집 경고: ${esc(p.warnings.slice(0, 3).join(" / "))}</p>` : ""}`;
-  $("#pat-recent").innerHTML = p.recent.slice(0, 12).map(patentRow).join("") || '<div class="empty">최근 60일 공개된 특허가 표본에 없습니다</div>';
+  $("#pat-recent").innerHTML = (p.recent || []).slice(0, 12).map(patentRow).join("");
 }
 function renderPatentDirection() {
   const p = P0();
-  if (!p.ready) { $("#pd-sub").textContent = "수집 전 — EPO OPS 키 등록 후 표시됩니다"; $("#pd-industry").innerHTML = patentNotReady(); $("#pd-movers").innerHTML = ""; return; }
+  $("#pd-sec").hidden = !p.ready;
+  if (!p.ready) return;
   const L = Object.fromEntries(p.layers.map((l) => [l.id, l]));
   const ind = p.industry.filter((x) => x.share_a != null);
   const max = Math.max(...ind.map((x) => Math.max(x.share_a, x.share_b || 0)), 0.0001);
@@ -747,35 +846,48 @@ function qddLine() {
   const ra = pl.a / sw.a, rb = pl.b / sw.b;
   return `<div style="font-size:0.8rem"><span class="b reported">특허 근거</span> 행성기어(QDD) ÷ 하모닉 출원 비율 ${rb.toFixed(1)} → <b>${ra.toFixed(1)}</b> (직전 3년 → 최근 3년, 추적 기업 합계) ${ra > rb * 1.15 ? "— QDD 쪽으로 기우는 중" : ra < rb * 0.85 ? "— 하모닉 쪽 비중이 늘어남" : "— 뚜렷한 변화 없음"}</div>`;
 }
+
+// ---- 부품 탭 · 기업 상세 ----
 function partBadge(i) {
   const P1 = D.patents, pp = P1?.ready && P1.parts[i.id];
   if (!pp) return "";
   return pp.kr.length ? `<span class="b official">국내 특허 ${pp.kr.length}곳</span>` : '<span class="b gap">국내 특허 없음</span>';
 }
 function partPatents(i) {
-  const P1 = D.patents;
-  if (!P1?.layers.some((l) => l.parts.includes(i.id))) return "";
-  if (!P1.ready) return '<div class="who muted">특허: 수집 전 (EPO OPS 키 등록 후 표시)</div>';
-  const pp = P1.parts[i.id];
-  if (!pp) return '<div class="who muted">특허: 아직 수집된 칸이 없습니다</div>';
-  const L = Object.fromEntries(P1.layers.map((l) => [l.id, l]));
-  const one = (t) => `${esc(t.name)} <b>${t.a}</b>${ptrend(t.a, t.b)}`;
-  return `<div class="who"><span class="k">특허</span>최근 3년 공개 건수(추적 출원인 기준): ${pp.top.map(one).join(" · ")}</div>
-    <div class="who"><span class="k">국내</span>${pp.kr.length ? pp.kr.map(one).join(" · ") : '<span class="b gap">추적 중인 국내 출원인의 특허 없음</span>'}</div>
-    <div class="who muted">${pp.layers.map((lid) => link(espace(L[lid].cpc), `${L[lid].label} 전체 검색`)).join(" · ")} — 침해·회피 판단은 특허팀 확인이 필요합니다</div>`;
+  const layers = HUB().layers.filter((l) => l.parts.includes(i.id));
+  if (!layers.length) return "";
+  const lines = layers.map((l) => {
+    const players = HUB().rows.filter((r) => r.kind !== "company" && (r.only || []).includes(l.id));
+    return `<div class="who"><span class="k">특허</span><b>${esc(l.label)}</b> — ${extA(searchUrl(null, l.id, "espacenet"), "에스페이스넷 ↗")} · ${extA(searchUrl(null, l.id, "google"), "구글 특허 ↗")}
+      ${players.length ? `<br><span class="muted">출원인별:</span> ${players.map((r) => `${extA(searchUrl(r, l.id), esc(r.name) + (r.home === "KR" ? " (국내)" : ""))}`).join(" · ")}` : ""}</div>`;
+  }).join("");
+  const P1 = D.patents, pp = P1?.ready && P1.parts[i.id];
+  const epo = pp ? (() => { const one = (t) => `${esc(t.name)} <b>${t.a}</b>${ptrend(t.a, t.b)}`;
+    return `<div class="who"><span class="k">집계</span>최근 3년 공개 건수(추적 출원인 기준): ${pp.top.map(one).join(" · ")}<br>${pp.kr.length ? "국내: " + pp.kr.map(one).join(" · ") : '<span class="b gap">추적 중인 국내 출원인의 특허 없음</span>'}</div>`; })() : "";
+  return `${lines}${epo}<div class="who muted">링크는 검색 결과로 연결될 뿐 데이터를 저장하지 않습니다 — 건수 확인·침해·회피 판단은 특허팀 몫입니다</div>`;
 }
 function patentFold(id) {
-  const P1 = D.patents;
-  if (!P1?.ready) return "";
-  const r = P1.rows.find((x) => x.id === id);
-  if (!r) return "";
-  const L = Object.fromEntries(P1.layers.map((l) => [l.id, l]));
-  const q = r.quality;
-  const lines = Object.entries(r.layers).sort((a, b) => b[1].a - a[1].a).map(([lid, v]) => `<div class="rm"><span class="w" style="width:auto">${esc(L[lid].label)}</span><span>${v.b} → <b>${v.a}</b>건 ${ptrend(v.a, v.b)}</span><span>${link(espace(`${r.q} and ${L[lid].cpc}`), "검색")}</span></div>`).join("");
-  return `${r.total ? `<p style="margin:0 0 6px;font-size:0.85rem">로봇(B25J) 특허 최근 3년 <b>${r.total.a.toLocaleString("ko-KR")}</b>건 (직전 3년 ${r.total.b.toLocaleString("ko-KR")}건) ${ptrend(r.total.a, r.total.b)} ${link(espace(`${r.q} and cpc=B25J`), "전체 검색")}</p>` : ""}
-    ${lines}
-    ${q ? `<p class="sub" style="margin:8px 0 0">최근 12개월 공개 ${q.total.toLocaleString("ko-KR")}건 중 표본 ${q.sample}건 — 등록 공고 ${Math.round(q.granted * 100)}% · 실용신안 ${Math.round(q.utility * 100)}% · 본거지 밖(해외·국제) 출원 ${Math.round(q.intl * 100)}%. 해외 출원 비중이 높을수록 실제 사업 의도가 큰 출원일 가능성이 높고, 실용신안(중국)은 건수를 부풀리는 경향이 있습니다</p>` : ""}
-    ${r.recent.length ? `<div class="list news" style="margin-top:8px">${r.recent.slice(0, 5).map((x) => patentRow({ ...x, company: null })).join("")}</div>` : ""}`;
+  const c = PREF().companies[id], row = hubRow(id), out = [];
+  if (c && (c.portfolio?.length || c.notable?.length)) {
+    out.push(`<div style="display:grid;gap:6px"><div>${srcB("cur")}</div>
+      ${(c.portfolio || []).map((p) => `<div style="font-size:0.84rem"><b class="num">${p.v.toLocaleString("ko-KR")}${esc(p.unit || "")}</b> ${kindB(p.kind)} <span class="muted">${esc(p.basis)} (${esc(p.as_of)})</span> ${link(p.src)}</div>`).join("")}
+      ${(c.notable || []).map((n) => `<div style="font-size:0.84rem"><span class="mono muted" style="font-size:0.74rem">${esc(n.date)}</span> ${esc(n.title)} ${kindB(n.kind)} ${link(n.src)}</div>`).join("")}</div>`);
+  }
+  const nws = (D.news || []).filter((x) => isPat(x) && ((x.companies || []).includes(id) || (!(x.companies || []).length && x.query === id))).slice(0, 4);
+  if (nws.length) out.push(`<div>${srcB("news")}<div class="list news" style="margin-top:6px">${nws.map((x) => newsRow(x, false)).join("")}</div></div>`);
+  if (row) {
+    out.push(`<div>${srcB("hub")}<div class="chips" style="margin-top:6px">${[{ id: "total", label: "로봇 전체" }, ...HUB().layers].map((l) => extA(searchUrl(row, l.id), `${esc(l.label)} ↗`, "chip")).join("")}</div>
+      <p class="sub" style="margin:6px 0 0">${esc(row.name)}의 특허를 기술 층별로 검색합니다(${esc(row.q)}). 열리지 않으면 부품·엔지니어 화면의 '검색식 만들기'를 쓰세요.</p></div>`);
+  }
+  const P1 = D.patents, r = P1?.ready && P1.rows.find((x) => x.id === id);
+  if (r) {
+    const L = Object.fromEntries(P1.layers.map((l) => [l.id, l]));
+    const q = r.quality;
+    out.push(`<div>${srcB("epo")}${r.total ? `<p style="margin:6px 0;font-size:0.85rem">로봇(B25J) 특허 최근 3년 <b>${r.total.a.toLocaleString("ko-KR")}</b>건 (직전 3년 ${r.total.b.toLocaleString("ko-KR")}건) ${ptrend(r.total.a, r.total.b)}</p>` : ""}
+      ${Object.entries(r.layers).sort((a, b) => b[1].a - a[1].a).map(([lid, v]) => `<div class="rm"><span class="w" style="width:auto">${esc(L[lid].label)}</span><span>${v.b} → <b>${v.a}</b>건 ${ptrend(v.a, v.b)}</span><span></span></div>`).join("")}
+      ${q ? `<p class="sub" style="margin:8px 0 0">최근 12개월 공개 ${q.total.toLocaleString("ko-KR")}건 중 표본 ${q.sample}건 — 등록 공고 ${Math.round(q.granted * 100)}% · 실용신안 ${Math.round(q.utility * 100)}% · 본거지 밖 출원 ${Math.round(q.intl * 100)}%</p>` : ""}</div>`);
+  }
+  return out.join("");
 }
 
 function renderHome() {
@@ -796,7 +908,7 @@ function renderHome() {
   // 숫자 타일: 누르면 무엇을 센 숫자인지 설명 + 해당 항목을 바로 아래에 펼친다
   const chgRow = (c) => `<div class="ev"><span class="d">${esc(c.date.slice(2).replace(/-/g, "."))}</span><span class="t">${esc(c.title)}</span><span class="m"><span class="b t3">${CHG_KIND[c.kind] || c.kind}</span>${c.company ? coChip(c.company) : ""}</span></div>`;
   const specChg = chg.filter((c) => c.kind === "spec");
-  const patItems = (P0().recent || []).filter((x) => (x.date || "") >= start);
+  const patNews = (D.news || []).filter((x) => x.date >= start && isPat(x));
   const tiles = [
     { id: "chg", label: "데이터 변화", items: chg, row: chgRow,
       help: "큐레이션 기준값이 이 기간에 바뀐 기록입니다. 점수·Tier·상장 단계·핵심 수치(밸류·출하 등)·로드맵 상태·신호 상태·로봇 스펙이 바뀌면 하루 단위로 쌓입니다." },
@@ -808,9 +920,8 @@ function renderHome() {
       help: "추적 중인 로봇 14종의 스펙(키·무게·자유도·손 자유도·가반하중·작동시간·가격·구동 방식)이 바뀐 기록입니다. 전체 표는 부품 탭에 있습니다." }] : []),
     ...(role !== "engineer" ? [{ id: "sign", label: "신호 관련 소식", items: spMoves, row: (x) => newsRow(x),
       help: "전략 탭의 '주시할 신호'(테슬라 외부 판매, 미국 규제, 현대차 RFQ 등)와 AI 가 직접 관련 있다고 짝지은 기사입니다." }] : []),
-    ...(role !== "exec" ? [{ id: "pat", label: "새 공개 특허", items: patItems, row: patentRow, pending: !P0().ready,
-      help: P0().ready ? "추적 기업이 이 기간에 공개한 로봇(B25J) 특허입니다(최근 60일 중 기업당 최대 8건 표본). 건수가 아니라 제목으로 기술 방향을 읽는 용도입니다."
-        : "특허 수집 전입니다. EPO OPS 키를 등록하면 추적 기업의 새 공개 특허가 여기에 표시됩니다." }] : []),
+    ...(role !== "exec" ? [{ id: "pat", label: "특허·IP 소식", items: patNews, row: (x) => newsRow(x),
+      help: "기업별 특허 키워드(특허 소송·라이선스·출원·등록)로 매일 수집한 기사입니다. AI 가 특허·지재권 소식으로 분류한 것과, 분류 전 기사 중 특허 검색어로 모은 것이 들어갑니다. 건수·추이는 조회 허브로 직접 확인하세요." }] : []),
   ];
   const openTile = store.get("tile", null);
   $("#chg-kpis").innerHTML = tiles.map((t) => `<button class="kpi" data-tile="${t.id}" aria-expanded="${openTile === t.id}" style="cursor:pointer${openTile === t.id ? ";border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)" : ""}">
@@ -909,6 +1020,7 @@ function renderStrategyBrief() {
   const next = D.companies.flatMap((c) => c.roadmap.filter((r) => r.status !== "done" && r.when.slice(0, 4) <= until).map((r) => ({ ...r, c })))
     .sort((a, b) => a.when.localeCompare(b.when));
   renderPatentDirection();
+  renderPatentNews("#pip2", "#pip2-sub");
   $("#next12").innerHTML = next.map((r) => `<button class="row" data-co="${esc(r.c.id)}"><span class="t ${r.status === "delayed" ? "st-delayed" : ""}">${esc(r.title)}</span><span class="r mono muted" style="font-size:.74rem">${esc(r.when)}</span><span class="s">${esc(r.c.name_ko)} · ${TYPE_RM[r.type] || r.type}</span></button>`).join("");
 }
 
@@ -924,6 +1036,9 @@ function renderEngineerBrief(start) {
     : `${start.slice(5).replace("-", "/")} 이후 소식 ${all.length}건 중 ${tagged.length}건 분류됨(기술 층 해당 ${news.length}건, 해당 없음 ${tagged.length - news.length}건)${pending ? ` · ${pending}건은 분류 대기` : ""} — 누르면 위 소식 목록을 그 층으로 거릅니다`;
   $("#layers").innerHTML = (tagged.length ? "" : '<div class="empty">분류 전</div>')
     + (tagged.length ? counts.map(([k, n]) => `<div class="hbar" data-nf="${k}" style="cursor:pointer"><span class="n">${LAYER[k]}</span><span class="track"><i style="width:${(n / max) * 100}%"></i></span><span class="v">${n}건</span></div>`).join("") : "");
+  renderPatentHub();
+  renderPatentNews("#pip", "#pip-sub");
+  renderPatentRef();
   renderPatentHeat();
   renderActMix("#act-mix");
   $("#gaps").innerHTML = D.bom.items.filter((i) => !i.kr.length).map((i) => `<a class="chip" href="#parts" style="text-decoration:none;color:inherit">${esc(i.name)} · ${BARRIER[i.barrier]}</a>`).join("");
@@ -1355,7 +1470,7 @@ function openSheet(id) {
     ${fold("검증 대기 (AI 추출)", props.map((p) => `<div class="rm"><span class="w">${esc(p.date)}</span><span>${FIELD[p.field]} ${fmtUnit(p.curated, p.unit)} → <b>${fmtUnit(p.proposed, p.unit)}</b></span><span>${link(p.url, "원문")}</span></div>`).join(""), true)}
     ${fold(`최근 소식 ${nws.length}건`, nws.length ? `<div class="list news">${nws.map((x) => newsRow(x, false)).join("")}</div>` : "", true)}
     ${q ? fold(`주가 <span class="muted mono" style="font-weight:400;font-size:.78rem">${esc(q.symbol)}</span>`, `<div style="display:flex;align-items:center;gap:12px;font-size:.85rem">${spark(q.spark)}<span><b class="num">${q.last.toLocaleString("ko-KR")}</b> ${esc(q.currency || "")} · 1주 ${pct(q.chg_1w)} · 1개월 ${pct(q.chg_1m)} <span class="muted">(${esc(q.date)} ${esc(q.note || "")})</span></span></div>`, true) : ""}
-    ${fold("특허", patentFold(id), true)}
+    ${fold("특허·지재권", patentFold(id), true)}
     ${fold("로봇 스펙", specs.map((m) => `<div class="rm"><span class="w">${esc(m.model)}</span><span>${D.specs.fields.filter((f) => m[f.id] != null).map((f) => `${esc(f.label)} ${f.id === "price_usd" ? usd(m[f.id]) : m[f.id] + (f.unit || "")}`).join(" · ")} · ${esc(D.specs.actuators[m.actuator])}</span><span>${kindB(m.kind)}</span></div>`).join(""))}
     ${fold("로드맵", c.roadmap.map((r) => `<div class="rm"><span class="w">${esc(r.when)}</span><span>${esc(r.title)}</span><span class="st-${r.status}" style="font-size:.74rem">${{ done: "완료", planned: "계획", delayed: "지연·변경" }[r.status]}</span></div>`).join(""))}
     ${fold("부품 조달 구조", c.sourcing?.mode ? `<p style="margin:0 0 6px;font-size:.85rem"><b>${esc(c.sourcing.mode)}</b></p>${c.sourcing.suppliers.length ? `<ul class="plain">${c.sourcing.suppliers.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}${c.sourcing.note ? `<p class="sub" style="margin:6px 0 0">${esc(c.sourcing.note)} ${link(c.sourcing.src)}</p>` : ""}` : "")}
@@ -1381,11 +1496,13 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
+  const t = e.target.closest("[data-psite],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
   if (!t) return;
   if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
   if (t.dataset.co) return openSheet(t.dataset.co);
   if (t.dataset.tile) { store.set("tile", store.get("tile", null) === t.dataset.tile ? null : t.dataset.tile); renderHome(); return; }
+  if (t.dataset.psite) { store.set("patSite", t.dataset.psite); renderPatentHub(); return; }
+  if (t.dataset.copy) { const el = t; copyText(t.dataset.copy).then((ok) => { if (ok) { const o = el.textContent; el.textContent = "복사됨"; setTimeout(() => (el.textContent = o), 1200); } }); return; }
   if (t.dataset.qs) { store.set("qsort", t.dataset.qs); renderCapital(); return; }
   if (t.dataset.cf) { store.set("compFilter", t.dataset.cf); renderParts(); return; }
   if (t.dataset.jump) { const el = document.getElementById(t.dataset.jump); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - 110, behavior: "smooth" }); return; }
@@ -1403,6 +1520,8 @@ document.addEventListener("click", (e) => {
 });
 $("#c-item").addEventListener("change", (e) => saveCalc({ item: e.target.value, qty: null, asp: null, dec: null }));
 for (const [id, k] of [["#c-qty", "qty"], ["#c-asp", "asp"], ["#c-dec", "dec"], ["#c-share", "share"]]) $(id).addEventListener("input", (e) => saveCalc({ [k]: Number(e.target.value) }));
+$("#hb-co").addEventListener("change", updateHubBuilder);
+$("#hb-ly").addEventListener("change", updateHubBuilder);
 $("#c-exc").addEventListener("change", (e) => saveCalc({ exc: e.target.checked }));
 for (const [id, k] of [["#n-capex", "capex"], ["#n-margin", "margin"], ["#n-rate", "rate"]]) $(id).addEventListener("input", (e) => saveStrat({ [k]: Number(e.target.value) }));
 $("#scrim").addEventListener("click", closeSheet);

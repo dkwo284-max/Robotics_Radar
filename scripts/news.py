@@ -134,31 +134,34 @@ def parse_feed(raw: bytes | str, company: str, lookback_days: int, lang: str) ->
 
 
 def collect(cfg: dict, client: httpx.Client, known: set[str]) -> list[dict]:
+    """일반 소식(queries)과 특허·지재권 소식(patent_queries, topic=patent)을 모은다. 둘 다 키가 필요 없는 구글 뉴스 RSS."""
     ncfg = cfg["news"]
-    days, per = int(ncfg.get("lookback_days", 7)), int(ncfg.get("per_company", 3))
+    days = int(ncfg.get("lookback_days", 7))
     fresh: list[dict] = []
     seen_titles: set[str] = set()
-    for company, queries in ncfg["queries"].items():
-        if company.startswith("_") and company != "_market":
-            continue
-        got = 0
-        for q, lang in queries:
-            try:
-                r = client.get(RSS[lang].format(q=quote_plus(q), d=days))
-                r.raise_for_status()
-                items = parse_feed(r.content, company, days, lang)
-            except Exception as e:  # noqa: BLE001
-                log.warning("news %s failed: %s", company, e)
+    for topic, per, by_company in (("news", int(ncfg.get("per_company", 3)), ncfg["queries"]),
+                                   ("patent", int(ncfg.get("per_company_patent", 2)), ncfg.get("patent_queries", {}))):
+        for company, queries in by_company.items():
+            if company.startswith("_") and company != "_market":
                 continue
-            for x in sorted(items, key=lambda x: x["date"], reverse=True):
-                key = re.sub(r"\W+", "", x["title"].lower())[:50]
-                if x["id"] in known or key in seen_titles:
+            got = 0
+            for q, lang in queries:
+                try:
+                    r = client.get(RSS[lang].format(q=quote_plus(q), d=days))
+                    r.raise_for_status()
+                    items = parse_feed(r.content, company, days, lang)
+                except Exception as e:  # noqa: BLE001
+                    log.warning("news %s/%s failed: %s", topic, company, e)
                     continue
-                seen_titles.add(key)
-                fresh.append(x)
-                got += 1
-                if got >= per:
-                    break
+                for x in sorted(items, key=lambda x: x["date"], reverse=True):
+                    key = re.sub(r"\W+", "", x["title"].lower())[:50]
+                    if x["id"] in known or key in seen_titles:
+                        continue
+                    seen_titles.add(key)
+                    fresh.append({**x, "topic": topic})
+                    got += 1
+                    if got >= per:
+                        break
     return fresh
 
 
@@ -166,7 +169,7 @@ def classify(items: list[dict], companies: list[dict], llm: Gemini, limit: int,
              signposts: list[dict] | None = None) -> tuple[list[dict], str | None, list[str]]:
     """AI 분류 → (저장할 기사, 경고, 관련 없다고 본 id). 실패하거나 키가 없으면 제목만."""
     signposts = signposts or []
-    plain = lambda x: {**x, "ai": False, "companies": [] if x["query"] == "_market" else [x["query"]], "type": "other",  # noqa: E731
+    plain = lambda x: {**x, "ai": False, "companies": [] if x["query"] == "_market" else [x["query"]], "type": "patent" if x.get("topic") == "patent" else "other",  # noqa: E731
                        "title_ko": "", "summary_ko": "", "importance": 1, "audience": [], "layer": "none", "signpost": None, "facts": []}
     if not items:
         return [], None, []

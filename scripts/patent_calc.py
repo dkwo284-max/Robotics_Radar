@@ -87,6 +87,14 @@ def block(cfg: dict, data: dict | None, bom_items: list[dict]) -> dict:
             "movers": movers[:8], "parts": parts, "recent": recent[:60]}
 
 
+def hub(cfg: dict) -> dict:
+    """조회 허브: 수집 데이터 없이 설정만으로 만든다 — 기업 × 기술 층 검색 링크의 재료(출원인 검색식·층별 CPC)."""
+    layers = [{k: l[k] for k in ("id", "label", "note", "parts", "cpc")} for l in cfg["layers"]]
+    rows = [{"id": a["id"], "company": a.get("company"), "name": a["name"], "kind": a["kind"], "home": a.get("home"), "scope": a.get("scope"),
+             "q": pa_q(a), "assignee": (a.get("pa") or [""])[0], "only": a.get("only")} for a in cfg["applicants"]]
+    return {"layers": layers, "total": cfg["total"], "rows": rows}
+
+
 def state(blk: dict) -> dict:
     """변화 로그용: {기업 id: {층: 최근 3년 건수}} — 수집 전이면 빈 dict."""
     if not blk.get("ready"):

@@ -37,7 +37,7 @@ def rm_key(r: dict) -> str:
     return f"{r['type']}|{r['title']}"
 
 
-def state_of(companies: list[dict], strategy: dict, specs: dict, patents: dict | None = None) -> dict:
+def state_of(companies: list[dict], strategy: dict, specs: dict, patents: dict | None = None, pref: dict | None = None) -> dict:
     comp = {}
     for c in companies:
         calc = c["calc"]
@@ -51,6 +51,7 @@ def state_of(companies: list[dict], strategy: dict, specs: dict, patents: dict |
         "signposts": {s["id"]: s["status"] for s in strategy.get("signposts", [])},
         "specs": {m["id"]: {k: m.get(k) for k in [f["id"] for f in specs.get("fields", [])] + ["actuator"]} for m in specs.get("models", [])},
         "patents": patents or {},
+        "pref": pref if pref is not None else {},
     }
 
 
@@ -107,6 +108,18 @@ def diff(prev: dict, cur: dict, ctx: dict, today: str) -> list[dict]:
         old = prev["signposts"].get(sid)
         if old and old != status:
             add(kind="signpost", ref=sid, title=f"신호 '{ctx['signposts'].get(sid, sid)}': {SIGN[old]} → {SIGN[status]}", roles=["exec", "strategy"], frm=old, to=status)
+    if prev.get("pref") is not None:  # 큐레이션 특허 지형: 포트폴리오 보도치·이슈가 새로 생기거나 바뀐 것
+        for cid, c in (cur.get("pref") or {}).items():
+            b = prev["pref"].get(cid, {"portfolio": {}, "notable": []})
+            n = names.get(cid, cid)
+            for basis, v in c["portfolio"].items():
+                if b["portfolio"].get(basis) != v:
+                    old = b["portfolio"].get(basis)
+                    add(kind="pref", company=cid, title=f"{n} 특허 포트폴리오(보도) {old if old is not None else '없음'} → {v}건 ({basis[:28]})",
+                        roles=["engineer", "strategy"], frm=old, to=v)
+            for t in c["notable"]:
+                if t not in b["notable"]:
+                    add(kind="pref", company=cid, title=f"{n} 특허·지재권 이슈: {t[:70]}", roles=["exec", "strategy", "engineer"], frm=None, to=t)
     for cid, layers in (cur.get("patents") or {}).items():  # 특허: 기술 층별 최근 3년 건수가 크게 바뀐 곳
         before = (prev.get("patents") or {}).get(cid)
         if not before:

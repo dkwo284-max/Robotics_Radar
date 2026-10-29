@@ -104,3 +104,51 @@ def test_needs_retry_covers_items_classified_before_new_tags():
     assert news.needs_retry({"ai": False}) is True                      # AI 분류 전
     assert news.needs_retry({"ai": True}) is True                       # 역할·기술 층 태그가 생기기 전에 분류됨
     assert news.needs_retry({"ai": True, "layer": "none"}) is False     # 'none' 도 분류가 끝난 값
+
+
+class _Resp:
+    def __init__(self, content):
+        self.content = content
+
+    def raise_for_status(self):
+        pass
+
+
+class _FakeClient:
+    """질의마다 기사 1건을 돌려주는 가짜 RSS 클라이언트."""
+
+    def __init__(self):
+        self.urls = []
+
+    def get(self, url):
+        self.urls.append(url)
+        n = len(self.urls)
+        item = (f"<item><title>Story {n} - Src</title><link>https://x.test/{n}</link><pubDate>{__import__('email.utils').utils.formatdate(usegmt=True)}</pubDate>"
+                f"<source url='https://s.test'>Src</source></item>")
+        return _Resp(f"<?xml version='1.0'?><rss><channel>{item}</channel></rss>".encode())
+
+
+def test_collect_tags_patent_topic_and_plain_fallback_type():
+    cfg = {"news": {"lookback_days": 7, "per_company": 3, "per_company_patent": 2,
+                    "queries": {"_market": [["humanoid", "en"]], "tesla": [["tesla", "en"]]},
+                    "patent_queries": {"_market": [["humanoid patent", "en"]], "tesla": [["tesla patent", "en"]]}}}
+    client = _FakeClient()
+    got = news.collect(cfg, client, set())
+    assert [x["topic"] for x in got] == ["news", "news", "patent", "patent"]
+    assert any("patent" in u for u in client.urls)
+    out, warn, _ = news.classify(got, COMPANIES, FakeLLM(enabled=False), 40)
+    assert [x["type"] for x in out] == ["other", "other", "patent", "patent"]   # AI 없이도 특허 검색어로 모은 기사는 특허 유형
+
+
+def test_pref_changes_are_logged_only_after_a_baseline_exists():
+    import changes
+
+    ctx = {"names": {"tesla": "테슬라"}, "layers": {}, "stages": [], "signposts": {}, "models": {}, "spec_labels": {}}
+    base = {"companies": {}, "signposts": {}, "specs": {}}
+    cur = {**base, "pref": {"tesla": {"portfolio": {"기준A": 10}, "notable": ["소송 합의"]}}}
+    assert changes.diff({**base}, cur, ctx, "2026-11-01") == []                     # 이전 상태에 pref 가 없으면 기준만 잡는다
+    prev = {**base, "pref": {"tesla": {"portfolio": {"기준A": 8}, "notable": []}}}
+    out = changes.diff(prev, cur, ctx, "2026-11-01")
+    assert {c["title"] for c in out} == {"테슬라 특허 포트폴리오(보도) 8 → 10건 (기준A)", "테슬라 특허·지재권 이슈: 소송 합의"}
+    assert all(c["kind"] == "pref" and c["company"] == "tesla" for c in out)
+    assert "kind" not in changes.keep_baseline(prev, cur, out)                      # 기준값 보존 로직이 pref 항목(layer 없음)에 깨지지 않는다
