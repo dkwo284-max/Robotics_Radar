@@ -13,6 +13,7 @@ import sys
 from datetime import datetime, timezone
 
 import build
+import papers
 import patents
 import usage
 from common import OUT, SRC, load_config, log, read_json, write_json
@@ -50,6 +51,10 @@ def main(argv: list[str] | None = None) -> int:
         requests += llm.requests
 
     write_json(OUT / "prices.json", update_prices(cfg, read_json(OUT / "prices.json", {})))
+    try:  # 논문 신호(arXiv, 키 불필요): 6일 지난 층만 갱신. 실패해도 나머지 파이프라인은 계속
+        papers.main([])
+    except Exception as e:  # noqa: BLE001
+        log.warning("논문 신호 수집 실패(무시하고 계속): %s", e)
     if args.patents == "auto":  # 키가 없으면 건너뜀. 실패해도 나머지 파이프라인은 계속
         try:
             patents.main([])

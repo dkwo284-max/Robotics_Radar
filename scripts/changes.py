@@ -17,6 +17,7 @@ FACTS = {  # 필드 → (한국어, 단위, 보는 사람)
 STATUS = {"done": "완료", "planned": "계획", "delayed": "지연·변경"}
 SIGN = {"watch": "주시", "progress": "진행 중", "happened": "발생"}
 from patent_calc import changed as patent_changed  # noqa: E402
+from paper_calc import changed as paper_changed  # noqa: E402
 
 SPEC_LAYER = {"hand_dof": "hand", "runtime_h": "battery", "actuator": "actuator", "payload_kg": "actuator", "price_usd": "cost"}
 
@@ -37,7 +38,8 @@ def rm_key(r: dict) -> str:
     return f"{r['type']}|{r['title']}"
 
 
-def state_of(companies: list[dict], strategy: dict, specs: dict, patents: dict | None = None, pref: dict | None = None) -> dict:
+def state_of(companies: list[dict], strategy: dict, specs: dict, patents: dict | None = None, pref: dict | None = None,
+             papers: dict | None = None) -> dict:
     comp = {}
     for c in companies:
         calc = c["calc"]
@@ -52,6 +54,7 @@ def state_of(companies: list[dict], strategy: dict, specs: dict, patents: dict |
         "specs": {m["id"]: {k: m.get(k) for k in [f["id"] for f in specs.get("fields", [])] + ["actuator"]} for m in specs.get("models", [])},
         "patents": patents or {},
         "pref": pref if pref is not None else {},
+        "papers": papers or {},
     }
 
 
@@ -65,6 +68,11 @@ def keep_baseline(prev: dict | None, cur: dict, new: list[dict]) -> dict:
         for lid in layers:
             if lid in old.get(cid, {}) and (cid, lid) not in logged:
                 out["patents"][cid][lid] = old[cid][lid]
+    old_p = (prev or {}).get("papers") or {}
+    logged_p = {c["layer"] for c in new if c.get("kind") == "paper"}
+    for lid in cur.get("papers", {}):
+        if lid in old_p and lid not in logged_p:
+            out["papers"][lid] = old_p[lid]
     return out
 
 
@@ -120,6 +128,11 @@ def diff(prev: dict, cur: dict, ctx: dict, today: str) -> list[dict]:
             for t in c["notable"]:
                 if t not in b["notable"]:
                     add(kind="pref", company=cid, title=f"{n} 특허·지재권 이슈: {t[:70]}", roles=["exec", "strategy", "engineer"], frm=None, to=t)
+    for lid, n in (cur.get("papers") or {}).items():  # 논문 신호: 층별 최근 12개월 편수가 크게 바뀐 곳
+        before = (prev.get("papers") or {}).get(lid)
+        if before is not None and paper_changed(before, n):
+            lab = ctx.get("paper_layers", {}).get(lid, lid)
+            add(kind="paper", layer=lid, title=f"논문 신호({lab}) 최근 12개월 {before} → {n}편", roles=["strategy", "engineer"], frm=before, to=n)
     for cid, layers in (cur.get("patents") or {}).items():  # 특허: 기술 층별 최근 3년 건수가 크게 바뀐 곳
         before = (prev.get("patents") or {}).get(cid)
         if not before:

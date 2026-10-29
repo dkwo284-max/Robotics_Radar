@@ -1,0 +1,108 @@
+{
+  "_about": "논문 신호 설정(사람이 관리). arXiv API(키 불필요, 설명 메타데이터 CC0, 요청 3초에 1회)로 로봇(cs.RO) 논문 중 기술 층 키워드가 초록에 나오는 논문 수를 센다. 최근 12개월 vs 직전 12개월. 논문은 보통 특허 출원보다 앞서는 선행 신호지만 학계 활동일 뿐 산업 동향과 다를 수 있다. 하모닉 감속기·롤러스크류는 논문 초록에 거의 나오지 않아(최근 12개월 각 1편·0편) 논문으로는 측정하지 않는다 — 특허 조회 허브로 본다. q 는 arXiv API 검색식, link 는 사람이 눌러 볼 arXiv 검색어, parts 는 BOM 품목 id.",
+  "base": "cat:cs.RO",
+  "ttl_days": 6,
+  "pause_seconds": 3.5,
+  "layers": [
+    {
+      "id": "humanoid",
+      "label": "휴머노이드(전체)",
+      "q": "abs:humanoid",
+      "link": "humanoid",
+      "parts": [],
+      "note": "초록에 humanoid 가 나오는 로봇 논문 — 기준선"
+    },
+    {
+      "id": "actuator",
+      "label": "액추에이터(휴머노이드)",
+      "q": "(abs:actuator OR abs:actuators) AND abs:humanoid",
+      "link": "humanoid actuator",
+      "parts": [],
+      "note": "휴머노이드 논문 중 액추에이터를 다룬 것"
+    },
+    {
+      "id": "qdd",
+      "label": "QDD·탄성 액추에이터",
+      "q": "(abs:\"quasi-direct drive\" OR abs:\"quasi direct drive\" OR abs:\"proprioceptive actuator\" OR abs:\"series elastic actuator\" OR abs:\"variable stiffness actuator\")",
+      "link": "\"quasi-direct drive\"",
+      "parts": [
+        "reducer"
+      ],
+      "note": "저감속비·직렬탄성 액추에이터 — 하모닉 감속기를 대체하는 흐름의 신호(표본이 작음)"
+    },
+    {
+      "id": "gearbox",
+      "label": "감속기·기어박스(일반)",
+      "q": "(abs:\"gearbox\" OR abs:\"gear reducer\" OR abs:\"reduction gear\" OR abs:\"speed reducer\")",
+      "link": "\"gear reducer\"",
+      "parts": [
+        "reducer"
+      ],
+      "note": "감속기 일반(표본이 작음) — 하모닉·롤러스크류 자체는 논문으로 측정되지 않음"
+    },
+    {
+      "id": "tendon",
+      "label": "텐던·케이블 구동",
+      "q": "(abs:\"tendon-driven\" OR abs:\"cable-driven\")",
+      "link": "\"tendon-driven\"",
+      "parts": [
+        "hand"
+      ],
+      "note": "손·경량 로봇에 쓰이는 선 구동 방식"
+    },
+    {
+      "id": "hand",
+      "label": "다지 손",
+      "q": "(abs:\"dexterous hand\" OR abs:\"multi-fingered hand\" OR abs:\"anthropomorphic hand\")",
+      "link": "\"dexterous hand\"",
+      "parts": [
+        "hand"
+      ],
+      "note": "손가락 여러 개를 가진 손 설계·제어"
+    },
+    {
+      "id": "tactile",
+      "label": "촉각 센서",
+      "q": "(abs:\"tactile sensor\" OR abs:\"tactile sensing\")",
+      "link": "\"tactile sensing\"",
+      "parts": [
+        "tactile"
+      ],
+      "note": "촉각 센서·촉각 인식"
+    },
+    {
+      "id": "force",
+      "label": "힘·토크 센서",
+      "q": "(abs:\"force/torque sensor\" OR abs:\"torque sensor\")",
+      "link": "\"torque sensor\"",
+      "parts": [
+        "ftsensor"
+      ],
+      "note": "관절·손목 토크/힘 센서"
+    },
+    {
+      "id": "vla",
+      "label": "VLA 모델",
+      "q": "(abs:\"vision-language-action\" OR abs:\"VLA model\")",
+      "link": "\"vision-language-action\"",
+      "parts": [
+        "compute"
+      ],
+      "note": "시각·언어·행동 통합 모델 — 로봇 두뇌"
+    },
+    {
+      "id": "wbc",
+      "label": "전신 제어·보행",
+      "q": "(abs:\"whole-body control\" OR abs:\"humanoid locomotion\" OR abs:\"bipedal locomotion\")",
+      "link": "\"whole-body control\"",
+      "parts": [],
+      "note": "전신 제어·이족 보행"
+    }
+  ],
+  "total": {
+    "id": "total",
+    "label": "로봇 논문 전체(cs.RO)",
+    "q": ""
+  },
+  "min_sample": 30
+}

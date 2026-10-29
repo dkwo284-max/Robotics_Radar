@@ -395,6 +395,11 @@ details.fold[open] > summary::after { content: "접기"; }
         <p class="sub">전략을 바꿔야 할 신호와 최근 30일 관련 소식 (AI 가 짝지음)</p>
         <div class="list" id="sp-moves"></div>
       </section>
+      <section id="pp-sec">
+        <h2>논문으로 본 기술 방향 <span class="b estimate">논문 신호</span></h2>
+        <p class="sub" id="pp-sub"></p>
+        <div class="chart" id="pp-chart"></div>
+      </section>
       <section id="pip2-sec">
         <h2>특허·지재권 소식 <span class="b reported">보도 기반</span></h2>
         <p class="sub" id="pip2-sub"></p>
@@ -436,6 +441,11 @@ details.fold[open] > summary::after { content: "접기"; }
         <div class="chart" id="pref-sector"></div>
         <div class="ins" id="pref-co" style="margin-top:10px"></div>
         <p class="sub" id="pref-gaps" style="margin-top:8px"></p>
+      </section>
+      <section id="pp2-sec">
+        <h2>논문으로 본 기술 방향 <span class="b estimate">논문 신호</span></h2>
+        <p class="sub" id="pp2-sub"></p>
+        <div class="chart" id="pp2-chart"></div>
       </section>
       <section id="pat-sec" class="full" hidden>
         <h2>특허 집계 <span class="b official">EPO 집계</span></h2>
@@ -709,7 +719,7 @@ const roleOf = (x) => (x.ai ? (x.audience?.length ? x.audience : ROLE_BY_TYPE[x.
 const ROLE_NAME = { exec: "경영진", strategy: "기술전략", engineer: "엔지니어" };
 const ROLE_SUBJ = { exec: "경영진이", strategy: "기술전략팀이", engineer: "엔지니어가" };
 const LAYER = { actuator: "액추에이터", hand: "손", battery: "배터리", sensor: "센서", ai: "AI·칩", safety: "안전·표준", cost: "원가" };
-const CHG_KIND = { tier: "Tier", score: "점수", attract: "매력도", listing: "상장", fact: "수치", roadmap: "로드맵", signpost: "신호", spec: "스펙", patent: "특허", pref: "특허·IP" };
+const CHG_KIND = { tier: "Tier", score: "점수", attract: "매력도", listing: "상장", fact: "수치", roadmap: "로드맵", signpost: "신호", spec: "스펙", patent: "특허", pref: "특허·IP", paper: "논문" };
 const TYPE_RM = { product: "제품", production: "양산", deploy: "배치", ipo: "상장", funding: "자금", partner: "제휴", org: "조직" };
 // 방문 기록: 오늘 처음 열면 지난 방문일을 prev 로 옮긴다 → '지난 방문 이후' 기준
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -796,6 +806,30 @@ function renderPatentRef() {
   $("#pref-gaps").textContent = R.gaps || "";
 }
 
+// 논문 신호: arXiv(cs.RO) 논문 수 — 최근 12개월 vs 직전 12개월 (키 불필요, 메타데이터 CC0)
+function renderPaperSignals(chartSel, subSel) {
+  const P = D.papers;
+  if (!P?.ready) { $(subSel).textContent = "아직 수집되지 않았습니다 — 다음 자동 수집에서 채워집니다"; $(chartSel).innerHTML = ""; return; }
+  const w = P.windows?.a || [];
+  $(subSel).innerHTML = `arXiv 로봇(cs.RO) 논문 중 기술 키워드가 초록에 나온 논문 수 — 최근 12개월${w[1] ? `(${esc(w[0].slice(0, 7))}~${esc(w[1].slice(0, 7))})` : ""} vs 직전 12개월. 막대는 로봇 논문 전체 대비 비중, 검은 눈금은 직전 12개월 비중, ×는 편수 증가 배수(로봇 논문 전체는 ×${P.total.growth ?? "–"}). 논문은 특허보다 앞서는 선행 신호일 뿐 산업 동향과 다를 수 있고, ⚠ 는 30편 미만이라 해석에 주의하라는 표시입니다. 하모닉 감속기·롤러스크류는 논문 초록에 거의 나오지 않아 측정하지 않습니다 — 특허 조회 허브로 보세요.`;
+  const max = Math.max(...P.rows.map((r) => Math.max(r.share_a || 0, r.share_b || 0)), 0.0001);
+  const bg = P.baseline_growth;
+  $(chartSel).innerHTML = P.rows.map((r) => {
+    const cls = r.growth == null || bg == null ? "" : r.growth > bg * 1.15 ? "up" : r.growth < bg * 0.85 ? "down" : "";
+    return `<div class="hbar" style="grid-template-columns:128px minmax(0,1fr) 104px"><span class="n" title="${esc(r.note)}">${extA(r.link, esc(r.label), "")}${r.small ? " ⚠" : ""}</span>
+      <span class="track" style="position:relative"><i style="width:${((r.share_a || 0) / max) * 100}%"></i>${r.share_b != null ? `<b style="position:absolute;top:0;bottom:0;left:${(r.share_b / max) * 100}%;width:2px;background:var(--ink)"></b>` : ""}</span>
+      <span class="v" style="font-size:0.78rem">${r.a}편 <span class="${cls}">×${r.growth ?? "–"}</span></span></div>`;
+  }).join("") + `<p class="sub" style="margin:8px 4px 0">× 색: 휴머노이드 논문 전체 증가 배수(×${bg ?? "–"})보다 빠르면 초록, 느리면 빨강. 출처: ${esc(P.source || "arXiv")} ${link("https://info.arxiv.org/help/api/tou.html", "이용 약관")}</p>`;
+}
+function paperQddLine() {
+  const pp = D.papers;
+  if (!pp?.ready) return "";
+  const q = pp.rows.find((r) => r.id === "qdd"), h = pp.rows.find((r) => r.id === "humanoid");
+  if (!q || !h || !q.b || !h.growth) return "";
+  const rel = q.growth > h.growth * 1.15 ? "보다 빠르게 증가" : q.growth < h.growth * 0.85 ? "보다 느리게 증가" : "와 비슷한 속도로 증가";
+  return `<div style="font-size:0.8rem"><span class="b estimate">논문 신호</span> QDD·탄성 액추에이터 논문 ${q.b} → <b>${q.a}</b>편(×${q.growth}) — 휴머노이드 논문 전체(×${h.growth})${rel}${q.small ? " · 표본이 작아 참고만" : ""}</div>`;
+}
+
 // ---- EPO 집계(선택 기능, 기본 꺼짐) ----
 function patentRow(x) {
   return `<div class="ev"><span class="d">${esc((x.date || "").slice(2).replace(/-/g, "."))}</span><span class="t">${esc(x.title || pnum(x))}<small>${esc(x.applicant || "")} · ${esc(pnum(x))}</small></span>
@@ -839,7 +873,7 @@ function renderPatentDirection() {
 }
 function qddLine() {
   const P1 = D.patents;
-  if (!P1?.ready) return "";
+  if (!P1?.ready) return paperQddLine();
   const g = (id) => P1.industry.find((x) => x.id === id);
   const sw = g("sw"), pl = g("planetary");
   if (!sw || !pl || !sw.a || !sw.b) return "";
@@ -855,7 +889,9 @@ function partBadge(i) {
 }
 function partPatents(i) {
   const layers = HUB().layers.filter((l) => l.parts.includes(i.id));
-  if (!layers.length) return "";
+  const pr = (D.papers?.ready ? D.papers.rows : []).filter((r) => r.parts.includes(i.id));
+  if (!layers.length && !pr.length) return "";
+  const paperLine = pr.length ? `<div class="who"><span class="k">논문</span>최근 12개월 arXiv 논문: ${pr.map((r) => `${extA(r.link, esc(r.label))} ${r.a}편 (×${r.growth ?? "–"})${r.small ? " ⚠" : ""}`).join(" · ")} <span class="muted">— 선행 신호, ⚠ 표본 작음</span></div>` : "";
   const lines = layers.map((l) => {
     const players = HUB().rows.filter((r) => r.kind !== "company" && (r.only || []).includes(l.id));
     return `<div class="who"><span class="k">특허</span><b>${esc(l.label)}</b> — ${extA(searchUrl(null, l.id, "espacenet"), "에스페이스넷 ↗")} · ${extA(searchUrl(null, l.id, "google"), "구글 특허 ↗")}
@@ -864,7 +900,7 @@ function partPatents(i) {
   const P1 = D.patents, pp = P1?.ready && P1.parts[i.id];
   const epo = pp ? (() => { const one = (t) => `${esc(t.name)} <b>${t.a}</b>${ptrend(t.a, t.b)}`;
     return `<div class="who"><span class="k">집계</span>최근 3년 공개 건수(추적 출원인 기준): ${pp.top.map(one).join(" · ")}<br>${pp.kr.length ? "국내: " + pp.kr.map(one).join(" · ") : '<span class="b gap">추적 중인 국내 출원인의 특허 없음</span>'}</div>`; })() : "";
-  return `${lines}${epo}<div class="who muted">링크는 검색 결과로 연결될 뿐 데이터를 저장하지 않습니다 — 건수 확인·침해·회피 판단은 특허팀 몫입니다</div>`;
+  return `${lines}${epo}${paperLine}${layers.length ? '<div class="who muted">링크는 검색 결과로 연결될 뿐 데이터를 저장하지 않습니다 — 건수 확인·침해·회피 판단은 특허팀 몫입니다</div>' : ""}`;
 }
 function patentFold(id) {
   const c = PREF().companies[id], row = hubRow(id), out = [];
@@ -1020,6 +1056,7 @@ function renderStrategyBrief() {
   const next = D.companies.flatMap((c) => c.roadmap.filter((r) => r.status !== "done" && r.when.slice(0, 4) <= until).map((r) => ({ ...r, c })))
     .sort((a, b) => a.when.localeCompare(b.when));
   renderPatentDirection();
+  renderPaperSignals("#pp-chart", "#pp-sub");
   renderPatentNews("#pip2", "#pip2-sub");
   $("#next12").innerHTML = next.map((r) => `<button class="row" data-co="${esc(r.c.id)}"><span class="t ${r.status === "delayed" ? "st-delayed" : ""}">${esc(r.title)}</span><span class="r mono muted" style="font-size:.74rem">${esc(r.when)}</span><span class="s">${esc(r.c.name_ko)} · ${TYPE_RM[r.type] || r.type}</span></button>`).join("");
 }
@@ -1039,6 +1076,7 @@ function renderEngineerBrief(start) {
   renderPatentHub();
   renderPatentNews("#pip", "#pip-sub");
   renderPatentRef();
+  renderPaperSignals("#pp2-chart", "#pp2-sub");
   renderPatentHeat();
   renderActMix("#act-mix");
   $("#gaps").innerHTML = D.bom.items.filter((i) => !i.kr.length).map((i) => `<a class="chip" href="#parts" style="text-decoration:none;color:inherit">${esc(i.name)} · ${BARRIER[i.barrier]}</a>`).join("");

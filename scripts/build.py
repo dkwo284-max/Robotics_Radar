@@ -15,6 +15,7 @@ import sys
 from datetime import date, datetime, timedelta, timezone
 
 from changes import diff, keep_baseline, state_of
+import paper_calc
 import patent_calc
 from common import OUT, SRC, plausible, read_json, write_json
 
@@ -252,14 +253,16 @@ def pref_state(pref: dict) -> dict:
 
 
 def change_log(companies: list[dict], strategy: dict, specs: dict, today: str, patents: dict | None = None,
-               layer_labels: dict | None = None, pref: dict | None = None) -> tuple[dict, list[dict], list[dict]]:
+               layer_labels: dict | None = None, pref: dict | None = None, papers: dict | None = None,
+               paper_labels: dict | None = None) -> tuple[dict, list[dict], list[dict]]:
     """(현재 상태, 오늘 새로 생긴 변화, 화면용 변화 목록 최근 120일)."""
-    cur = state_of(companies, strategy, specs, patents, pref)
+    cur = state_of(companies, strategy, specs, patents, pref, papers)
     prev = read_json(SRC / "state.json", None)
     ctx = {"names": {c["id"]: c["name_ko"] for c in companies}, "stages": IPO_STAGES,
            "signposts": {s["id"]: s["trigger"] for s in strategy["signposts"]},
            "models": {m["id"]: (m["model"], m["company"]) for m in specs["models"]},
            "layers": layer_labels or {},
+           "paper_layers": paper_labels or {},
            "spec_labels": {**{f["id"]: f["label"] for f in specs["fields"]}, "actuator": "구동 방식"}}
     new = diff(prev, cur, ctx, today)
     log_items = read_json(SRC / "changes.json", {"items": []})["items"]
@@ -274,6 +277,8 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     specs = load("specs.json")
     pcfg = load("patents_cfg.json")
     pref = load("patents_ref.json")
+    pcfg2 = load("papers_cfg.json")
+    papers_blk = paper_calc.block(pcfg2, read_json(OUT / "papers.json", {}))
     pblock = patent_calc.block(pcfg, read_json(OUT / "patents.json", {}), market["bom"]["items"])
     news = read_json(OUT / "news.json", {})
     prices = read_json(OUT / "prices.json", {})
@@ -307,6 +312,10 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     for it in pref.get("sector", {}).get("items", []):
         if it.get("company") and it["company"] not in known:
             warnings.append(f"특허 지형 sector: 기업 id {it['company']} 없음")
+    for l in pcfg2["layers"]:
+        for part in l.get("parts", []):
+            if part not in {i["id"] for i in market["bom"]["items"]}:
+                warnings.append(f"논문 층 {l['id']}: BOM 품목 {part} 없음")
     bom_ids = {i["id"] for i in market["bom"]["items"]}
     for l in pcfg["layers"]:
         for part in l.get("parts", []):
@@ -323,7 +332,8 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     k = kpis(companies, market)
     today = datetime.now(timezone.utc).date().isoformat()
     state, new_changes, changes = change_log(companies, strategy, specs, today, patent_calc.state(pblock),
-                                             {l["id"]: l["label"] for l in pcfg["layers"]}, pref_state(pref))
+                                             {l["id"]: l["label"] for l in pcfg["layers"]}, pref_state(pref),
+                                             paper_calc.state(papers_blk), {l["id"]: l["label"] for l in pcfg2["layers"]})
     nb = news_block(news)
     digest = read_json(OUT / "digest.json", {}).get("items", [])
     out = {
@@ -349,6 +359,7 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "patents": pblock,
         "patent_hub": patent_calc.hub(pcfg),
         "patent_ref": pref,
+        "papers": papers_blk,
         "news_meta": {"generated_at": news.get("generated_at"), "ai": news.get("ai"), "warnings": news.get("warnings", [])},
         "proposals": news.get("proposals", []),
         "quotes": prices.get("quotes", {}),
