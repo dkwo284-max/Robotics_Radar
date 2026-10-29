@@ -257,6 +257,25 @@ table.heat tr[data-co] { cursor: pointer; }
 .tipbtn { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0 2px; font-size: 0.9em; line-height: 1; }
 .tipbtn:hover { color: var(--ink); }
 .tipbox { position: absolute; z-index: 60; max-width: min(300px, calc(100vw - 24px)); background: var(--ink); color: var(--bg); padding: 8px 10px; border-radius: 8px; font-size: 0.78rem; line-height: 1.5; box-shadow: var(--shadow); }
+.hc.new, .lm.new { border-color: var(--warn); background: color-mix(in oklab, var(--warn) 9%, var(--surface)); }
+.hc .lmname { border: 0; background: transparent; font-weight: 700; font-size: 0.82rem; cursor: pointer; padding: 0; text-align: left; color: var(--ink); }
+.hc .lmname[aria-pressed="true"] { color: var(--accent); }
+.hc .ind { color: var(--muted); font-size: 0.72rem; border-top: 1px dashed var(--line); padding-top: 3px; }
+.chip.hot::after { content: " ●"; color: var(--warn); font-size: 0.6rem; vertical-align: 1px; }
+.lgd { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 0.74rem; color: var(--muted); margin: 0 0 8px; }
+.lgd i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; border: 1px solid var(--line); background: var(--surface); }
+.lgd i.n { border-color: var(--warn); background: color-mix(in oklab, var(--warn) 30%, var(--surface)); }
+table.hm { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
+table.hm th { font-weight: 600; color: var(--muted); padding: 4px 3px; text-align: center; line-height: 1.2; }
+table.hm td { padding: 3px; text-align: center; }
+table.hm td:first-child, table.hm th:first-child { text-align: left; white-space: nowrap; position: sticky; left: 0; background: var(--surface); padding-left: 8px; }
+table.hm td.c { min-width: 40px; }
+table.hm td.c b { display: block; border-radius: 6px; padding: 4px 0; font-weight: 600; background: var(--raised); }
+table.hm td.c.new b { background: color-mix(in oklab, var(--warn) 32%, var(--surface)); box-shadow: inset 0 0 0 1px var(--warn); }
+table.hm td.c.z { color: var(--muted); opacity: 0.5; }
+table.hm td.c[data-hm] { cursor: pointer; }
+table.hm td.ind b { background: transparent; color: var(--muted); font-weight: 500; }
+table.hm td.ind.new b { color: var(--warn); font-weight: 700; }
 .hcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .hc { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: grid; gap: 4px; font-size: 0.8rem; background: var(--surface); align-content: start; }
 .hc.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
@@ -847,19 +866,18 @@ function sparkSvg(series, color = "var(--accent)", w = 92, h = 26) {
 // ---- 1) 기술 층 신호 매트릭스 ----
 function layerSignals() {
   const R = PREF(), P = D.papers, base = P?.ready ? P.baseline_growth : null;
-  const since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
-  const patNews = (D.news || []).filter((x) => isPat(x) && x.date >= since);
-  const tagged = patNews.filter((x) => x.layer).length;
+  const patNews = pat30(), start = periodNow().start;
   return HUB().layers.map((l) => {
     const pr = l.paper ? paperRow(l.paper) : null;
     const items = D.bom.items.filter((i) => (l.parts || []).includes(i.id));
     const kr = items.reduce((s, i) => s + i.kr.length, 0);
     const barrier = items.length ? ["H", "M", "L"].find((b) => items.some((i) => i.barrier === b)) : null;
     const notable = Object.entries(R.companies).flatMap(([cid, c]) => (c.notable || []).filter((n) => n.layer === l.id).map((n) => ({ ...n, company: cid })));
-    const news = l.news_layer ? patNews.filter((x) => x.layer === l.news_layer) : [];
+    const news = layerNews(l, patNews), fresh = news.filter((x) => x.date >= start).length;
     const hot = !!(pr && pr.growth != null && base != null && pr.growth > base * 1.15);
     const gap = items.length > 0 && kr === 0;
-    return { l, pr, base, items, kr, barrier, notable, news, tagged, hot, gap, star: hot && gap };
+    const moved = paperMoved(l, start), notableNew = notable.filter((n) => String(n.date) >= start.slice(0, String(n.date).length)).length;
+    return { l, pr, base, items, kr, barrier, notable, news, fresh, moved, hot, gap, star: hot && gap, changed: fresh + notableNew > 0 || moved };
   });
 }
 function renderLayerMatrix(listSel, sortSel, subSel) {
@@ -868,17 +886,17 @@ function renderLayerMatrix(listSel, sortSel, subSel) {
   const key = { base: () => 0, growth: (r) => -(r.pr?.growth ?? -1), gap: (r) => -((r.gap ? 2 : 0) + (r.hot ? 1 : 0) + (r.items.length ? 0 : -1)) }[sort];
   rows.sort((a, b) => key(a) - key(b));
   $(sortSel).innerHTML = [["base", "기본 순서"], ["growth", "논문 성장순"], ["gap", "국내 공백 우선"]].map(([id, l]) => `<button class="chip" data-lmsort="${id}" aria-pressed="${id === sort}">${l}</button>`).join("");
-  $(subSel).innerHTML = `기술 층마다 흩어져 있던 신호를 한 줄로 모았습니다. ${srcB("news")} ${srcB("cur")} <span class="b estimate">논문 신호</span> ${srcB("hub")} 카드를 누르면 아래 소식·허브·부품 화면이 그 층으로 걸러집니다.${sel ? ` <button class="chip" data-plclear aria-pressed="true">필터: ${esc(layerById(sel).label)} ✕ 해제</button>` : ""}`;
+  $(subSel).innerHTML = `기술 층마다 흩어져 있던 신호를 한 줄로 모았습니다. ${srcB("news")} ${srcB("cur")} <span class="b estimate">논문 신호</span> ${srcB("hub")} 카드를 누르면 아래 소식·허브·부품 화면이 그 층으로 걸러집니다. <b>업계 전체 기준</b>이며, 노란 카드는 ${periodNow().label} 안에 새 소식·근거가 생긴 층입니다.${sel ? ` <button class="chip" data-plclear aria-pressed="true">필터: ${esc(layerById(sel).label)} ✕ 해제</button>` : ""}`;
   $(listSel).innerHTML = rows.map((r) => {
     const { l, pr } = r;
     const paperBox = pr
       ? `<div class="v">${sparkSvg(pr.series, r.hot ? "var(--good)" : "var(--accent)")}<span class="${growthCls(pr.growth, r.base)}">×${pr.growth ?? "–"} ${growthArrow(pr.growth, r.base)} ${growthWord(pr.growth, r.base)}</span></div><div class="s">${pr.b} → <b>${pr.a}</b>편${pr.small ? " ⚠ 표본 작음" : ""}</div>`
       : l.paper ? '<div class="s">수집 중…</div>' : '<div class="s">측정 불가 — 논문 초록에 거의 안 나옴</div>';
-    const newsBox = !r.tagged ? '<div class="s">분류 전</div>' : l.news_layer ? `<div class="v"><b>${r.news.length}</b>건</div><div class="s">최근 30일</div>` : '<div class="s">해당 태그 없음</div>';
+    const newsBox = r.news.length ? `<div class="v"><b>${r.news.length}</b>건</div><div class="s">최근 30일${r.fresh ? ` · <b style="color:var(--warn)">새 ${r.fresh}</b>` : ""}</div>` : '<div class="s">최근 30일 기사 없음</div>';
     const curBox = r.notable.length ? `<div class="v"><b>${r.notable.length}</b>건</div><div class="s">${r.notable.map((n) => esc(coLabel(n.company))).join("·")}</div>` : '<div class="s">확인된 것 없음</div>';
     const krBox = !r.items.length ? '<div class="s">해당 부품 없음</div>' : r.kr ? `<div class="v">국내 <b>${r.kr}</b>곳</div><div class="s">${r.items.map((i) => esc(i.name.replace(/\(.*\)/, ""))).join("·")}</div>` : `<div class="v"><span class="b gap">국내 후보 없음</span></div><div class="s">${r.items.map((i) => esc(i.name.replace(/\(.*\)/, ""))).join("·")}</div>`;
-    return `<article class="lm${sel === l.id ? " on" : ""}${r.star ? " star" : ""}">
-      <div class="hd"><button class="lmname" data-pl="${l.id}" aria-pressed="${sel === l.id}">${esc(l.label)}</button>${r.star ? `<span class="b H">주목 ${tipBtn(TIPS.star)}</span>` : ""}${r.barrier ? `<span class="b ${r.barrier}">${BARRIER[r.barrier]}</span>` : ""}<span class="lmlinks">${extA(searchUrl(null, l.id, "espacenet"), "에스페이스넷 ↗")} ${extA(searchUrl(null, l.id, "google"), "구글 특허 ↗")}</span></div>
+    return `<article class="lm${sel === l.id ? " on" : ""}${r.star ? " star" : ""}${r.changed ? " new" : ""}">
+      <div class="hd"><button class="lmname" data-pl="${l.id}" aria-pressed="${sel === l.id}">${esc(l.label)}</button>${r.changed ? `<span class="b M" title="선택한 기간에 새 특허 소식·큐레이션 근거가 있거나 논문 편수가 크게 바뀐 층">변화${r.moved ? "·논문" : ""}</span>` : ""}${r.star ? `<span class="b H">주목 ${tipBtn(TIPS.star)}</span>` : ""}${r.barrier ? `<span class="b ${r.barrier}">${BARRIER[r.barrier]}</span>` : ""}<span class="lmlinks">${extA(searchUrl(null, l.id, "espacenet"), "에스페이스넷 ↗")} ${extA(searchUrl(null, l.id, "google"), "구글 특허 ↗")}</span></div>
       <div class="mx"><div class="box"><span class="k">논문 신호 ${tipBtn(TIPS.paper)}</span>${paperBox}</div>
         <div class="box"><span class="k">특허·IP 소식 ${tipBtn(TIPS.news)}</span>${newsBox}</div>
         <div class="box"><span class="k">큐레이션 근거 ${tipBtn(TIPS.cur)}</span>${curBox}</div>
@@ -888,6 +906,31 @@ function renderLayerMatrix(listSel, sortSel, subSel) {
 }
 const renderLayerMatrices = () => { renderLayerMatrix("#lm", "#lm-sort", "#lm-sub"); renderLayerMatrix("#lm2", "#lm2-sort", "#lm2-sub"); };
 
+// 선택한 기간(7일·30일·지난 방문 이후) — 홈 화면의 기간 칩과 같은 값
+function periodNow() {
+  let id = store.get("period", VISIT.prev ? "since" : "7");
+  if (id === "since" && !VISIT.prev) id = "7";
+  return { id, start: periodStart(id), label: id === "since" ? "지난 방문 이후" : `${id}일` };
+}
+// 층 키워드가 제목·요약에 있거나 AI 가 그 층 태그를 붙인 기사
+const layerNews = (L, items) => {
+  const re = L.kw ? new RegExp(L.kw, "i") : null;
+  return items.filter((x) => (x.ai && L.news_layer && x.layer === L.news_layer) || (re && re.test(`${x.title} ${x.title_ko || ""} ${x.summary_ko || ""}`)));
+};
+const pat30 = () => { const since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10); return (D.news || []).filter((x) => isPat(x) && x.date >= since); };
+const paperMoved = (L, start) => !!(L.paper && (D.changes || []).some((c) => c.kind === "paper" && c.layer === L.paper && c.date >= start));
+// 한 칸(출원인 × 기술 층)의 기업 단위 신호: 최근 30일 특허 소식 + 큐레이션 근거. 새 것 = 선택 기간 안에 생긴 것
+function hubCell(row, lid, start, items30) {
+  const L = lid === "total" ? null : layerById(lid);
+  let news = patNewsFor(row, items30);
+  if (L) news = layerNews(L, news);
+  const notable = (row.company ? PREF().companies[row.company]?.notable || [] : []).filter((n) => !L || n.layer === lid);
+  const nNew = news.filter((x) => x.date >= start).length;
+  const eNew = notable.filter((n) => String(n.date) >= start.slice(0, String(n.date).length)).length;
+  return { news, notable, nNew, eNew, changed: nNew + eNew > 0 };
+}
+const hubLayersFor = (row) => [{ id: "total", label: "로봇 전체", note: "cpc=B25J — 이 출원인의 로봇 특허 전반" }, ...HUB().layers].filter((l) => (l.id === "total" ? row.scope === "robot" : !row.only || row.only.includes(l.id)));
+
 // ---- 3) 조회 허브: 기업을 먼저 고르는 방식 ----
 function renderPatentHub() {
   const H = HUB(), site = store.get("patSite", "espacenet"), sel = selLayer();
@@ -895,22 +938,49 @@ function renderPatentHub() {
   let cur = store.get("patCo", "tesla");
   if (!H.rows.some((r) => r.id === cur)) cur = H.rows[0].id;
   const row = H.rows.find((r) => r.id === cur);
-  const chip = (r) => `<button class="chip" data-pco="${esc(r.id)}" aria-pressed="${r.id === cur}">${esc(r.company ? coLabel(r.company) : r.name)}</button>`;
-  $("#hub-site").innerHTML = [["espacenet", "에스페이스넷"], ["google", "구글 특허"]].map(([id, l]) => `<button class="chip" data-psite="${id}" aria-pressed="${id === site}">${l}</button>`).join("");
-  $("#hub-co").innerHTML = `<div class="chips">${companies.map(chip).join("")}</div><div class="chips" style="margin-top:6px"><span class="muted" style="font-size:0.74rem;align-self:center">부품 경쟁사·국내 부품사</span>${others.map(chip).join("")}</div>`;
-  const R = PREF(), since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
-  const allPat30 = (D.news || []).filter((x) => isPat(x) && x.date >= since);
-  const myNews = patNewsFor(row, allPat30);
-  const layers = [{ id: "total", label: "로봇 전체", note: "cpc=B25J — 이 출원인의 로봇 특허 전반" }, ...H.layers].filter((l) => l.id === "total" ? row.scope === "robot" : !row.only || row.only.includes(l.id));
-  $("#hub-cards").innerHTML = `<p class="sub" style="margin:0 0 8px"><b>${esc(row.name)}</b> · 최근 30일 특허·IP 소식 ${myNews.length}건 <span class="muted">(전체 ${allPat30.length}건 중${myNews.length ? "" : " — 이 이름이 나온 기사가 아직 없습니다"})</span>${row.only ? " · 이 출원인과 관련된 기술 층만 표시" : ""}</p>
-    <div class="hcards">${layers.map((l) => {
-      const pr = l.paper ? paperRow(l.paper) : null;
-      const ev = row.company ? (R.companies[row.company]?.notable || []).filter((n) => n.layer === l.id) : [];
-      return `<div class="hc${sel === l.id ? " on" : ""}"><b>${esc(l.label)}</b>
-        ${pr ? `<span class="s ${growthCls(pr.growth, D.papers.baseline_growth)}">논문 ×${pr.growth ?? "–"} ${growthArrow(pr.growth, D.papers.baseline_growth)}</span>` : ""}
-        ${ev.length ? `<span class="b reported" title="${esc(ev.map((e) => e.title).join(" / "))}">근거 ${ev.length}건</span>` : ""}
-        <span class="lmlinks">${extA(searchUrl(row, l.id), `${site === "google" ? "구글" : "에스페이스넷"} ↗`)}</span></div>`;
-    }).join("")}</div>`;
+  const { start, label: plabel } = periodNow(), items30 = pat30(), view = store.get("patView", "co");
+  const cellsOf = (r) => hubLayersFor(r).map((l) => ({ l, c: hubCell(r, l.id, start, items30) }));
+  const hot = Object.fromEntries(H.rows.map((r) => [r.id, cellsOf(r).some(({ c }) => c.changed)]));
+  const chip = (r) => `<button class="chip${hot[r.id] ? " hot" : ""}" data-pco="${esc(r.id)}" aria-pressed="${view === "co" && r.id === cur}">${esc(r.company ? coLabel(r.company) : r.name)}</button>`;
+  $("#hub-site").innerHTML = [["espacenet", "에스페이스넷"], ["google", "구글 특허"]].map(([id, l]) => `<button class="chip" data-psite="${id}" aria-pressed="${id === site}">${l}</button>`).join("")
+    + `<span style="width:14px"></span>` + [["co", "기업별 보기"], ["all", "전체 한눈에"]].map(([id, l]) => `<button class="chip" data-pview="${id}" aria-pressed="${id === view}">${l}</button>`).join("");
+  const legend = `<div class="lgd"><span><i></i>변화 없음(기존 색)</span><span><i class="n"></i>${esc(plabel)} 안에 새 소식·근거가 있음</span><span>숫자 = 최근 30일 특허 소식 + 큐레이션 근거 건수</span><span>논문 수치는 기업이 아닌 <b>업계 전체</b> 값</span></div>`;
+  if (view === "all") {
+    $("#hub-co").innerHTML = "";
+    const lyr = H.layers, tot = H.rows.map((r) => ({ r, cells: Object.fromEntries(cellsOf(r).map(({ l, c }) => [l.id, c])) }));
+    const cnt = (x) => Object.values(x.cells).reduce((n, c) => n + c.news.length + c.notable.length, 0), chg = (x) => Object.values(x.cells).filter((c) => c.changed).length;
+    tot.sort((x, y) => chg(y) - chg(x) || cnt(y) - cnt(x));
+    const active = tot.filter((x) => cnt(x)), quiet = tot.filter((x) => !cnt(x));
+    const cols = [{ id: "total", label: "로봇 전체" }, ...lyr];
+    const td = (x, l) => {
+      const c = x.cells[l.id];
+      if (!c) return '<td class="c z">–</td>';
+      const n = c.news.length + c.notable.length;
+      return n ? `<td class="c${c.changed ? " new" : ""}" data-hm="${esc(x.r.id)}|${l.id}" title="${esc(x.r.name)} · ${esc(l.label)} — 소식 ${c.news.length}건(새 ${c.nNew}) · 근거 ${c.notable.length}건(새 ${c.eNew})"><b>${n}</b></td>` : '<td class="c z">·</td>';
+    };
+    const indRow = `<tr><td><b>업계 전체(논문)</b></td>${cols.map((l) => {
+      const L = l.id === "total" ? null : layerById(l.id), pr = L?.paper ? paperRow(L.paper) : null;
+      return pr ? `<td class="c ind${paperMoved(L, start) ? " new" : ""}" title="업계 전체 논문 — 기업과 무관"><b>×${pr.growth ?? "–"}</b></td>` : '<td class="c ind"><b>·</b></td>';
+    }).join("")}</tr>`;
+    $("#hub-cards").innerHTML = `${legend}<p class="sub" style="margin:0 0 8px">${active.length}곳에서 신호가 잡혔고, ${tot.filter((x) => chg(x)).length}곳에 ${esc(plabel)} 안의 변화가 있습니다. 칸을 누르면 그 기업·기술 층으로 이동합니다.</p>
+      <div class="card" style="padding:0;overflow-x:auto"><table class="hm"><tr><th>출원인</th>${cols.map((l) => `<th>${esc(l.label)}</th>`).join("")}</tr>${indRow}
+      ${active.map((x) => `<tr><td><b>${esc(x.r.company ? coLabel(x.r.company) : x.r.name)}</b></td>${cols.map((l) => td(x, l)).join("")}</tr>`).join("")}</table></div>
+      ${quiet.length ? `<p class="sub" style="margin:8px 0 0">신호 없음(최근 30일 소식·큐레이션 근거 없음): ${quiet.map((x) => `<button class="chip co" data-hm="${esc(x.r.id)}|total">${esc(x.r.company ? coLabel(x.r.company) : x.r.name)}</button>`).join(" ")}</p>` : ""}`;
+  } else {
+    $("#hub-co").innerHTML = `<div class="chips">${companies.map(chip).join("")}</div><div class="chips" style="margin-top:6px"><span class="muted" style="font-size:0.74rem;align-self:center">부품 경쟁사·국내 부품사</span>${others.map(chip).join("")}</div>`;
+    const cells = cellsOf(row), myNews = patNewsFor(row, items30);
+    $("#hub-cards").innerHTML = `${legend}<p class="sub" style="margin:0 0 8px"><b>${esc(row.name)}</b> · 최근 30일 특허·IP 소식 ${myNews.length}건 <span class="muted">(전체 ${items30.length}건 중${myNews.length ? "" : " — 이 이름이 나온 기사가 아직 없습니다"})</span>${row.only ? " · 이 출원인과 관련된 기술 층만 표시" : ""}</p>
+      <div class="hcards">${cells.map(({ l, c }) => {
+        const pr = l.paper ? paperRow(l.paper) : null;
+        const own = c.news.length || c.notable.length
+          ? `${c.news.length ? `<span class="s" title="${esc(c.news.slice(0, 5).map((x) => x.title_ko || x.title).join(" / "))}">소식 <b>${c.news.length}</b>건${c.nNew ? ` <b style="color:var(--warn)">(새 ${c.nNew})</b>` : ""}</span>` : ""}${c.notable.length ? `<span class="b reported" title="${esc(c.notable.map((e) => e.title).join(" / "))}">근거 ${c.notable.length}건${c.eNew ? " · 새" : ""}</span>` : ""}`
+          : '<span class="s muted">확인된 것 없음</span>';
+        return `<div class="hc${c.changed ? " new" : ""}${sel === l.id ? " on" : ""}">${l.id === "total" ? `<b>${esc(l.label)}</b>` : `<button class="lmname" data-pl="${l.id}" aria-pressed="${sel === l.id}">${esc(l.label)}</button>`}${c.changed ? `<span class="b M">새 ${c.nNew + c.eNew}</span>` : ""}
+          ${own}
+          ${pr ? `<span class="s ind ${growthCls(pr.growth, D.papers.baseline_growth)}" title="arXiv 로봇 논문 전체 기준 — 이 기업의 값이 아닙니다">업계 논문 ×${pr.growth ?? "–"} ${growthArrow(pr.growth, D.papers.baseline_growth)}${paperMoved(l, start) ? " · 변화" : ""}</span>` : ""}
+          <span class="lmlinks">${extA(searchUrl(row, l.id), `${site === "google" ? "구글" : "에스페이스넷"} ↗`)}</span></div>`;
+      }).join("")}</div>`;
+  }
   const co = $("#hb-co"), ly = $("#hb-ly");
   if (!co.options.length) {
     co.innerHTML = '<option value="">(출원인 지정 안 함)</option>' + H.rows.map((r) => `<option value="${esc(r.id)}">${esc(r.name)}${r.kind === "company" ? "" : r.kind === "incumbent" ? " (부품 경쟁사)" : " (국내 부품사)"}</option>`).join("");
@@ -935,9 +1005,9 @@ function renderPatentNews(listSel, subSel) {
   const sel = selLayer(), l = sel ? layerById(sel) : null;
   const all = (D.news || []).filter(isPat).sort((a, b) => b.date.localeCompare(a.date));
   let items = all;
-  const sc = selCo(), re = l?.kw ? new RegExp(l.kw, "i") : null;
+  const sc = selCo();
   // AI 가 붙인 층 태그가 있으면 그것으로, 아직 분류 전인 기사는 층 키워드가 제목·요약에 있는지로 거른다
-  if (l) items = all.filter((x) => (x.ai && l.news_layer && x.layer === l.news_layer) || (re && re.test(`${x.title} ${x.title_ko || ""} ${x.summary_ko || ""}`)));
+  if (l) items = layerNews(l, all);
   if (sc) items = patNewsFor(sc, items);
   const m = D.news_meta || {};
   $(subSel).innerHTML = (items.length || l || sc
@@ -1794,7 +1864,7 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-lmsort],[data-psite],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
+  const t = e.target.closest("[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-pview],[data-hm],[data-lmsort],[data-psite],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
   if (!t) return;
   if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
   if (t.dataset.co) return openSheet(t.dataset.co);
@@ -1802,6 +1872,12 @@ document.addEventListener("click", (e) => {
   if (t.dataset.pl) { setPatLayer(t.dataset.pl); return; }
   if (t.dataset.plclear !== undefined) { store.set("patLayer", null); rerenderCurrent(); return; }
   if (t.dataset.pco) { store.set("patCo", t.dataset.pco); store.set("patCoF", t.dataset.pco); rerenderCurrent(); return; }
+  if (t.dataset.pview) { store.set("patView", t.dataset.pview); rerenderCurrent(); return; }
+  if (t.dataset.hm) {
+    const [rid, lid] = t.dataset.hm.split("|");
+    store.set("patCo", rid); store.set("patCoF", rid); store.set("patLayer", lid === "total" ? null : lid); store.set("patView", "co");
+    rerenderCurrent(); $("#hub-cards")?.scrollIntoView({ block: "center" }); return;
+  }
   if (t.dataset.pcoclear !== undefined) { store.set("patCoF", null); rerenderCurrent(); return; }
   if (t.dataset.lmsort) { store.set("lmSort", t.dataset.lmsort); renderLayerMatrices(); return; }
   if (t.dataset.psite) { store.set("patSite", t.dataset.psite); renderPatentHub(); return; }
