@@ -138,6 +138,30 @@ def kpis(companies: list[dict], market: dict) -> dict:
     }
 
 
+def owner_basis(strategy: dict, companies: list[dict], warnings: list[str]) -> None:
+    """국가 레이더의 '소유 기준' 점선: 본사는 다른 나라지만 지분이 그 나라 기업인 회사(예: 보스턴 다이나믹스 → 한국)를
+    그 나라 점수에 가중치만큼 반영한다. 올리기만 하고 내리지 않으며, 기업 점수가 없는 축은 그대로 둔다."""
+    by_id = {c["id"]: c for c in companies}
+    tops = {**AXES, **ATTR_AXES}
+    names = {a["id"]: a["label"] for a in strategy["countries"]["axes"]}
+    for code, cfg in strategy["countries"].get("owner_basis", {}).items():
+        item = next((i for i in strategy["countries"]["items"] if i["id"] == code), None)
+        members = [by_id[i] for i in cfg["companies"] if i in by_id]
+        if item is None or len(members) != len(cfg["companies"]):
+            warnings.append(f"owner_basis {code}: 국가 또는 기업 id 없음")
+            continue
+        w, scores, adjust = float(cfg["weight"]), dict(item["scores"]), []
+        for axis, key in cfg["axis_map"].items():
+            for c in members:
+                norm = c["scores"][key][0] / tops[key] * 10
+                delta = round((norm - scores[axis]) * w) if norm > scores[axis] else 0
+                if delta > 0:
+                    adjust.append({"axis": axis, "label": names[axis], "company": c["id"], "from": scores[axis], "to": scores[axis] + delta,
+                                   "basis": f"{c['name_ko']} {c['scores'][key][0]}/{tops[key]} → 10점 환산 {norm:.1f}"})
+                    scores[axis] += delta
+        item["owner"] = {"scores": scores, "weight": w, "companies": [c["id"] for c in members], "adjust": adjust, "note": cfg.get("note", "")}
+
+
 def _median(xs: list[float]) -> float:
     xs = sorted(xs)
     n = len(xs)
@@ -320,6 +344,7 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     for c in companies:
         c["calc"] = {**score_company(c, warnings), **efficiency(c)}
     validate(companies, market, strategy, warnings)
+    owner_basis(strategy, companies, warnings)
     known = {c["id"] for c in companies}
     for m in specs["models"]:
         if m["company"] not in known or m["actuator"] not in specs["actuators"]:

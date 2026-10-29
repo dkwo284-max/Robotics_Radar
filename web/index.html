@@ -699,6 +699,7 @@ details.fold[open] > summary::after { content: "접기"; }
       <p class="sub">6개 축 0~10점(공개 정보 기반 분석). 칩을 눌러 강조</p>
       <div class="chips" id="cty-chips" style="margin-bottom:10px"></div>
       <div class="chart"><svg id="radar" class="radar" viewBox="0 0 360 300" role="img" aria-label="국가 경쟁력 레이더"></svg></div>
+      <p class="sub" id="radar-note" style="margin:6px 4px 0"></p>
       <div class="ins" id="cty" style="margin-top:10px"></div>
     </section>
     <section id="s-apps" class="full">
@@ -1774,8 +1775,13 @@ function renderStrat() {
     g += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" style="stroke:var(--line)"/><text x="${lx}" y="${ly + 3}" text-anchor="middle">${esc(a.label)}</text>`;
   });
   g += C.items.filter((c) => sel.includes(c.id)).map((c) => `<polygon class="c on" points="${C.axes.map((a, i) => pt(i, c.scores[a.id]).join(",")).join(" ")}" style="fill:${CTY_COLOR[c.id]};stroke:${CTY_COLOR[c.id]}"/>`).join("");
+  // 소유 기준 점선: 본사는 다른 나라지만 지분이 이 나라 기업인 회사(보스턴 다이나믹스 → 한국)를 가중치만큼 반영한 선
+  g += C.items.filter((c) => sel.includes(c.id) && c.owner?.adjust.length).map((c) => `<polygon points="${C.axes.map((a, i) => pt(i, c.owner.scores[a.id]).join(",")).join(" ")}" style="fill:none;stroke:${CTY_COLOR[c.id]};stroke-width:2.6;stroke-dasharray:6 4"/>${c.owner.adjust.map((x) => { const i = C.axes.findIndex((a) => a.id === x.axis), [px, py] = pt(i, x.to); return `<circle cx="${px}" cy="${py}" r="4" style="fill:var(--bg);stroke:${CTY_COLOR[c.id]};stroke-width:2"/>`; }).join("")}`).join("");
   $("#radar").innerHTML = g;
-  $("#cty-chips").innerHTML = C.items.map((c) => `<button class="chip" data-cty="${c.id}" aria-pressed="${sel.includes(c.id)}"><i class="dot" style="background:${CTY_COLOR[c.id]}"></i> ${esc(c.name)} ${Object.values(c.scores).reduce((a, b) => a + b, 0)}</button>`).join("");
+  const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
+  $("#cty-chips").innerHTML = C.items.map((c) => `<button class="chip" data-cty="${c.id}" aria-pressed="${sel.includes(c.id)}"><i class="dot" style="background:${CTY_COLOR[c.id]}"></i> ${esc(c.name)} ${sum(c.scores)}${c.owner?.adjust.length ? ` <span class="muted" title="소유 기준 포함 점수">(소유 기준 ${sum(c.owner.scores)})</span>` : ""}</button>`).join("");
+  const ownC = C.items.find((c) => c.owner?.adjust.length && sel.includes(c.id));
+  $("#radar-note").innerHTML = ownC ? `실선 = 본사 위치 기준 · <b style="color:${CTY_COLOR[ownC.id]}">점선 = ${esc(ownC.name)} 계열(소유 기준) 포함</b> — ${ownC.owner.companies.map((i) => esc(byId[i].name_ko)).join("·")}를 가중치 ${ownC.owner.weight}로 반영` : "";
   $("#cty").innerHTML = C.items.filter((c) => sel.includes(c.id)).map((c) => `
     <article class="card" style="display:grid;gap:6px"><b><i class="dot" style="background:${CTY_COLOR[c.id]}"></i> ${esc(c.name)} <span class="muted num" style="font-weight:400">${Object.values(c.scores).reduce((a, b) => a + b, 0)}/60</span></b>
       <p style="margin:0;font-size:.84rem;color:var(--muted)">${esc(c.why)}</p>
@@ -1785,7 +1791,10 @@ function renderStrat() {
         return (mine.length ? `<div style="font-size:.82rem"><b>${esc(c.name)} 계열(소유 기준)</b> ${mine.map(chip).join(" ")}<br><span class="muted">본사·개발은 ${mine.map((x) => COUNTRY[x.country]).join("·")}이지만 지분은 ${mine.map((x) => esc(byId[x.parent].name_ko)).join("·")} 소유입니다. 위 점수는 본사 위치 기준 큐레이션 값이라 이 기업을 합산하지 않았습니다.</span></div>` : "")
           + (away.length ? `<div style="font-size:.82rem" class="muted">위치 기준으로는 ${esc(c.name)} 기업이지만 소유는 다른 나라(${away.map((x) => `${esc(x.name_ko)} → ${COUNTRY[ownerCountry(x)]}`).join(", ")})입니다.</div>` : "");
       })()}
-      <div style="font-size:.84rem;padding:8px 10px;border-radius:10px;background:color-mix(in oklab, var(--accent) 9%, var(--surface))"><b style="color:var(--accent);margin-right:6px">한국 부품사에</b>${esc(c.for_kr)}</div></article>`).join("");
+      <div style="font-size:.84rem;padding:8px 10px;border-radius:10px;background:color-mix(in oklab, var(--accent) 9%, var(--surface))"><b style="color:var(--accent);margin-right:6px">한국 부품사에</b>${esc(c.for_kr)}</div>
+      ${c.owner?.adjust.length ? `<details class="fold" style="font-size:.82rem"><summary><b>소유 기준 점수 근거</b> ${sum(c.scores)} → <b>${sum(c.owner.scores)}</b></summary>
+        <div style="display:grid;gap:4px;margin-top:8px">${c.owner.adjust.map((x) => `<div class="rm"><span class="w" style="width:auto">${esc(x.label)}</span><span>${x.from} → <b>${x.to}</b> <span class="muted">(${esc(x.basis)})</span></span><span></span></div>`).join("")}</div>
+        <p class="sub" style="margin:8px 0 0">${esc(c.owner.note)}</p></details>` : ""}</article>`).join("");
 
   // 용도
   const A = S.applications, short = { manufacturing: "제조", logistics: "물류", retail: "리테일", research: "연구", hazard: "점검", health: "헬스", home: "가정" };

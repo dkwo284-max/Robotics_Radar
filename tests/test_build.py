@@ -46,3 +46,15 @@ def test_bom_asp_matches_share():
 def test_months_back():
     assert build.months_back("2026-10-29", "2025-11") == 11
     assert build.months_back("2026-10-29", "2025-10") == 12
+
+
+def test_owner_basis_raises_only_axes_where_the_subsidiary_scores_higher():
+    strategy = {"countries": {"axes": [{"id": "ai", "label": "AI"}, {"id": "cost", "label": "원가"}, {"id": "policy", "label": "정책"}],
+                              "items": [{"id": "KR", "scores": {"ai": 4, "cost": 5, "policy": 7}}],
+                              "owner_basis": {"KR": {"companies": ["x"], "weight": 0.3, "axis_map": {"ai": "tech", "cost": "scale"}}}}}
+    companies = [{"id": "x", "name_ko": "엑스", "scores": {"tech": [27, ""], "scale": [6, ""]}}]
+    warnings: list[str] = []
+    build.owner_basis(strategy, companies, warnings)
+    owner = strategy["countries"]["items"][0]["owner"]
+    assert owner["scores"] == {"ai": 6, "cost": 5, "policy": 7}  # 9.0 환산 → 4+(9-4)*0.3=5.5→6, 원가는 내리지 않음, 매핑 없는 축은 그대로
+    assert [a["axis"] for a in owner["adjust"]] == ["ai"] and not warnings

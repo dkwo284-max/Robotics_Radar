@@ -3,6 +3,14 @@
   "as_of": "2026-10-29",
 
   "countries": {
+    "owner_basis": {
+      "KR": {
+        "companies": ["bd"],
+        "weight": 0.3,
+        "axis_map": {"ai": "tech", "capital": "capital", "cost": "scale"},
+        "note": "소유 기준 점수 = 위치 기준 점수 + (한국 계열 기업의 해당 축 점수를 10점 만점으로 환산한 값 − 위치 기준 점수) × 가중치. 기업 점수가 더 높은 축만 올리고(내리지 않음), 기업 점수가 없는 축(부품 공급망·정책 지원·수요 시장)은 그대로 둡니다. 가중치 0.3 은 '한국 계열 기업 하나가 국가 전체 역량에 더하는 몫'을 가정한 값이며 data/strategy.json 에서 바꿀 수 있습니다."
+      }
+    },
     "axes": [
       {"id": "ai", "label": "AI·모델"},
       {"id": "supply", "label": "부품 공급망"},
