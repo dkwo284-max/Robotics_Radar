@@ -16,7 +16,7 @@ from urllib.parse import quote_plus
 import feedparser
 import httpx
 
-from common import log
+from common import log, plausible
 from llm import Gemini, LLMError
 
 RSS = {
@@ -71,10 +71,13 @@ SYSTEM = """당신은 휴머노이드·피지컬 AI 산업을 한국 제조·부
 - type: funding(투자 유치) / ipo(상장) / production(양산·생산능력) / product(제품·모델 공개) / deploy(현장 배치·고객) / partner(제휴) / supply(부품·공급망) / policy(정책·규제) / org(경영진·조직) / other.
 - title_ko: 자연스러운 한국어 제목(45자 이내).
 - summary_ko: 한국 부품사·투자 관점에서 왜 중요한지 한 문장(80자 이내). 주어진 제목·설명에 있는 사실만 쓰고 없는 수치를 지어내지 마세요.
-- importance: 1(참고) 2(주목) 3(의사결정에 영향 — 대형 조달·상장·양산 일정 변경·대형 고객 계약·규제).
-- facts: 기사에 명시된 수치만. field 는 valuation·funding_total·revenue·orders(USD 백만으로 환산, 위안은 7.1, 원은 1400, 홍콩달러 7.8 로 나눔),
-  cum_units(누적 출하·생산 대수), capacity(연간 생산능력 대수), target_2026(2026 출하·생산 목표 대수), price(대당 판매가 USD).
-  as_of 는 수치 기준 시점(YYYY-MM 또는 YYYY). 명시된 수치가 없으면 빈 배열.
+- title_ko·summary_ko 는 한글로만 쓰세요. 중국어·영어·스페인어 단어를 섞지 말고 고유명사도 한글로 표기합니다(예: Boston Dynamics → 보스턴 다이나믹스, 固态电池 → 전고체 배터리).
+- importance: 1(참고) 2(주목) 3(의사결정에 영향 — 1억 달러 이상 조달, 상장 단계 변화, 양산 일정 변경, 대형 고객 계약, 규제 통과).
+  3 은 드물게(전체의 10% 이내) 주세요. 신제품 시연·행사·채용·전망 기사는 1~2 입니다.
+- facts: 기사에 명시된 회사 전체 수치만. field 는 valuation·funding_total·revenue·orders(모두 금액, USD 백만으로 환산 — 위안은 7.1, 원은 1400, 홍콩달러 7.8 로 나눔.
+  대수로 된 주문은 넣지 마세요), cum_units(회사의 누적 출하·생산 총계 — 행사·시연에 동원된 대수나 한 고객 납품 대수는 아님),
+  capacity(연간 생산능력 대수), target_2026(2026 출하·생산 목표 대수), price(대당 판매가 USD).
+  as_of 는 수치 기준 시점(YYYY-MM 또는 YYYY). 확실하지 않으면 넣지 말고, 명시된 수치가 없으면 빈 배열.
 모든 id 를 한 번씩 반환하세요."""
 
 
@@ -190,7 +193,7 @@ def proposals(items: list[dict], companies: list[dict], old: list[dict], keep_da
             if not c:
                 continue
             cur = (c.get(f["field"]) or {}).get("v") if isinstance(c.get(f["field"]), dict) else None
-            if cur and abs(f["value"] - cur) / cur <= 0.10:
+            if not plausible(f["field"], cur, f["value"]):
                 continue
             key = (f["company"], f["field"], f["value"])
             out.setdefault(key, {"company": f["company"], "field": f["field"], "unit": FIELDS[f["field"]], "curated": cur,

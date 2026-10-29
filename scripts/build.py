@@ -14,7 +14,7 @@ import math
 import sys
 from datetime import date, datetime, timedelta, timezone
 
-from common import OUT, SRC, read_json, write_json
+from common import OUT, SRC, plausible, read_json, write_json
 
 # 경쟁력 점수 축과 만점. 합계 100 → Tier
 AXES = {"tech": 30, "scale": 30, "capital": 20, "execution": 20}
@@ -177,11 +177,11 @@ def alerts(companies: list[dict], news: dict, prices: dict, moves: dict, as_of: 
     names = {c["id"]: c["name_ko"] for c in companies}
     week = (date.fromisoformat(as_of) - timedelta(days=7)).isoformat()
     out = []
-    for x in news.get("items", []):
-        if x.get("importance", 1) >= 3 and x["date"] >= week:
-            out.append({"level": "high", "kind": "news", "title": x.get("title_ko") or x["title"], "sub": x.get("summary_ko", ""),
-                        "ids": x.get("companies", []), "url": x["url"], "date": x["date"]})
-    pending = news.get("proposals", [])
+    key_news = [x for x in news.get("items", []) if x.get("importance", 1) >= 3 and x["date"] >= week]
+    for x in key_news[:4]:  # 경보는 최근 핵심 소식 4건까지 — 나머지는 '오늘의 소식'에
+        out.append({"level": "high", "kind": "news", "title": x.get("title_ko") or x["title"], "sub": x.get("summary_ko", ""),
+                    "ids": x.get("companies", []), "url": x["url"], "date": x["date"]})
+    pending = news["proposals"]
     if pending:
         cs = sorted({p["company"] for p in pending})
         out.append({"level": "mid", "kind": "proposal", "title": f"검증 대기 수치 {len(pending)}건",
@@ -215,6 +215,10 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     strategy = load("strategy.json")
     news = read_json(OUT / "news.json", {})
     prices = read_json(OUT / "prices.json", {})
+    # 검증 대기: 큐레이션 값이 이미 반영됐거나 단위 착오로 보이는 제안은 뺀다
+    by_id = {c["id"]: c for c in raw["companies"]}
+    news["proposals"] = [{**p, "curated": fact_v(by_id[p["company"]], p["field"])} for p in news.get("proposals", [])
+                         if p["company"] in by_id and plausible(p["field"], fact_v(by_id[p["company"]], p["field"]), p["proposed"])]
     history = history if history is not None else read_json(SRC / "history.json", {"snapshots": []})
     warnings: list[str] = []
     companies = raw["companies"]

@@ -88,3 +88,13 @@ def test_score_moves_and_tier_change():
     moves = build.score_moves(comps, hist)
     assert moves["figure"]["d_total"] == 13 and moves["figure"]["tier_from"] == 2
     assert "tesla" not in moves
+
+
+def test_plausible_filters_unit_mistakes():
+    from common import plausible
+    assert plausible("cum_units", 15000, 110) is False      # 누적값 감소 (행사 동원 대수)
+    assert plausible("valuation", 39000, 40000) is False    # 10% 이내 = 같은 값
+    assert plausible("valuation", 39000, 60000) is True
+    assert plausible("valuation", 39000, 390) is False      # 1/100 — 단위 착오
+    assert plausible("price", None, 20) is False            # 대당 $20 은 불가능
+    assert plausible("cum_units", None, 1500) is True

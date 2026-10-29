@@ -12,6 +12,26 @@ OUT = ROOT / "web" / "data"  # 화면이 읽는 파일 (자동 수집 결과 포
 log = logging.getLogger("radar")
 
 
+CUMULATIVE = {"cum_units", "funding_total"}  # 누적값 — 줄어들 수 없음
+LIMITS = {"USD_M": 200_000, "units": 5_000_000}
+
+
+def plausible(field: str, cur, new) -> bool:
+    """AI 추출 수치를 '검증 대기'로 올릴 만한지: 기준값과 10% 넘게 다르되, 단위 착오로 보이는 값은 거른다."""
+    if not isinstance(new, (int, float)) or new <= 0:
+        return False
+    unit = "units" if field in ("cum_units", "capacity", "target_2026") else "USD" if field == "price" else "USD_M"
+    if unit in LIMITS and new > LIMITS[unit] or unit == "USD" and not 1_000 <= new <= 1_000_000:
+        return False
+    if not cur:
+        return True
+    if abs(new - cur) / cur <= 0.10:
+        return False  # 이미 같은 값
+    if field in CUMULATIVE and new < cur:
+        return False
+    return 0.2 <= new / cur <= 5
+
+
 def load_config() -> dict:
     return json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
 
