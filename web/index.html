@@ -796,11 +796,17 @@ function renderStrategyBrief() {
 }
 
 function renderEngineerBrief(start) {
-  const news = (D.news || []).filter((x) => x.date >= start && x.layer && x.layer !== "none");
+  const all = (D.news || []).filter((x) => x.date >= start);
+  const tagged = all.filter((x) => x.layer);          // AI 가 기술 층 태그를 붙인 기사 ('none' 포함)
+  const news = tagged.filter((x) => x.layer !== "none");
   const counts = Object.keys(LAYER).map((k) => [k, news.filter((x) => x.layer === k).length]);
   const max = Math.max(1, ...counts.map(([, n]) => n));
-  $("#layer-sub").textContent = `${start.slice(5).replace("-", "/")} 이후 AI 가 기술 층으로 분류한 소식 ${news.length}건 — 누르면 위 소식 목록을 그 층으로 거릅니다`;
-  $("#layers").innerHTML = counts.map(([k, n]) => `<div class="hbar" data-nf="${k}" style="cursor:pointer"><span class="n">${LAYER[k]}</span><span class="track"><i style="width:${(n / max) * 100}%"></i></span><span class="v">${n}건</span></div>`).join("");
+  const pending = all.length - tagged.length;
+  $("#layer-sub").textContent = !all.length ? "이 기간에 수집된 소식이 없습니다"
+    : !tagged.length ? `기술 층 분류 전입니다 — 이 기간 소식 ${all.length}건에 아직 AI 태그가 없습니다. 다음 자동 수집(매일 UTC 19:10)에서 분류되며, 그전까지 0건은 '소식이 없다'가 아니라 '아직 분류 전'입니다`
+    : `${start.slice(5).replace("-", "/")} 이후 소식 ${all.length}건 중 ${tagged.length}건 분류됨(기술 층 해당 ${news.length}건, 해당 없음 ${tagged.length - news.length}건)${pending ? ` · ${pending}건은 분류 대기` : ""} — 누르면 위 소식 목록을 그 층으로 거릅니다`;
+  $("#layers").innerHTML = (tagged.length ? "" : '<div class="empty">분류 전</div>')
+    + (tagged.length ? counts.map(([k, n]) => `<div class="hbar" data-nf="${k}" style="cursor:pointer"><span class="n">${LAYER[k]}</span><span class="track"><i style="width:${(n / max) * 100}%"></i></span><span class="v">${n}건</span></div>`).join("") : "");
   renderActMix("#act-mix");
   $("#gaps").innerHTML = D.bom.items.filter((i) => !i.kr.length).map((i) => `<a class="chip" href="#parts" style="text-decoration:none;color:inherit">${esc(i.name)} · ${BARRIER[i.barrier]}</a>`).join("");
 }

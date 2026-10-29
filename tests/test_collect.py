@@ -98,3 +98,9 @@ def test_plausible_filters_unit_mistakes():
     assert plausible("valuation", 39000, 390) is False      # 1/100 — 단위 착오
     assert plausible("price", None, 20) is False            # 대당 $20 은 불가능
     assert plausible("cum_units", None, 1500) is True
+
+
+def test_needs_retry_covers_items_classified_before_new_tags():
+    assert news.needs_retry({"ai": False}) is True                      # AI 분류 전
+    assert news.needs_retry({"ai": True}) is True                       # 역할·기술 층 태그가 생기기 전에 분류됨
+    assert news.needs_retry({"ai": True, "layer": "none"}) is False     # 'none' 도 분류가 끝난 값

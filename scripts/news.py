@@ -229,6 +229,11 @@ def proposals(items: list[dict], companies: list[dict], old: list[dict], keep_da
     return sorted((p for p in out.values() if p["date"] >= cutoff), key=lambda p: p["date"], reverse=True)
 
 
+def needs_retry(x: dict) -> bool:
+    """AI 로 분류되지 않았거나, 역할·기술 층·신호 태그가 생기기 전에 분류돼 태그가 없는 기사는 다시 분류한다."""
+    return not x.get("ai") or "layer" not in x
+
+
 def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client: httpx.Client | None = None,
                 signposts: list[dict] | None = None) -> dict:
     own = client is None
@@ -238,7 +243,7 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
         fresh = collect(cfg, client, set(items) | set(old.get("dropped", [])))
         # 키가 없거나 상한에 걸려 제목만 저장된 최근 기사는 AI 를 쓸 수 있을 때 다시 분류한다(새 기사 먼저)
         since = (date.today() - timedelta(days=int(cfg["news"].get("lookback_days", 7)))).isoformat()
-        retry = [{**x, "desc": ""} for x in items.values() if not x.get("ai") and x["date"] >= since] if llm.enabled else []
+        retry = [{**x, "desc": ""} for x in items.values() if needs_retry(x) and x["date"] >= since] if llm.enabled else []
         done, warn, dropped = classify(fresh + retry, companies, llm, int(cfg["news"].get("max_ai_items", 40)), signposts)
         for i in dropped:
             items.pop(i, None)

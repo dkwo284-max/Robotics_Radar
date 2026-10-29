@@ -5,7 +5,7 @@
     "lookback_days": 7,
     "keep_days": 120,
     "per_company": 3,
-    "max_ai_items": 40,
+    "max_ai_items": 60,
     "queries": {
       "_market": [["humanoid robot", "en"], ["휴머노이드 로봇", "ko"]],
       "tesla": [["\"Tesla Optimus\" OR \"Optimus robot\"", "en"]],
