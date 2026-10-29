@@ -28,9 +28,13 @@ CFG = {"base": "cat:cs.RO", "ttl_days": 6, "min_sample": 30, "total": {"id": "to
                   {"id": "hand", "label": "손", "q": "(abs:\"dexterous hand\")", "link": "\"dexterous hand\"", "parts": ["hand"], "note": "n"}]}
 
 
-def test_periods_are_two_consecutive_years():
-    p = papers.periods(TODAY)
-    assert p["a"] == (date(2025, 10, 30), TODAY) and p["b"] == (date(2024, 10, 30), date(2025, 10, 29))
+def test_month_helpers_and_finality():
+    assert papers.month_list(date(2026, 10, 29), 3) == ["2026-07", "2026-08", "2026-09"]
+    assert papers.month_list(date(2027, 1, 5), 2) == ["2026-11", "2026-12"]
+    assert papers.month_range("2026-02") == (date(2026, 2, 1), date(2026, 2, 28))
+    assert papers.is_final([100, "2026-10-09"], "2026-09") is True       # 9월이 끝난 지 8일 뒤에 센 값 → 확정
+    assert papers.is_final([100, "2026-10-05"], "2026-09") is False      # 아직 늦은 제출이 더 올라올 수 있음
+    assert papers.is_final(None, "2026-09") is False
 
 
 def test_total_builds_query_with_dates_and_parses_count():
@@ -60,29 +64,40 @@ def test_total_retries_when_busy_and_raises_on_bad_shape():
         pass
 
 
-def test_collect_refreshes_only_stale_layers_and_keeps_data_on_failure():
+def test_collect_counts_months_caches_final_ones_and_keeps_data_on_failure():
     n = {"calls": 0}
 
     def handler(req):
         n["calls"] += 1
         return httpx.Response(200, text=feed(100 if "humanoid" in req.url.params["search_query"] else 1000))
 
+    cfg = {**CFG, "months": 4}
     data: dict = {}
-    papers.collect(CFG, data, make(handler), TODAY)
-    assert set(data["layers"]) == {"total", "humanoid", "hand"} and n["calls"] == 6          # 층 3개 × 기간 2개
-    papers.collect(CFG, data, make(handler), date(2026, 10, 31))                              # 2일 지남 — 새로 세지 않음
-    assert n["calls"] == 6
-    papers.collect(CFG, data, make(lambda req: httpx.Response(500, text="boom")), date(2026, 11, 10), force=True)
-    assert data["warnings"] and data["layers"]["total"]["a"] == 1000                          # 실패하면 지난 값 보존
+    saved = []
+    papers.collect(cfg, data, make(handler), TODAY, on_layer_done=lambda: saved.append(1))
+    assert n["calls"] == 12 and len(saved) == 3                                      # 층 3개 × 4개월, 층마다 저장
+    assert data["month_list"] == ["2026-06", "2026-07", "2026-08", "2026-09"] and data["months"]["total"]["2026-09"] == [1000, "2026-10-29"]
+    papers.collect(cfg, data, make(handler), date(2026, 10, 31))                      # 2일 뒤 — 새로 세지 않음(6일 미만)
+    assert n["calls"] == 12
+    papers.collect(cfg, data, make(handler), date(2026, 11, 10))                      # 10월이 끝난 달로 편입 — 6~9월은 확정이라 10월만 센다
+    assert n["calls"] - 12 == 3
+    papers.collect(cfg, data, make(lambda req: httpx.Response(500, text="boom")), date(2026, 12, 20), force=True)
+    assert data["warnings"] and data["months"]["total"]["2026-09"][0] == 1000       # 실패해도 창 안의 지난 값은 보존
+    assert "2026-06" not in data["months"]["total"]                                # 창(최근 4개월) 밖의 오래된 달은 정리됨
 
 
-def test_paper_block_shares_growth_and_small_sample_flag():
-    data = {"layers": {"total": {"a": 1000, "b": 800}, "humanoid": {"a": 100, "b": 40}, "hand": {"a": 12, "b": 6}}, "windows": {"a": ["x", "y"]}}
-    b = paper_calc.block(CFG, data)
-    assert b["ready"] and b["total"]["growth"] == 1.25 and b["baseline_growth"] == 2.5
+def test_paper_block_sums_two_year_halves_and_exposes_series():
+    months = [f"2025-{m:02d}" for m in range(1, 13)] + [f"2026-{m:02d}" for m in range(1, 13)]
+    cell = lambda vals: {m: [v, "2027-01-20"] for m, v in zip(months, vals)}   # noqa: E731
+    data = {"month_list": months, "months": {"total": cell([100] * 12 + [150] * 12), "humanoid": cell([10] * 12 + [25] * 12), "hand": cell([1] * 12 + [2] * 12)}}
+    b = paper_calc.block({**CFG, "months": 24}, data)
+    assert b["ready"] and b["total"]["a"] == 1800 and b["total"]["b"] == 1200 and b["total"]["growth"] == 1.5
+    assert b["windows"] == {"a": ["2026-01", "2026-12"], "b": ["2025-01", "2025-12"]} and b["baseline_growth"] == 2.5
     hand = next(r for r in b["rows"] if r["id"] == "hand")
-    assert hand["share_a"] == 0.012 and hand["growth"] == 2.0 and hand["small"] is True and "arxiv.org/search" in hand["link"]
-    assert paper_calc.block(CFG, {})["ready"] is False and paper_calc.state(paper_calc.block(CFG, {})) == {}
+    assert (hand["a"], hand["b"], hand["growth"]) == (24, 12, 2.0) and hand["small"] is True and len(hand["series"]) == 24 and "arxiv.org/search" in hand["link"]
+    assert paper_calc.block(CFG, {})["ready"] is False
+    del data["months"]["hand"]["2026-12"]                                       # 한 층에 빈 달이 있으면 그 층만 빠진다
+    assert [r["id"] for r in paper_calc.block({**CFG, "months": 24}, data)["rows"]] == ["humanoid"]
 
 
 def test_paper_changes_use_threshold_and_baseline():
@@ -96,3 +111,22 @@ def test_paper_changes_use_threshold_and_baseline():
     kept = changes.keep_baseline(prev, cur, out)["papers"]
     assert kept == {"hand": 203, "vla": 300, "tactile": 40}       # 작은 증가(vla)는 기준 유지, 기록된 칸·새 칸만 갱신
     assert changes.diff({"companies": {}, "signposts": {}, "specs": {}}, cur, ctx, "2026-11-06") == []   # 이전에 papers 가 없으면 기준만
+
+
+def test_months_counted_before_they_settle_are_refreshed_later():
+    calls = []
+
+    def handler(req):
+        calls.append(req.url.params["search_query"][-30:])
+        return httpx.Response(200, text=feed(7))
+
+    cfg = {**CFG, "months": 2, "layers": [], "total": {"id": "total", "q": ""}}
+    data: dict = {}
+    papers.collect(cfg, data, make(handler), date(2026, 10, 3))          # 9월이 끝난 지 3일 — 아직 늦은 제출이 더 올라올 수 있다
+    assert data["month_list"] == ["2026-08", "2026-09"] and len(calls) == 2
+    papers.collect(cfg, data, make(handler), date(2026, 10, 6))          # 3일 뒤 — 6일 미만이라 그대로
+    assert len(calls) == 2
+    papers.collect(cfg, data, make(handler), date(2026, 10, 12))         # 9일 뒤 — 8월은 확정, 9월은 8일이 지난 뒤 다시 센다
+    assert len(calls) == 3 and data["months"]["total"]["2026-09"][1] == "2026-10-12"
+    papers.collect(cfg, data, make(handler), date(2026, 10, 30))         # 확정된 뒤에는 다시 세지 않는다
+    assert len(calls) == 3

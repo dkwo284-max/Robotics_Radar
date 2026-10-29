@@ -4,55 +4,189 @@
   "sector": {
     "note": "GreyB 휴머노이드 특허 지형(최근 20년 누적 출원, 패밀리 기준) 상위 — 한국·미국 기업은 일부만 상위권. 건수는 정의에 따라 크게 달라진다.",
     "items": [
-      {"name": "UBTech", "value": 521, "company": "ubtech", "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"},
-      {"name": "Honda", "value": 372, "company": null, "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"},
-      {"name": "Toyota", "value": 214, "company": null, "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"},
-      {"name": "Boston Dynamics", "value": 151, "company": "bd", "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"},
-      {"name": "Fourier", "value": 150, "company": "fourier", "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"},
-      {"name": "AgiBot", "value": 109, "company": "agibot", "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"}
+      {
+        "name": "UBTech",
+        "value": 521,
+        "company": "ubtech",
+        "kind": "reported",
+        "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+        "lane": "greyb"
+      },
+      {
+        "name": "Honda",
+        "value": 372,
+        "company": null,
+        "kind": "reported",
+        "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+        "lane": "greyb"
+      },
+      {
+        "name": "Toyota",
+        "value": 214,
+        "company": null,
+        "kind": "reported",
+        "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+        "lane": "greyb"
+      },
+      {
+        "name": "Boston Dynamics",
+        "value": 151,
+        "company": "bd",
+        "kind": "reported",
+        "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+        "lane": "greyb"
+      },
+      {
+        "name": "Fourier",
+        "value": 150,
+        "company": "fourier",
+        "kind": "reported",
+        "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+        "lane": "greyb"
+      },
+      {
+        "name": "AgiBot",
+        "value": 109,
+        "company": "agibot",
+        "kind": "reported",
+        "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+        "lane": "greyb"
+      }
     ]
   },
   "companies": {
     "ubtech": {
       "portfolio": [
-        {"v": 521, "unit": "건", "basis": "GreyB 휴머노이드 특허 지형, 최근 20년 누적 출원 1위", "as_of": "2026", "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"},
-        {"v": 2985, "unit": "건", "basis": "선전시 발표, 보유 등록 특허(로봇 전반) — 위와 집계 기준이 다름", "as_of": "2026-04", "kind": "reported", "src": "https://drc.sz.gov.cn/ywb/szxw/tpxw/content/post_12719067.html"}
+        {
+          "v": 521,
+          "unit": "건",
+          "basis": "GreyB 휴머노이드 특허 지형, 최근 20년 누적 출원 1위",
+          "as_of": "2026",
+          "kind": "reported",
+          "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+          "lane": "greyb"
+        },
+        {
+          "v": 2985,
+          "unit": "건",
+          "basis": "선전시 발표, 보유 등록 특허(로봇 전반) — 위와 집계 기준이 다름",
+          "as_of": "2026-04",
+          "kind": "reported",
+          "src": "https://drc.sz.gov.cn/ywb/szxw/tpxw/content/post_12719067.html",
+          "lane": "sz_granted"
+        }
       ],
       "notable": []
     },
     "unitree": {
       "portfolio": [
-        {"v": 328, "unit": "건", "basis": "분석사 프로필, 전 세계 특허(등록 231건 포함)", "as_of": "2025", "kind": "reported", "src": "https://insights.greyb.com/unitree-robotics-patents/"}
+        {
+          "v": 328,
+          "unit": "건",
+          "basis": "분석사 프로필, 전 세계 특허(등록 231건 포함)",
+          "as_of": "2025",
+          "kind": "reported",
+          "src": "https://insights.greyb.com/unitree-robotics-patents/",
+          "lane": "analyst_global"
+        }
       ],
       "notable": [
-        {"date": "2026-01", "title": "휴머노이드 로봇 디자인 특허 2건 등록(1/6, 1/20)", "layer": null, "kind": "reported", "src": "https://technode.com/2026/01/20/unitree-granted-two-humanoid-robot-design-patents-ships-over-5500-units-in-2025/"}
+        {
+          "date": "2026-01",
+          "title": "휴머노이드 로봇 디자인 특허 2건 등록(1/6, 1/20)",
+          "layer": null,
+          "kind": "reported",
+          "src": "https://technode.com/2026/01/20/unitree-granted-two-humanoid-robot-design-patents-ships-over-5500-units-in-2025/"
+        }
       ]
     },
     "bd": {
-      "portfolio": [{"v": 151, "unit": "건", "basis": "GreyB 휴머노이드 특허 지형(7위)", "as_of": "2026", "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"}],
+      "portfolio": [
+        {
+          "v": 151,
+          "unit": "건",
+          "basis": "GreyB 휴머노이드 특허 지형(7위)",
+          "as_of": "2026",
+          "kind": "reported",
+          "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+          "lane": "greyb"
+        }
+      ],
       "notable": []
     },
     "fourier": {
-      "portfolio": [{"v": 150, "unit": "건", "basis": "GreyB 휴머노이드 특허 지형", "as_of": "2026", "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"}],
+      "portfolio": [
+        {
+          "v": 150,
+          "unit": "건",
+          "basis": "GreyB 휴머노이드 특허 지형",
+          "as_of": "2026",
+          "kind": "reported",
+          "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+          "lane": "greyb"
+        }
+      ],
       "notable": []
     },
     "agibot": {
-      "portfolio": [{"v": 109, "unit": "건", "basis": "GreyB 휴머노이드 특허 지형", "as_of": "2026", "kind": "reported", "src": "https://insights.greyb.com/humanoid-robotics-patents/"}],
+      "portfolio": [
+        {
+          "v": 109,
+          "unit": "건",
+          "basis": "GreyB 휴머노이드 특허 지형",
+          "as_of": "2026",
+          "kind": "reported",
+          "src": "https://insights.greyb.com/humanoid-robotics-patents/",
+          "lane": "greyb"
+        }
+      ],
       "notable": []
     },
     "tesla": {
       "portfolio": [],
       "notable": [
-        {"date": "2025-06", "title": "전 직원·스타트업(Proception)을 로봇 손 영업비밀 유출로 제소", "layer": "hand", "kind": "reported", "src": "https://heise.de/-10443736"},
-        {"date": "2026-06", "title": "위 소송 합의·취하 — 상대 스타트업은 시드 $11M 조달 후 로봇 손 출하 시작", "layer": "hand", "kind": "reported", "src": "https://thenextweb.com/news/proception-robot-hand-tesla-trade-secret-settlement-seed-round"}
+        {
+          "date": "2025-06",
+          "title": "전 직원·스타트업(Proception)을 로봇 손 영업비밀 유출로 제소",
+          "layer": "hand",
+          "kind": "reported",
+          "src": "https://heise.de/-10443736"
+        },
+        {
+          "date": "2026-06",
+          "title": "위 소송 합의·취하 — 상대 스타트업은 시드 $11M 조달 후 로봇 손 출하 시작",
+          "layer": "hand",
+          "kind": "reported",
+          "src": "https://thenextweb.com/news/proception-robot-hand-tesla-trade-secret-settlement-seed-round"
+        }
       ]
     },
     "rainbow": {
       "portfolio": [],
       "notable": [
-        {"date": "2023", "title": "삼성전자 지분 투자(14.7%) 시기를 전후해 특허 약 17건 출원 — 평소 연 3~5건 대비 급증(윕스 인용 보도)", "layer": null, "kind": "reported", "src": "https://news.mtn.co.kr/news-detail/2026060814463030650"}
+        {
+          "date": "2023",
+          "title": "삼성전자 지분 투자(14.7%) 시기를 전후해 특허 약 17건 출원 — 평소 연 3~5건 대비 급증(윕스 인용 보도)",
+          "layer": null,
+          "kind": "reported",
+          "src": "https://news.mtn.co.kr/news-detail/2026060814463030650"
+        }
       ]
     }
   },
-  "gaps": "Figure AI, Agility, Apptronik, 1X, Galbot, XPeng, Neura, 삼성전자, LG전자, 현대차, NVIDIA 등은 이번 조사에서 출처가 있는 특허 수치·분쟁을 확인하지 못했다. 다음 분기 갱신에서 보강한다. 건수가 필요하면 이 화면의 조회 허브로 직접 검색할 수 있다."
+  "gaps": "Figure AI, Agility, Apptronik, 1X, Galbot, XPeng, Neura, 삼성전자, LG전자, 현대차, NVIDIA 등은 이번 조사에서 출처가 있는 특허 수치·분쟁을 확인하지 못했다. 다음 분기 갱신에서 보강한다. 건수가 필요하면 이 화면의 조회 허브로 직접 검색할 수 있다.",
+  "lanes": {
+    "greyb": {
+      "label": "분석사 GreyB — 휴머노이드 특허 지형",
+      "note": "최근 20년 누적 출원(패밀리 기준), '휴머노이드'로 분류된 특허만"
+    },
+    "analyst_global": {
+      "label": "분석사 프로필 — 전 세계 보유 특허",
+      "note": "등록 포함, 로봇 전반(휴머노이드 한정 아님)"
+    },
+    "sz_granted": {
+      "label": "선전시 발표 — 보유 등록 특허",
+      "note": "로봇 전반의 등록 특허. 위 두 줄과 정의가 달라 비교 불가"
+    }
+  }
 }

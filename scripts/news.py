@@ -248,7 +248,16 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
         # 키가 없거나 상한에 걸려 제목만 저장된 최근 기사는 AI 를 쓸 수 있을 때 다시 분류한다(새 기사 먼저)
         since = (date.today() - timedelta(days=int(cfg["news"].get("lookback_days", 7)))).isoformat()
         retry = [{**x, "desc": ""} for x in items.values() if needs_retry(x) and x["date"] >= since] if llm.enabled else []
-        done, warn, dropped = classify(fresh + retry, companies, llm, int(cfg["news"].get("max_ai_items", 40)), signposts)
+        limit = int(cfg["news"].get("max_ai_items", 40))
+        todo = fresh + retry  # 새 기사 먼저, 그다음 태그가 없는 지난 기사
+        done, dropped, warn = [], [], None
+        for start in range(0, len(todo), limit):
+            if llm.enabled and llm.requests >= llm.max_requests:
+                break  # 오늘 쓸 수 있는 AI 요청을 다 썼다 — 나머지는 다음 실행에서 이어서 분류
+            out, w, drp = classify(todo[start:start + limit], companies, llm, limit, signposts)
+            done += out
+            dropped += drp
+            warn = warn or w
         for i in dropped:
             items.pop(i, None)
     finally:

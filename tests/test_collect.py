@@ -152,3 +152,47 @@ def test_pref_changes_are_logged_only_after_a_baseline_exists():
     assert {c["title"] for c in out} == {"테슬라 특허 포트폴리오(보도) 8 → 10건 (기준A)", "테슬라 특허·지재권 이슈: 소송 합의"}
     assert all(c["kind"] == "pref" and c["company"] == "tesla" for c in out)
     assert "kind" not in changes.keep_baseline(prev, cur, out)                      # 기준값 보존 로직이 pref 항목(layer 없음)에 깨지지 않는다
+
+
+class _BatchLLM:
+    """요청한 id 를 그대로 '관련 있음'으로 돌려주는 가짜 Gemini. 요청 수 상한을 흉내 낸다."""
+
+    enabled = True
+
+    def __init__(self, max_requests):
+        self.max_requests, self.requests, self.calls = max_requests, 0, []
+
+    def json_call(self, system, user, schema, max_tokens=0):
+        import re
+
+        if self.requests >= self.max_requests:
+            raise news.LLMError("max_requests_per_run reached")
+        self.requests += 1
+        ids = re.findall(r"\[id\] (\S+)", user)
+        self.calls.append(ids)
+        return {"items": [{"id": i, "relevant": True, "companies": [], "type": "patent", "title_ko": "제목", "summary_ko": "요약", "importance": 1,
+                           "audience": ["engineer"], "layer": "hand", "signpost": "none", "facts": []} for i in ids]}
+
+
+def _news_cfg():
+    return {"news": {"lookback_days": 7, "per_company": 3, "max_ai_items": 2, "keep_days": 120,
+                     "queries": {"a": [["x", "en"]], "b": [["y", "en"]], "c": [["z", "en"]]}}}
+
+
+def test_update_news_classifies_in_chunks_within_the_request_budget():
+    llm = _BatchLLM(max_requests=1)
+    out = news.update_news(_news_cfg(), {}, COMPANIES, llm, client=_FakeClient())
+    assert llm.requests == 1 and len(llm.calls[0]) == 2
+    assert len(out["items"]) == 2 and all(x["ai"] and x["layer"] == "hand" for x in out["items"])   # 예산 밖의 세 번째 기사는 저장하지 않고 다음 실행으로
+    llm2 = _BatchLLM(max_requests=2)
+    out2 = news.update_news(_news_cfg(), {}, COMPANIES, llm2, client=_FakeClient())
+    assert llm2.requests == 2 and [len(c) for c in llm2.calls] == [2, 1] and len(out2["items"]) == 3
+
+
+def test_update_news_reclassifies_untagged_old_items_after_fresh_ones():
+    old = {"items": [{"id": "old1", "date": date.today().isoformat(), "title": "t", "source": "s", "url": "u", "query": "a", "ai": True, "type": "other",
+                      "companies": [], "importance": 1, "title_ko": "", "summary_ko": "", "facts": []}]}   # layer 태그가 생기기 전에 분류된 기사
+    llm = _BatchLLM(max_requests=2)
+    out = news.update_news({"news": {**_news_cfg()["news"], "max_ai_items": 10, "queries": {"a": [["x", "en"]]}}}, old, COMPANIES, llm, client=_FakeClient())
+    assert llm.calls[0][-1] == "old1" and llm.calls[0][0] != "old1"                                       # 새 기사 먼저
+    assert next(x for x in out["items"] if x["id"] == "old1")["layer"] == "hand"

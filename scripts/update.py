@@ -44,6 +44,8 @@ def main(argv: list[str] | None = None) -> int:
         if over:
             log.warning("AI 하루 상한 도달(%d/%d) — 오늘은 분류 없이 제목만", used, cap)
             llm.key = ""
+        else:  # 하루 상한(허브와 합산 관리)을 넘지 않도록 오늘 남은 요청 수로 제한
+            llm.max_requests = max(0, min(llm.max_requests, cap - used))
         news = update_news(cfg, read_json(OUT / "news.json", {}), companies, llm, signposts=signposts)
         if over:
             news["warnings"].append(f"오늘 AI 상한({cap}회)에 도달해 새 기사는 분류 없이 제목만 표시합니다.")

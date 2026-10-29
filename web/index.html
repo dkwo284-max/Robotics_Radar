@@ -240,6 +240,29 @@ table.heat tr[data-co] { cursor: pointer; }
 .tr .cells div small { display: block; color: var(--muted); font-size: 0.68rem; margin-bottom: 2px; }
 .sp { display: grid; gap: 4px; }
 .sp .st { font-size: 0.7rem; font-weight: 600; }
+.lm { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.lm.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.lm.star { border-left: 4px solid var(--bad); }
+.lm .hd { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lm .lmname { border: 0; background: transparent; font-weight: 700; font-size: 0.95rem; cursor: pointer; padding: 0; text-align: left; color: var(--ink); }
+.lm .lmname[aria-pressed="true"] { color: var(--accent); }
+.lmlinks { margin-left: auto; font-size: 0.74rem; display: inline-flex; gap: 8px; }
+.lm .mx { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 700px) { .lm .mx { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.lm .box { background: var(--raised); border-radius: 10px; padding: 8px 10px; font-size: 0.8rem; display: grid; gap: 3px; align-content: start; min-width: 0; }
+.lm .box .k { color: var(--muted); font-size: 0.7rem; font-weight: 600; }
+.lm .box .v { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.lm .box .s { color: var(--muted); font-size: 0.74rem; }
+.spark2 { display: inline-block; vertical-align: middle; }
+.tipbtn { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0 2px; font-size: 0.9em; line-height: 1; }
+.tipbtn:hover { color: var(--ink); }
+.tipbox { position: absolute; z-index: 60; max-width: min(300px, calc(100vw - 24px)); background: var(--ink); color: var(--bg); padding: 8px 10px; border-radius: 8px; font-size: 0.78rem; line-height: 1.5; box-shadow: var(--shadow); }
+.hcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.hc { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: grid; gap: 4px; font-size: 0.8rem; background: var(--surface); align-content: start; }
+.hc.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.tlv { border-left: 2px solid var(--line); margin-left: 6px; padding-left: 14px; display: grid; gap: 12px; }
+.tlv .it { position: relative; display: grid; gap: 2px; font-size: 0.84rem; }
+.tlv .it::before { content: ""; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 a.chip { text-decoration: none; color: inherit; display: inline-block; }
 table.pheat td.pc a { text-decoration: none; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
 table.pheat td.pc a:hover { background: var(--raised); }
@@ -385,6 +408,12 @@ details.fold[open] > summary::after { content: "접기"; }
     </div>
 
     <div class="panel" id="role-strategy" hidden>
+      <section id="lm2-sec" class="full">
+        <h2>기술 층 신호 매트릭스</h2>
+        <p class="sub" id="lm2-sub"></p>
+        <div class="chips" id="lm2-sort" style="margin-bottom:10px"></div>
+        <div class="ins" id="lm2"></div>
+      </section>
       <section>
         <h2>상태 확인이 필요한 로드맵</h2>
         <p class="sub">계획·지연 항목 중 최근 30일 관련 소식이 있는 것. 완료·지연 여부를 확인해 data/companies.json 의 status 를 고치면 변화 로그에 남습니다</p>
@@ -420,11 +449,18 @@ details.fold[open] > summary::after { content: "접기"; }
     </div>
 
     <div class="panel" id="role-engineer" hidden>
+      <section id="lm-sec" class="full">
+        <h2>기술 층 신호 매트릭스</h2>
+        <p class="sub" id="lm-sub"></p>
+        <div class="chips" id="lm-sort" style="margin-bottom:10px"></div>
+        <div class="ins" id="lm"></div>
+      </section>
       <section id="hub-sec" class="full">
         <h2>특허 조회 허브 <span class="b t3">링크 전용</span></h2>
-        <p class="sub">칸을 누르면 그 기업·기술 층의 특허 검색 결과가 새 탭에 열립니다(데이터를 저장하지 않는 링크). 대기업은 로봇(B25J) 분류로 좁혀 검색합니다. 에스페이스넷은 처음 열 때 봇 확인 화면이 나올 수 있고, 링크가 열리지 않으면 아래 '검색식 만들기'에서 검색식을 복사해 붙여 넣으세요.</p>
+        <p class="sub">기업을 고르면 기술 층별 카드가 나오고, 카드의 링크를 누르면 그 기업·기술 층의 특허 검색 결과가 새 탭에 열립니다(데이터를 저장하지 않는 링크). 대기업은 로봇(B25J) 분류로 좁혀 검색합니다. 에스페이스넷은 처음 열 때 봇 확인 화면이 나올 수 있고, 링크가 열리지 않으면 아래 '검색식 만들기'에서 검색식을 복사해 붙여 넣으세요.</p>
         <div class="chips" id="hub-site" style="margin-bottom:10px"></div>
-        <div class="card" style="padding:0;overflow-x:auto"><table class="pheat" id="hub-grid"></table></div>
+        <div id="hub-co" style="margin-bottom:10px"></div>
+        <div id="hub-cards"></div>
         <details class="card fold" style="margin-top:10px"><summary><h3 style="display:inline">검색식 만들기·복사</h3></summary>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0"><select id="hb-co" aria-label="출원인"></select><select id="hb-ly" aria-label="기술 층"></select></div>
           <div id="hb-out"></div></details>
@@ -438,9 +474,12 @@ details.fold[open] > summary::after { content: "접기"; }
       <section id="pref-sec" class="full">
         <h2>특허 지형 <span class="b estimate">분기 큐레이션</span></h2>
         <p class="sub" id="pref-sub"></p>
-        <div class="chart" id="pref-sector"></div>
-        <div class="ins" id="pref-co" style="margin-top:10px"></div>
-        <p class="sub" id="pref-gaps" style="margin-top:8px"></p>
+        <div class="ins" id="pref-dots"></div>
+        <h3 style="margin:14px 0 8px;font-size:0.9rem">이벤트 타임라인</h3>
+        <div id="pref-timeline"></div>
+        <h3 style="margin:14px 0 8px;font-size:0.9rem">근거 커버리지</h3>
+        <div id="pref-cover"></div>
+        <details class="card fold" style="margin-top:10px"><summary><h3 style="display:inline">기업별 상세</h3></summary><div class="ins" id="pref-co" style="margin-top:8px"></div></details>
       </section>
       <section id="pp2-sec">
         <h2>논문으로 본 기술 방향 <span class="b estimate">논문 신호</span></h2>
@@ -532,6 +571,7 @@ details.fold[open] > summary::after { content: "접기"; }
     <section>
       <h2>부품별 진입 지도</h2>
       <p class="sub">기존 공급사와 국내 후보. 빨간 점선은 국내 공급 레퍼런스가 확인되지 않은 공백 품목입니다</p>
+      <div id="parts-layer-banner"></div>
       <div class="chips" id="comp-filter" style="margin-bottom:10px"></div>
       <div class="ins" id="comps"></div>
     </section>
@@ -730,12 +770,12 @@ function periodStart(p) {
 }
 const newB = (date) => (VISIT.prev && date > VISIT.prev ? '<span class="b H">새</span>' : "");
 
-// ---------- 특허 ----------
-// 기본(계정·키 없음): ① 조회 허브(검색 링크) ② 특허·지재권 소식(구글 뉴스 RSS + AI 분류) ③ 분기 큐레이션 지형.
+// ---------- 특허·기술 방향 ----------
+// 기본(계정·키 없음): 기술 층 신호 매트릭스 · 조회 허브(검색 링크) · 특허·지재권 소식 · 분기 큐레이션 지형 · 논문 신호.
 // EPO 집계(D.patents.ready)는 꺼져 있는 선택 기능 — 켜져 있을 때만 히트맵·방향 패널이 나타난다.
 const P0 = () => D.patents || { ready: false, layers: [] };
 const HUB = () => D.patent_hub;
-const PREF = () => D.patent_ref || { companies: {}, sector: { items: [] } };
+const PREF = () => D.patent_ref || { companies: {}, sector: { items: [] }, lanes: {} };
 const enc = encodeURIComponent;
 const espace = (q) => `https://worldwide.espacenet.com/patent/search?q=${enc(q)}`;
 const pnum = (x) => `${x.country}${x.number}${x.kind}`;
@@ -743,9 +783,29 @@ const ptrend = (a, b) => (b === 0 ? (a >= 5 ? '<span class="up">▲</span>' : ""
 const isPat = (x) => x.type === "patent" || (x.topic === "patent" && !x.ai);
 const SRC_B = { hub: ["링크 전용", "t3"], news: ["보도 기반", "reported"], cur: ["분기 큐레이션", "estimate"], epo: ["EPO 집계", "official"] };
 const srcB = (k) => `<span class="b ${SRC_B[k][1]}">${SRC_B[k][0]}</span>`;
+const extA = (href, text, cls = "") => `<a${cls ? ` class="${cls}"` : ""} href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
+const tipBtn = (text) => `<button type="button" class="tipbtn" data-tip="${esc(text)}" aria-label="설명 보기">ⓘ</button>`;
+const TIPS = {
+  paper: "arXiv 로봇(cs.RO) 논문 중 이 기술 키워드가 초록에 나온 논문 수. 최근 12개월 ÷ 직전 12개월이 ×배수입니다. 논문은 특허보다 1~2년 앞서는 선행 신호일 뿐 산업 동향과 다를 수 있고, 30편 미만(⚠)은 표본이 작아 참고만 하세요.",
+  news: "최근 30일 동안 기업별 특허 키워드로 수집한 기사 중 AI 가 '특허·지재권 소식'으로 분류하고 이 기술 층 태그를 붙인 것. AI 분류 전이면 '분류 전'으로 표시됩니다.",
+  cur: "분기마다 웹 리서치로 정리한 출처 있는 특허 이슈(소송·합의·등록 등) 중 이 기술 층에 해당하는 것. 없다고 이슈가 없다는 뜻은 아니고 '확인된 것이 없다'는 뜻입니다.",
+  kr: "부품 탭의 공급사 지도 기준 — 이 기술 층이 속한 부품에 국내 후보·레퍼런스가 있는지.",
+  barrier: "부품 탭의 진입 난도(상·중·하). 층에 부품이 여러 개면 가장 높은 값.",
+  star: "논문 증가 속도가 휴머노이드 논문 전체보다 15% 넘게 빠르고(성장), 국내 후보가 없는(공백) 기술 층입니다. 점수가 아니라 두 조건이 겹치는 곳을 표시하는 규칙입니다.",
+  cpc: "CPC 는 특허청들이 함께 쓰는 특허 기술 분류 코드입니다. 층마다 대표 분류로 검색하므로 해당 분야 특허를 모두 잡지는 못합니다.",
+  scatter: "가로는 최근 12개월 논문 편수(로그), 세로는 직전 12개월 대비 증가 배수(로그). 가로 점선보다 위면 휴머노이드 논문 전체보다 빠르게 늘어난 층, 빗금 구간(30편 미만)은 표본이 작은 영역입니다. 점을 누르면 해당 기술 층을 모든 화면에서 고릅니다.",
+};
+const selLayer = () => store.get("patLayer", null);
+const layerById = (id) => HUB().layers.find((l) => l.id === id);
+const paperRow = (id) => (D.papers?.ready ? D.papers.rows.find((r) => r.id === id) : null);
+const rerenderCurrent = () => { const h = (location.hash || "#home").slice(1); (PANELS[h] || PANELS.home)(); };
+function setPatLayer(id) { store.set("patLayer", selLayer() === id ? null : id); rerenderCurrent(); }
+const growthWord = (g, base) => (g == null || base == null ? "" : g > base * 1.15 ? "빠름" : g < base * 0.85 ? "느림" : "비슷");
+const growthCls = (g, base) => (g == null || base == null ? "" : g > base * 1.15 ? "up" : g < base * 0.85 ? "down" : "");
+const growthArrow = (g, base) => (g == null || base == null ? "" : g > base * 1.15 ? "▲" : g < base * 0.85 ? "▼" : "▬");
 
 // 검색 링크: 에스페이스넷(CQL)·구글 특허. 데이터를 저장하지 않고 주소만 만든다.
-const cpcOf = (lid) => (lid === "total" ? HUB().total.cpc : HUB().layers.find((l) => l.id === lid)?.cpc || "");
+const cpcOf = (lid) => (lid === "total" ? HUB().total.cpc : layerById(lid)?.cpc || "");
 const needsRobot = (row, lid) => row && row.scope === "robot" && lid !== "total" && !cpcOf(lid).includes("B25J");
 const cqlFor = (row, lid) => `${row ? `${row.q} and ` : ""}${cpcOf(lid)}${needsRobot(row, lid) ? " and cpc=B25J" : ""}`;
 const gTerms = (row, lid) => [...cpcOf(lid).split(" and "), ...(needsRobot(row, lid) ? ["cpc=B25J"] : [])].map((t) => `(CPC=${t.replace(/^cpc=/i, "")})`).join(" ");
@@ -753,15 +813,83 @@ const searchUrl = (row, lid, site = store.get("patSite", "espacenet")) => (site 
   ? `https://patents.google.com/?${row ? `assignee=${enc(row.assignee)}&` : ""}q=${enc(gTerms(row, lid))}`
   : espace(cqlFor(row, lid)));
 const hubRow = (id) => HUB().rows.find((r) => r.company === id);
-const extA = (href, text, cls = "") => `<a${cls ? ` class="${cls}"` : ""} href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
+const coLabel = (id) => byId[id]?.name_ko || id;
 
+// 작은 추이선(월별 시계열) — 각 층의 자체 최대값 기준
+function sparkSvg(series, color = "var(--accent)", w = 92, h = 26) {
+  if (!series || series.length < 2) return "";
+  const hi = Math.max(...series, 1), n = series.length;
+  const x = (i) => 2 + (i / (n - 1)) * (w - 4), y = (v) => h - 3 - (v / hi) * (h - 6);
+  const pts = series.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  return `<svg class="spark2" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="월별 논문 수 추이, 최근 ${series.at(-1)}편"><polyline points="${pts}" style="fill:none;stroke:${color};stroke-width:1.6"/><circle cx="${x(n - 1)}" cy="${y(series.at(-1))}" r="2.4" style="fill:${color}"/></svg>`;
+}
+
+// ---- 1) 기술 층 신호 매트릭스 ----
+function layerSignals() {
+  const R = PREF(), P = D.papers, base = P?.ready ? P.baseline_growth : null;
+  const since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+  const patNews = (D.news || []).filter((x) => isPat(x) && x.date >= since);
+  const tagged = patNews.filter((x) => x.layer).length;
+  return HUB().layers.map((l) => {
+    const pr = l.paper ? paperRow(l.paper) : null;
+    const items = D.bom.items.filter((i) => (l.parts || []).includes(i.id));
+    const kr = items.reduce((s, i) => s + i.kr.length, 0);
+    const barrier = items.length ? ["H", "M", "L"].find((b) => items.some((i) => i.barrier === b)) : null;
+    const notable = Object.entries(R.companies).flatMap(([cid, c]) => (c.notable || []).filter((n) => n.layer === l.id).map((n) => ({ ...n, company: cid })));
+    const news = l.news_layer ? patNews.filter((x) => x.layer === l.news_layer) : [];
+    const hot = !!(pr && pr.growth != null && base != null && pr.growth > base * 1.15);
+    const gap = items.length > 0 && kr === 0;
+    return { l, pr, base, items, kr, barrier, notable, news, tagged, hot, gap, star: hot && gap };
+  });
+}
+function renderLayerMatrix(listSel, sortSel, subSel) {
+  const sort = store.get("lmSort", "base"), sel = selLayer();
+  const rows = layerSignals();
+  const key = { base: () => 0, growth: (r) => -(r.pr?.growth ?? -1), gap: (r) => -((r.gap ? 2 : 0) + (r.hot ? 1 : 0) + (r.items.length ? 0 : -1)) }[sort];
+  rows.sort((a, b) => key(a) - key(b));
+  $(sortSel).innerHTML = [["base", "기본 순서"], ["growth", "논문 성장순"], ["gap", "국내 공백 우선"]].map(([id, l]) => `<button class="chip" data-lmsort="${id}" aria-pressed="${id === sort}">${l}</button>`).join("");
+  $(subSel).innerHTML = `기술 층마다 흩어져 있던 신호를 한 줄로 모았습니다. ${srcB("news")} ${srcB("cur")} <span class="b estimate">논문 신호</span> ${srcB("hub")} 카드를 누르면 아래 소식·허브·부품 화면이 그 층으로 걸러집니다.${sel ? ` <button class="chip" data-plclear aria-pressed="true">필터: ${esc(layerById(sel).label)} ✕ 해제</button>` : ""}`;
+  $(listSel).innerHTML = rows.map((r) => {
+    const { l, pr } = r;
+    const paperBox = pr
+      ? `<div class="v">${sparkSvg(pr.series, r.hot ? "var(--good)" : "var(--accent)")}<span class="${growthCls(pr.growth, r.base)}">×${pr.growth ?? "–"} ${growthArrow(pr.growth, r.base)} ${growthWord(pr.growth, r.base)}</span></div><div class="s">${pr.b} → <b>${pr.a}</b>편${pr.small ? " ⚠ 표본 작음" : ""}</div>`
+      : l.paper ? '<div class="s">수집 중…</div>' : '<div class="s">측정 불가 — 논문 초록에 거의 안 나옴</div>';
+    const newsBox = !r.tagged ? '<div class="s">분류 전</div>' : l.news_layer ? `<div class="v"><b>${r.news.length}</b>건</div><div class="s">최근 30일</div>` : '<div class="s">해당 태그 없음</div>';
+    const curBox = r.notable.length ? `<div class="v"><b>${r.notable.length}</b>건</div><div class="s">${r.notable.map((n) => esc(coLabel(n.company))).join("·")}</div>` : '<div class="s">확인된 것 없음</div>';
+    const krBox = !r.items.length ? '<div class="s">해당 부품 없음</div>' : r.kr ? `<div class="v">국내 <b>${r.kr}</b>곳</div><div class="s">${r.items.map((i) => esc(i.name.replace(/\(.*\)/, ""))).join("·")}</div>` : `<div class="v"><span class="b gap">국내 후보 없음</span></div><div class="s">${r.items.map((i) => esc(i.name.replace(/\(.*\)/, ""))).join("·")}</div>`;
+    return `<article class="lm${sel === l.id ? " on" : ""}${r.star ? " star" : ""}">
+      <div class="hd"><button class="lmname" data-pl="${l.id}" aria-pressed="${sel === l.id}">${esc(l.label)}</button>${r.star ? `<span class="b H">주목 ${tipBtn(TIPS.star)}</span>` : ""}${r.barrier ? `<span class="b ${r.barrier}">${BARRIER[r.barrier]}</span>` : ""}<span class="lmlinks">${extA(searchUrl(null, l.id, "espacenet"), "에스페이스넷 ↗")} ${extA(searchUrl(null, l.id, "google"), "구글 특허 ↗")}</span></div>
+      <div class="mx"><div class="box"><span class="k">논문 신호 ${tipBtn(TIPS.paper)}</span>${paperBox}</div>
+        <div class="box"><span class="k">특허·IP 소식 ${tipBtn(TIPS.news)}</span>${newsBox}</div>
+        <div class="box"><span class="k">큐레이션 근거 ${tipBtn(TIPS.cur)}</span>${curBox}</div>
+        <div class="box"><span class="k">국내 공급 ${tipBtn(TIPS.kr)}</span>${krBox}</div></div>
+      <div class="s muted" style="font-size:0.74rem">${esc(l.note)} · <code>${esc(l.cpc)}</code> ${tipBtn(TIPS.cpc)}</div></article>`;
+  }).join("");
+}
+const renderLayerMatrices = () => { renderLayerMatrix("#lm", "#lm-sort", "#lm-sub"); renderLayerMatrix("#lm2", "#lm2-sort", "#lm2-sub"); };
+
+// ---- 3) 조회 허브: 기업을 먼저 고르는 방식 ----
 function renderPatentHub() {
-  const H = HUB(), site = store.get("patSite", "espacenet");
+  const H = HUB(), site = store.get("patSite", "espacenet"), sel = selLayer();
+  const companies = H.rows.filter((r) => r.kind === "company"), others = H.rows.filter((r) => r.kind !== "company");
+  let cur = store.get("patCo", "tesla");
+  if (!H.rows.some((r) => r.id === cur)) cur = H.rows[0].id;
+  const row = H.rows.find((r) => r.id === cur);
+  const chip = (r) => `<button class="chip" data-pco="${esc(r.id)}" aria-pressed="${r.id === cur}">${esc(r.company ? coLabel(r.company) : r.name)}</button>`;
   $("#hub-site").innerHTML = [["espacenet", "에스페이스넷"], ["google", "구글 특허"]].map(([id, l]) => `<button class="chip" data-psite="${id}" aria-pressed="${id === site}">${l}</button>`).join("");
-  const cols = [{ id: "total", label: "로봇 전체", note: H.total.cpc }, ...H.layers];
-  const rows = H.rows.filter((r) => r.kind === "company");
-  $("#hub-grid").innerHTML = `<tr><th>기업</th>${cols.map((c) => `<th title="${esc(c.note || "")}">${esc(c.label)}</th>`).join("")}</tr>`
-    + rows.map((r) => { const nm = byId[r.company]?.name_ko || r.name; return `<tr><td><b>${esc(nm)}</b></td>${cols.map((c) => `<td class="pc">${extA(searchUrl(r, c.id), "↗")}</td>`).join("")}</tr>`; }).join("");
+  $("#hub-co").innerHTML = `<div class="chips">${companies.map(chip).join("")}</div><div class="chips" style="margin-top:6px"><span class="muted" style="font-size:0.74rem;align-self:center">부품 경쟁사·국내 부품사</span>${others.map(chip).join("")}</div>`;
+  const R = PREF(), since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+  const myNews = row.company ? (D.news || []).filter((x) => isPat(x) && x.date >= since && ((x.companies || []).includes(row.company) || (!(x.companies || []).length && x.query === row.company))) : [];
+  const layers = [{ id: "total", label: "로봇 전체", note: "cpc=B25J — 이 출원인의 로봇 특허 전반" }, ...H.layers].filter((l) => l.id === "total" ? row.scope === "robot" : !row.only || row.only.includes(l.id));
+  $("#hub-cards").innerHTML = `<p class="sub" style="margin:0 0 8px"><b>${esc(row.name)}</b>${row.company ? ` · 최근 30일 특허·IP 소식 ${myNews.length}건` : ""}${row.only ? " · 이 출원인과 관련된 기술 층만 표시" : ""}</p>
+    <div class="hcards">${layers.map((l) => {
+      const pr = l.paper ? paperRow(l.paper) : null;
+      const ev = row.company ? (R.companies[row.company]?.notable || []).filter((n) => n.layer === l.id) : [];
+      return `<div class="hc${sel === l.id ? " on" : ""}"><b>${esc(l.label)}</b>
+        ${pr ? `<span class="s ${growthCls(pr.growth, D.papers.baseline_growth)}">논문 ×${pr.growth ?? "–"} ${growthArrow(pr.growth, D.papers.baseline_growth)}</span>` : ""}
+        ${ev.length ? `<span class="b reported" title="${esc(ev.map((e) => e.title).join(" / "))}">근거 ${ev.length}건</span>` : ""}
+        <span class="lmlinks">${extA(searchUrl(row, l.id), `${site === "google" ? "구글" : "에스페이스넷"} ↗`)}</span></div>`;
+    }).join("")}</div>`;
   const co = $("#hb-co"), ly = $("#hb-ly");
   if (!co.options.length) {
     co.innerHTML = '<option value="">(출원인 지정 안 함)</option>' + H.rows.map((r) => `<option value="${esc(r.id)}">${esc(r.name)}${r.kind === "company" ? "" : r.kind === "incumbent" ? " (부품 경쟁사)" : " (국내 부품사)"}</option>`).join("");
@@ -781,45 +909,123 @@ async function copyText(t) {
   try { await navigator.clipboard.writeText(t); return true; } catch { window.prompt("복사해서 사용하세요", t); return false; }
 }
 
-// 특허·지재권 소식: 구글 뉴스 RSS(특허 키워드) + AI 분류(type=patent)
+// ---- 특허·지재권 소식 (기술 층 필터 연동) ----
 function renderPatentNews(listSel, subSel) {
-  const items = (D.news || []).filter(isPat).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+  const sel = selLayer(), l = sel ? layerById(sel) : null;
+  let items = (D.news || []).filter(isPat).sort((a, b) => b.date.localeCompare(a.date));
+  if (l) items = items.filter((x) => l.news_layer && x.layer === l.news_layer);
+  items = items.slice(0, 10);
   const m = D.news_meta || {};
-  $(subSel).textContent = items.length
-    ? `기업별 특허 키워드로 매일 수집한 소식 중 ${m.ai === "gemini" ? "AI 가 특허·지재권 소식으로 분류한 것" : "특허 검색어로 모은 기사(AI 분류 전)"} — 소송·라이선스·대형 출원·등록처럼 기사로 나온 큰 사건만 잡힙니다. 건수·추이는 조회 허브로 직접 확인하세요`
-    : "아직 특허·지재권 소식이 수집되지 않았습니다. 다음 자동 수집(매일)부터 채워집니다";
-  $(listSel).innerHTML = items.map((x) => newsRow(x)).join("") || '<div class="empty">없음</div>';
+  $(subSel).innerHTML = (items.length || l
+    ? `기업별 특허 키워드로 매일 수집한 소식 중 ${m.ai === "gemini" ? "AI 가 특허·지재권 소식으로 분류한 것" : "특허 검색어로 모은 기사(AI 분류 전)"} — 소송·라이선스·대형 출원·등록처럼 기사로 나온 큰 사건만 잡힙니다. 건수·추이는 조회 허브로 직접 확인하세요.`
+    : "아직 특허·지재권 소식이 수집되지 않았습니다. 다음 자동 수집(매일)부터 채워집니다")
+    + (l ? ` <button class="chip" data-plclear aria-pressed="true">필터: ${esc(l.label)} ✕ 해제</button>${l.news_layer ? "" : " (이 층에는 대응하는 소식 태그가 없습니다)"}` : "");
+  $(listSel).innerHTML = items.map((x) => newsRow(x)).join("") || '<div class="empty">조건에 맞는 소식이 없습니다</div>';
 }
 
-// 분기 큐레이션 지형
+// ---- 5) 특허 지형: 점도표·타임라인·커버리지 ----
+function dotStrip(points, w = 340, h = 62) {
+  if (!points.length) return "";
+  const lo = Math.log10(60), hi = Math.log10(4000), x = (v) => 8 + ((Math.log10(v) - lo) / (hi - lo)) * (w - 16);
+  const sorted = [...points].sort((a, b) => a.v - b.v), boxes = [];
+  let g = `<line x1="8" x2="${w - 8}" y1="${h - 16}" y2="${h - 16}" style="stroke:var(--line)"/>`;
+  for (const t of [100, 300, 1000, 3000]) g += `<line x1="${x(t)}" x2="${x(t)}" y1="${h - 19}" y2="${h - 13}" style="stroke:var(--muted)"/><text x="${x(t)}" y="${h - 3}" text-anchor="middle" style="fill:var(--muted);font-size:9px">${t.toLocaleString("ko-KR")}</text>`;
+  for (const p of sorted) {
+    const cx = x(p.v), label = `${p.name} ${p.v.toLocaleString("ko-KR")}`, tw = label.length * 6.2;
+    let row = 0;
+    while (row < 3 && boxes.some((b) => b.row === row && cx - tw / 2 < b.x1 && cx + tw / 2 > b.x0)) row++;
+    boxes.push({ row, x0: cx - tw / 2, x1: cx + tw / 2 });
+    const ty = 12 + row * 11;
+    g += `<g ${p.company ? `data-co="${esc(p.company)}" style="cursor:pointer"` : ""}><circle cx="${cx}" cy="${h - 16}" r="5" style="fill:var(--accent);opacity:0.85"><title>${esc(label)} — ${esc(p.basis || "")}</title></circle><text x="${Math.min(Math.max(cx, tw / 2 + 2), w - tw / 2 - 2)}" y="${ty}" text-anchor="middle" style="fill:var(--ink);font-size:9.5px;font-weight:600">${esc(label)}</text></g>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto" role="img" aria-label="출원·보유 특허 수 점도표(로그 눈금)">${g}</svg>`;
+}
 function renderPatentRef() {
-  const R = PREF(), sec = R.sector?.items || [];
-  const max = Math.max(1, ...sec.map((x) => x.value));
-  const cos = Object.entries(R.companies).filter(([, c]) => c.portfolio?.length || c.notable?.length);
-  $("#pref-sub").textContent = `공개된 보도·분석사 자료를 우리가 요약해 출처와 함께 적었습니다(기준일 ${R.as_of}, 분기마다 갱신). 건수는 집계 기준이 출처마다 달라 서로 비교하지 마세요.`;
-  $("#pref-sector").innerHTML = `<p class="sub" style="margin:0 4px 6px">${esc(R.sector?.note || "")}</p>` + sec.map((x) => `<div class="hbar" ${x.company ? `data-co="${esc(x.company)}" style="cursor:pointer"` : ""}><span class="n">${esc(x.name)}</span><span class="track"><i style="width:${(x.value / max) * 100}%"></i></span><span class="v">${x.value}</span></div>`).join("");
-  $("#pref-co").innerHTML = cos.map(([id, c]) => `
+  const R = PREF(), lanes = R.lanes || {};
+  $("#pref-sub").innerHTML = `공개된 보도·분석사 자료를 우리가 요약해 출처와 함께 적었습니다(기준일 ${esc(R.as_of)}, 분기마다 갱신). 건수는 <b>집계 기준이 출처마다 달라</b> 기준별로 줄을 나눴습니다 — 줄 사이는 비교하지 마세요.`;
+  // 점도표: 기준(lane)별 한 줄
+  const points = [];
+  for (const [cid, c] of Object.entries(R.companies)) for (const p of c.portfolio || []) points.push({ lane: p.lane, v: p.v, name: coLabel(cid), company: cid, basis: p.basis });
+  for (const it of R.sector?.items || []) if (!it.company) points.push({ lane: it.lane || "greyb", v: it.value, name: it.name, company: "", basis: lanes[it.lane || "greyb"]?.label });
+  $("#pref-dots").innerHTML = Object.entries(lanes).map(([id, ln]) => {
+    const pts = points.filter((p) => p.lane === id);
+    return pts.length ? `<div class="card" style="padding:10px 12px"><b style="font-size:0.86rem">${esc(ln.label)}</b><div class="sub" style="margin:0 0 4px;font-size:0.74rem">${esc(ln.note)}</div>${dotStrip(pts)}</div>` : "";
+  }).join("");
+  // 타임라인: 소송·합의·등록·출원 급증 같은 이벤트
+  const events = Object.entries(R.companies).flatMap(([cid, c]) => (c.notable || []).map((n) => ({ ...n, company: cid }))).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  $("#pref-timeline").innerHTML = events.length ? `<div class="tlv">${events.map((e) => `<div class="it"><span class="mono muted" style="font-size:0.74rem">${esc(e.date)}</span>
+      <div>${coChip(e.company)} ${esc(e.title)} ${e.layer ? `<button class="chip co" data-pl="${esc(e.layer)}">${esc(layerById(e.layer)?.label || e.layer)}</button>` : ""} ${kindB(e.kind)} ${link(e.src)}</div></div>`).join("")}</div>` : '<div class="empty">아직 정리된 이벤트가 없습니다</div>';
+  // 커버리지: 어느 기업에 근거가 있고 어디가 비었나
+  const has = (id) => { const c = R.companies[id]; return !!(c && ((c.portfolio || []).length || (c.notable || []).length)); };
+  const withEv = D.companies.filter((c) => has(c.id)), without = D.companies.filter((c) => !has(c.id));
+  $("#pref-cover").innerHTML = `<div class="chips"><span class="b official">● 근거 있음 ${withEv.length}곳</span>${withEv.map((c) => `<button class="chip co" data-co="${esc(c.id)}">● ${esc(c.name_ko)}</button>`).join("")}</div>
+    <div class="chips" style="margin-top:6px"><span class="b t3">○ 확인 못 함 ${without.length}곳</span>${without.map((c) => `<button class="chip co" data-co="${esc(c.id)}" style="opacity:0.7">○ ${esc(c.name_ko)}</button>`).join("")}</div>
+    <p class="sub" style="margin:8px 0 0">${esc(R.gaps || "")}</p>`;
+  $("#pref-co").innerHTML = Object.entries(R.companies).filter(([, c]) => (c.portfolio || []).length || (c.notable || []).length).map(([id, c]) => `
     <article class="card" style="display:grid;gap:6px"><b>${coChip(id) || esc(id)}</b>
       ${(c.portfolio || []).map((p) => `<div style="font-size:0.84rem"><b class="num">${p.v.toLocaleString("ko-KR")}${esc(p.unit || "")}</b> ${kindB(p.kind)} <span class="muted">${esc(p.basis)} (${esc(p.as_of)})</span> ${link(p.src)}</div>`).join("")}
-      ${(c.notable || []).map((n) => `<div style="font-size:0.84rem"><span class="mono muted" style="font-size:0.74rem">${esc(n.date)}</span> ${esc(n.title)} ${n.layer ? `<span class="b t3">${esc(HUB().layers.find((l) => l.id === n.layer)?.label || n.layer)}</span>` : ""} ${kindB(n.kind)} ${link(n.src)}</div>`).join("")}
+      ${(c.notable || []).map((n) => `<div style="font-size:0.84rem"><span class="mono muted" style="font-size:0.74rem">${esc(n.date)}</span> ${esc(n.title)} ${kindB(n.kind)} ${link(n.src)}</div>`).join("")}
     </article>`).join("");
-  $("#pref-gaps").textContent = R.gaps || "";
 }
 
-// 논문 신호: arXiv(cs.RO) 논문 수 — 최근 12개월 vs 직전 12개월 (키 불필요, 메타데이터 CC0)
+// ---- 2) 논문 신호: 산점도 + 덤벨·추이선 ----
+function paperScatter(P, sel) {
+  const W = 360, H = 262, L = 40, Rm = 16, T = 14, B = 34;
+  const rows = P.rows.filter((r) => r.growth != null && r.a > 0);
+  const amax = Math.max(...rows.map((r) => r.a)), gmax = Math.max(...rows.map((r) => r.growth), 1.5), gmin = Math.min(...rows.map((r) => r.growth), 1);
+  const xlo = Math.log10(5), xhi = Math.log10(amax * 1.5), ylo = Math.log10(Math.min(gmin * 0.8, 0.8)), yhi = Math.log10(gmax * 1.25);
+  const x = (a) => L + ((Math.log10(Math.max(a, 5)) - xlo) / (xhi - xlo)) * (W - L - Rm), y = (g) => H - B - ((Math.log10(g) - ylo) / (yhi - ylo)) * (H - T - B);
+  const base = P.baseline_growth, x30 = x(30);
+  const pl = Object.fromEntries(HUB().layers.filter((l) => l.paper).map((l) => [l.paper, l.id]));
+  let g = `<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" style="stroke:var(--muted);stroke-width:1;opacity:0.35"/></pattern></defs>
+    <rect x="${L}" y="${T}" width="${Math.max(0, x30 - L)}" height="${H - T - B}" style="fill:url(#hatch)"/>
+    <text x="${L + 3}" y="${H - B - 5}" style="fill:var(--muted);font-size:9px">표본 작음(30편 미만)</text>`;
+  for (const v of [10, 100, 1000, 10000].filter((v) => v >= 5 && v <= amax * 1.5)) g += `<line x1="${x(v)}" x2="${x(v)}" y1="${T}" y2="${H - B}" style="stroke:var(--line)"/><text x="${x(v)}" y="${H - B + 12}" text-anchor="middle" style="fill:var(--muted);font-size:9.5px">${v.toLocaleString("ko-KR")}</text>`;
+  for (const v of [0.5, 1, 2, 4, 8].filter((v) => v >= Math.pow(10, ylo) && v <= Math.pow(10, yhi))) g += `<line x1="${L}" x2="${W - Rm}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--line)"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end" style="fill:var(--muted);font-size:9.5px">×${v}</text>`;
+  g += `<line x1="${L}" x2="${W - Rm}" y1="${y(base)}" y2="${y(base)}" style="stroke:var(--ink);stroke-dasharray:4 3"/><text x="${L + 4}" y="${y(base) - 4}" text-anchor="start" style="fill:var(--ink);font-size:9.5px;font-weight:600">휴머노이드 전체 ×${base} (기준선)</text>`;
+  g += `<text x="${(L + W - Rm) / 2}" y="${H - 3}" text-anchor="middle" style="fill:var(--muted);font-size:9.5px">최근 12개월 논문 수(로그) →</text><text x="10" y="${T + 6}" style="fill:var(--muted);font-size:9.5px">증가 배수 ↑</text>`;
+  const boxes = [{ x0: L, x1: L + 150, y0: y(base) - 15, y1: y(base) - 1 }, { x0: L, x1: L + 112, y0: H - B - 15, y1: H - B }];  // 고정 라벨 자리는 점 라벨이 피한다
+  const pts = rows.map((r) => ({ r, cx: x(r.a), cy: y(r.growth), lid: pl[r.id] }));
+  g += pts.map((p) => {
+    const cls = growthCls(p.r.growth, base), col = cls === "up" ? "var(--good)" : cls === "down" ? "var(--bad)" : "var(--accent)";
+    const on = p.lid && p.lid === sel;
+    return `<g ${p.lid ? `data-pl="${p.lid}" style="cursor:pointer"` : ""}><circle cx="${p.cx}" cy="${p.cy}" r="${on ? 8 : 6}" style="fill:${p.r.small ? "none" : col};stroke:${on ? "var(--ink)" : col};stroke-width:${on ? 2.5 : 1.8};${p.r.small ? "stroke-dasharray:2 2" : ""};fill-opacity:0.85"><title>${esc(p.r.label)}: ${p.r.b}→${p.r.a}편 ×${p.r.growth} ${growthWord(p.r.growth, base)}${p.r.small ? " (표본 작음)" : ""}</title></circle></g>`;
+  }).join("");
+  g += pts.map((p) => {
+    const name = p.r.label.replace(/\(.*\)/, ""), tw = [...name].reduce((s, c) => s + (/[ㄱ-힝]/.test(c) ? 9.5 : 5.8), 0);
+    for (const [ox, oy, anchor] of [[9, 3, "start"], [-9, 3, "end"], [0, -11, "middle"], [0, 17, "middle"]]) {
+      const x0 = anchor === "start" ? p.cx + ox : anchor === "end" ? p.cx + ox - tw : p.cx - tw / 2, b = { x0, x1: x0 + tw, y0: p.cy + oy - 9, y1: p.cy + oy + 2 };
+      if (b.x0 < L - 30 || b.x1 > W || boxes.some((q) => b.x0 < q.x1 && b.x1 > q.x0 && b.y0 < q.y1 && b.y1 > q.y0)) continue;
+      boxes.push(b);
+      return `<text x="${p.cx + ox}" y="${p.cy + oy}" text-anchor="${anchor}" style="fill:var(--ink);font-size:9.5px;font-weight:600;pointer-events:none">${esc(name)}</text>`;
+    }
+    return "";
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="논문 신호 산점도: 가로 논문 수, 세로 증가 배수">${g}</svg>`;
+}
 function renderPaperSignals(chartSel, subSel) {
-  const P = D.papers;
+  const P = D.papers, sel = selLayer();
   if (!P?.ready) { $(subSel).textContent = "아직 수집되지 않았습니다 — 다음 자동 수집에서 채워집니다"; $(chartSel).innerHTML = ""; return; }
-  const w = P.windows?.a || [];
-  $(subSel).innerHTML = `arXiv 로봇(cs.RO) 논문 중 기술 키워드가 초록에 나온 논문 수 — 최근 12개월${w[1] ? `(${esc(w[0].slice(0, 7))}~${esc(w[1].slice(0, 7))})` : ""} vs 직전 12개월. 막대는 로봇 논문 전체 대비 비중, 검은 눈금은 직전 12개월 비중, ×는 편수 증가 배수(로봇 논문 전체는 ×${P.total.growth ?? "–"}). 논문은 특허보다 앞서는 선행 신호일 뿐 산업 동향과 다를 수 있고, ⚠ 는 30편 미만이라 해석에 주의하라는 표시입니다. 하모닉 감속기·롤러스크류는 논문 초록에 거의 나오지 않아 측정하지 않습니다 — 특허 조회 허브로 보세요.`;
-  const max = Math.max(...P.rows.map((r) => Math.max(r.share_a || 0, r.share_b || 0)), 0.0001);
-  const bg = P.baseline_growth;
-  $(chartSel).innerHTML = P.rows.map((r) => {
-    const cls = r.growth == null || bg == null ? "" : r.growth > bg * 1.15 ? "up" : r.growth < bg * 0.85 ? "down" : "";
-    return `<div class="hbar" style="grid-template-columns:128px minmax(0,1fr) 104px"><span class="n" title="${esc(r.note)}">${extA(r.link, esc(r.label), "")}${r.small ? " ⚠" : ""}</span>
-      <span class="track" style="position:relative"><i style="width:${((r.share_a || 0) / max) * 100}%"></i>${r.share_b != null ? `<b style="position:absolute;top:0;bottom:0;left:${(r.share_b / max) * 100}%;width:2px;background:var(--ink)"></b>` : ""}</span>
-      <span class="v" style="font-size:0.78rem">${r.a}편 <span class="${cls}">×${r.growth ?? "–"}</span></span></div>`;
-  }).join("") + `<p class="sub" style="margin:8px 4px 0">× 색: 휴머노이드 논문 전체 증가 배수(×${bg ?? "–"})보다 빠르면 초록, 느리면 빨강. 출처: ${esc(P.source || "arXiv")} ${link("https://info.arxiv.org/help/api/tou.html", "이용 약관")}</p>`;
+  const w = P.windows || {};
+  $(subSel).innerHTML = `arXiv 로봇(cs.RO) 논문 중 기술 키워드가 초록에 나온 논문 수 — 최근 12개월(${esc(w.a?.[0] || "")}~${esc(w.a?.[1] || "")}) vs 직전 12개월. 논문은 특허보다 앞서는 선행 신호일 뿐 산업 동향과 다를 수 있습니다. ${tipBtn(TIPS.scatter)} 하모닉 감속기·롤러스크류는 논문 초록에 거의 나오지 않아 측정하지 않습니다 — 특허 조회 허브로 확인하세요.`;
+  const base = P.baseline_growth;
+  const rows = P.rows;
+  const vals = rows.flatMap((r) => [r.a, r.b]).filter((v) => v > 0);
+  const lo = Math.log10(Math.max(1, Math.min(...vals))), hi = Math.log10(Math.max(...vals)), DW = 132;
+  const pos = (v) => 6 + ((Math.log10(Math.max(v, 1)) - lo) / (hi - lo || 1)) * (DW - 12);
+  const pl = Object.fromEntries(HUB().layers.filter((l) => l.paper).map((l) => [l.paper, l.id]));
+  const list = rows.map((r) => {
+    const cls = growthCls(r.growth, base), col = cls === "up" ? "var(--good)" : cls === "down" ? "var(--bad)" : "var(--accent)", lid = pl[r.id];
+    const dumb = `<svg viewBox="0 0 ${DW} 18" width="${DW}" height="18" role="img" aria-label="${esc(r.label)}: ${r.b}편에서 ${r.a}편"><line x1="${pos(r.b)}" x2="${pos(r.a)}" y1="9" y2="9" style="stroke:${col};stroke-width:2"/><circle cx="${pos(r.b)}" cy="9" r="4" style="fill:var(--surface);stroke:${col};stroke-width:1.6"/><circle cx="${pos(r.a)}" cy="9" r="4.5" style="fill:${r.small ? "var(--surface)" : col};stroke:${col};stroke-width:1.6;${r.small ? "stroke-dasharray:2 2" : ""}"/></svg>`;
+    const inner = `<span class="n" style="min-width:0"><b style="font-size:0.82rem">${esc(r.label)}</b>${r.small ? " ⚠" : ""}<br><span class="muted" style="font-size:0.72rem">${r.b} → ${r.a}편</span></span>${dumb}${sparkSvg(r.series, col, 70, 24)}
+      <span class="v ${cls}" style="text-align:right;font-size:0.8rem">×${r.growth ?? "–"}<br><span style="font-size:0.7rem">${growthArrow(r.growth, base)} ${growthWord(r.growth, base)}</span></span>`;
+    const st = `display:grid;grid-template-columns:minmax(0,1fr) ${DW}px 70px 54px;gap:8px;align-items:center;padding:6px 8px;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:${lid && lid === sel ? "color-mix(in oklab, var(--accent) 10%, transparent)" : "transparent"}`;
+    return lid ? `<button data-pl="${lid}" style="${st};cursor:pointer;color:inherit">${inner}</button>` : `<div style="${st}">${inner}</div>`;
+  }).join("");
+  $(chartSel).innerHTML = `${paperScatter(P, sel)}
+    <div style="margin-top:8px;font-size:0.7rem;color:var(--muted);padding:0 4px">아래 줄: 속 빈 점 = 직전 12개월, 채운 점 = 최근 12개월(로그 눈금) · 오른쪽 작은 선 = 24개월 월별 추이 · 색: 휴머노이드 논문 전체(×${base})보다 빠르면 초록▲, 느리면 빨강▼, 비슷하면 ▬</div>
+    <div style="margin-top:4px">${list}</div>
+    <p class="sub" style="margin:8px 4px 0">출처: ${esc(P.source || "arXiv")} ${link("https://info.arxiv.org/help/api/tou.html", "이용 약관")}</p>`;
 }
 function paperQddLine() {
   const pp = D.papers;
@@ -888,10 +1094,10 @@ function partBadge(i) {
   return pp.kr.length ? `<span class="b official">국내 특허 ${pp.kr.length}곳</span>` : '<span class="b gap">국내 특허 없음</span>';
 }
 function partPatents(i) {
-  const layers = HUB().layers.filter((l) => l.parts.includes(i.id));
-  const pr = (D.papers?.ready ? D.papers.rows : []).filter((r) => r.parts.includes(i.id));
+  const layers = HUB().layers.filter((l) => (l.parts || []).includes(i.id));
+  const pr = (D.papers?.ready ? D.papers.rows : []).filter((r) => (r.parts || []).includes(i.id));
   if (!layers.length && !pr.length) return "";
-  const paperLine = pr.length ? `<div class="who"><span class="k">논문</span>최근 12개월 arXiv 논문: ${pr.map((r) => `${extA(r.link, esc(r.label))} ${r.a}편 (×${r.growth ?? "–"})${r.small ? " ⚠" : ""}`).join(" · ")} <span class="muted">— 선행 신호, ⚠ 표본 작음</span></div>` : "";
+  const paperLine = pr.length ? `<div class="who"><span class="k">논문</span>최근 12개월 arXiv 논문: ${pr.map((r) => `${extA(r.link, esc(r.label))} ${r.a}편 <span class="${growthCls(r.growth, D.papers.baseline_growth)}">(×${r.growth ?? "–"} ${growthArrow(r.growth, D.papers.baseline_growth)})</span>${r.small ? " ⚠" : ""} ${sparkSvg(r.series, "var(--accent)", 60, 18)}`).join(" · ")} <span class="muted">— 선행 신호, ⚠ 표본 작음</span></div>` : "";
   const lines = layers.map((l) => {
     const players = HUB().rows.filter((r) => r.kind !== "company" && (r.only || []).includes(l.id));
     return `<div class="who"><span class="k">특허</span><b>${esc(l.label)}</b> — ${extA(searchUrl(null, l.id, "espacenet"), "에스페이스넷 ↗")} · ${extA(searchUrl(null, l.id, "google"), "구글 특허 ↗")}
@@ -913,7 +1119,7 @@ function patentFold(id) {
   if (nws.length) out.push(`<div>${srcB("news")}<div class="list news" style="margin-top:6px">${nws.map((x) => newsRow(x, false)).join("")}</div></div>`);
   if (row) {
     out.push(`<div>${srcB("hub")}<div class="chips" style="margin-top:6px">${[{ id: "total", label: "로봇 전체" }, ...HUB().layers].map((l) => extA(searchUrl(row, l.id), `${esc(l.label)} ↗`, "chip")).join("")}</div>
-      <p class="sub" style="margin:6px 0 0">${esc(row.name)}의 특허를 기술 층별로 검색합니다(${esc(row.q)}). 열리지 않으면 부품·엔지니어 화면의 '검색식 만들기'를 쓰세요.</p></div>`);
+      <p class="sub" style="margin:6px 0 0">${esc(row.name)}의 특허를 기술 층별로 검색합니다(${esc(row.q)}). 열리지 않으면 엔지니어 화면의 '검색식 만들기'를 쓰세요.</p></div>`);
   }
   const P1 = D.patents, r = P1?.ready && P1.rows.find((x) => x.id === id);
   if (r) {
@@ -1055,6 +1261,7 @@ function renderStrategyBrief() {
   const until = String(new Date().getFullYear() + 1);
   const next = D.companies.flatMap((c) => c.roadmap.filter((r) => r.status !== "done" && r.when.slice(0, 4) <= until).map((r) => ({ ...r, c })))
     .sort((a, b) => a.when.localeCompare(b.when));
+  renderLayerMatrix("#lm2", "#lm2-sort", "#lm2-sub");
   renderPatentDirection();
   renderPaperSignals("#pp-chart", "#pp-sub");
   renderPatentNews("#pip2", "#pip2-sub");
@@ -1073,6 +1280,7 @@ function renderEngineerBrief(start) {
     : `${start.slice(5).replace("-", "/")} 이후 소식 ${all.length}건 중 ${tagged.length}건 분류됨(기술 층 해당 ${news.length}건, 해당 없음 ${tagged.length - news.length}건)${pending ? ` · ${pending}건은 분류 대기` : ""} — 누르면 위 소식 목록을 그 층으로 거릅니다`;
   $("#layers").innerHTML = (tagged.length ? "" : '<div class="empty">분류 전</div>')
     + (tagged.length ? counts.map(([k, n]) => `<div class="hbar" data-nf="${k}" style="cursor:pointer"><span class="n">${LAYER[k]}</span><span class="track"><i style="width:${(n / max) * 100}%"></i></span><span class="v">${n}건</span></div>`).join("") : "");
+  renderLayerMatrix("#lm", "#lm-sort", "#lm-sub");
   renderPatentHub();
   renderPatentNews("#pip", "#pip-sub");
   renderPatentRef();
@@ -1263,8 +1471,11 @@ function renderParts() {
   const CF = [["all", "전체"], ["gap", "국내 공백만"], ["H", "진입 난도 상"], ["kr", "국내 후보 있음"]];
   $("#comp-filter").innerHTML = CF.map(([id, l]) => `<button class="chip" data-cf="${id}" aria-pressed="${id === cf}">${l}</button>`).join("");
   const comps = D.bom.items.filter((i) => cf === "all" || (cf === "gap" ? !i.kr.length : cf === "kr" ? i.kr.length : i.barrier === cf));
+  const sl = selLayer() ? layerById(selLayer()) : null;
+  $("#parts-layer-banner").innerHTML = sl ? `<div class="card" style="margin-bottom:10px;font-size:0.84rem">선택한 기술 층: <b>${esc(sl.label)}</b> — 관련 부품 카드를 펼쳤습니다. <button class="chip" data-plclear aria-pressed="true">해제 ✕</button></div>` : "";
+  const layerOpen = (i) => !!(sl && (sl.parts || []).includes(i.id));
   $("#comps").innerHTML = comps.map((i) => `
-    <details class="card comp fold">
+    <details class="card comp fold"${layerOpen(i) ? " open" : ""}>
       <summary class="hd"><b>${esc(i.name)}</b><span class="b ${i.barrier}">${BARRIER[i.barrier]}</span>${i.kr.length ? `<span class="b official">국내 ${i.kr.length}</span>` : `<span class="b gap">국내 후보 없음</span>`}${partBadge(i)}${i.module ? "" : `<span class="muted" style="font-size:.76rem">비중 ${Math.round(i.share * 100)}% · $${i.asp.toLocaleString()}</span>`}</summary>
       <div class="kv">${i.module ? "<span>구성 부품을 묶은 모듈 단위</span>" : `<span>비중 <b>${Math.round(i.share * 100)}%</b></span><span>대당 <b>${i.qty}</b>개</span><span>개당 <b>$${i.asp.toLocaleString()}</b></span><span>연 하락 <b>${Math.round(i.decline * 100)}%</b></span>`}</div>
       <div class="who"><span class="k">기존</span>${esc(i.incumbents.join(" · "))}</div>
@@ -1534,11 +1745,15 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-psite],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
+  const t = e.target.closest("[data-pl],[data-plclear],[data-pco],[data-lmsort],[data-psite],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
   if (!t) return;
   if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
   if (t.dataset.co) return openSheet(t.dataset.co);
   if (t.dataset.tile) { store.set("tile", store.get("tile", null) === t.dataset.tile ? null : t.dataset.tile); renderHome(); return; }
+  if (t.dataset.pl) { setPatLayer(t.dataset.pl); return; }
+  if (t.dataset.plclear !== undefined) { store.set("patLayer", null); rerenderCurrent(); return; }
+  if (t.dataset.pco) { store.set("patCo", t.dataset.pco); renderPatentHub(); return; }
+  if (t.dataset.lmsort) { store.set("lmSort", t.dataset.lmsort); renderLayerMatrices(); return; }
   if (t.dataset.psite) { store.set("patSite", t.dataset.psite); renderPatentHub(); return; }
   if (t.dataset.copy) { const el = t; copyText(t.dataset.copy).then((ok) => { if (ok) { const o = el.textContent; el.textContent = "복사됨"; setTimeout(() => (el.textContent = o), 1200); } }); return; }
   if (t.dataset.qs) { store.set("qsort", t.dataset.qs); renderCapital(); return; }
@@ -1558,6 +1773,17 @@ document.addEventListener("click", (e) => {
 });
 $("#c-item").addEventListener("change", (e) => saveCalc({ item: e.target.value, qty: null, asp: null, dec: null }));
 for (const [id, k] of [["#c-qty", "qty"], ["#c-asp", "asp"], ["#c-dec", "dec"], ["#c-share", "share"]]) $(id).addEventListener("input", (e) => saveCalc({ [k]: Number(e.target.value) }));
+// ⓘ 설명: 누르면 말풍선, 다른 곳을 누르거나 Esc 로 닫는다
+document.addEventListener("click", (e) => {
+  const box = $("#tipbox"), tb = e.target.closest("[data-tip]");
+  if (!tb) { box.hidden = true; return; }
+  if (!box.hidden && box.dataset.for === tb.dataset.tip) { box.hidden = true; return; }
+  box.textContent = tb.dataset.tip; box.dataset.for = tb.dataset.tip; box.hidden = false;
+  const r = tb.getBoundingClientRect(), bw = box.offsetWidth;
+  box.style.left = `${Math.max(8, Math.min(r.left + scrollX - 8, innerWidth - bw - 8 + scrollX))}px`;
+  box.style.top = `${r.bottom + scrollY + 6}px`;
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("#tipbox").hidden = true; });
 $("#hb-co").addEventListener("change", updateHubBuilder);
 $("#hb-ly").addEventListener("change", updateHubBuilder);
 $("#c-exc").addEventListener("change", (e) => saveCalc({ exc: e.target.checked }));
@@ -1617,5 +1843,6 @@ $("#theme").addEventListener("click", () => {
 
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
+<div id="tipbox" class="tipbox" role="tooltip" hidden></div>
 </body>
 </html>

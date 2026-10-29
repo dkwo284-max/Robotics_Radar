@@ -1,15 +1,18 @@
-"""논문 신호(arXiv API, 키 불필요): 기술 층 키워드별 로봇(cs.RO) 논문 수 — 최근 12개월 vs 직전 12개월.
+"""논문 신호(arXiv API, 키 불필요): 기술 층 키워드별 로봇(cs.RO) 논문 수 — 월별 24개월 시계열.
 
 - arXiv 약관: 설명 메타데이터는 CC0, 요청은 3초에 1회·연결 1개. 건수만 세므로 응답이 작다(max_results=1).
-- 결과: web/data/papers.json (층별 수집일을 남겨 6일 지난 것만 새로 센다 — 주 1회 약 20회 요청).
+- 달(月) 단위로 세어 쌓는다: 끝난 지 8일이 지난 달은 확정(다시 세지 않음), 최근 달만 6일마다 갱신.
+  처음에는 층 11개 × 24개월 ≈ 264회(약 15분), 그다음부터는 주 1회 20회 안팎.
+- 최근 12개월(A) vs 직전 12개월(B)은 이 월별 값을 합쳐 계산한다(제출일 기준이라 합이 정확하다).
 - 논문은 특허 출원보다 앞서는 선행 신호일 뿐 산업 동향과 같지 않다. 화면에도 '논문 신호'로 표시한다.
 
-    python scripts/papers.py            # 오래된 층만 갱신
+    python scripts/papers.py            # 필요한 달만 갱신
     python scripts/papers.py --force    # 전부 다시 센다
 """
 from __future__ import annotations
 
 import argparse
+import calendar
 import logging
 import re
 import sys
@@ -23,23 +26,36 @@ from common import OUT, SRC, log, read_json, write_json
 API = "https://export.arxiv.org/api/query"
 UA = "RoboticsRadar/1.0 (personal dashboard; respects arXiv API terms of use)"
 TOTAL_RE = re.compile(r"<opensearch:totalResults[^>]*>\s*(\d+)\s*<")
+SETTLE_DAYS = 8  # 달이 끝난 뒤 이만큼 지나면 확정(늦게 올라오는 제출 반영)
 
 
 class PapersError(RuntimeError):
     pass
 
 
-def shift_years(d: date, n: int) -> date:
+def month_list(today: date, n: int = 24) -> list[str]:
+    """오늘 기준 '끝난 달' n개(오래된 순) — 예: 오늘이 2026-10-29 이면 마지막은 2026-09."""
+    y, m = today.year, today.month
+    out = []
+    for _ in range(n):
+        m -= 1
+        if m == 0:
+            y, m = y - 1, 12
+        out.append(f"{y}-{m:02d}")
+    return out[::-1]
+
+
+def month_range(ym: str) -> tuple[date, date]:
+    y, m = int(ym[:4]), int(ym[5:7])
+    return date(y, m, 1), date(y, m, calendar.monthrange(y, m)[1])
+
+
+def is_final(cell: list | None, ym: str) -> bool:
+    """cell = [건수, 센 날짜]. 달이 끝난 지 SETTLE_DAYS 가 지난 뒤에 센 값이면 확정."""
     try:
-        return d.replace(year=d.year - n)
-    except ValueError:  # 2/29
-        return d.replace(year=d.year - n, day=28)
-
-
-def periods(today: date) -> dict:
-    a_start = shift_years(today, 1) + timedelta(days=1)
-    b_end = a_start - timedelta(days=1)
-    return {"a": (a_start, today), "b": (shift_years(b_end, 1) + timedelta(days=1), b_end)}
+        return date.fromisoformat(cell[1]) >= month_range(ym)[1] + timedelta(days=SETTLE_DAYS)
+    except (TypeError, ValueError, IndexError):
+        return False
 
 
 class Arxiv:
@@ -81,23 +97,30 @@ def age_days(stamp: str | None, today: date) -> int:
         return 10_000
 
 
-def collect(cfg: dict, data: dict, ax: Arxiv, today: date, force: bool = False) -> dict:
-    per = periods(today)
-    data.setdefault("layers", {})
-    warnings: list[str] = []
+def collect(cfg: dict, data: dict, ax: Arxiv, today: date, force: bool = False, on_layer_done=None) -> dict:
+    """data["months"][층][YYYY-MM] = [건수, 센 날짜] 를 채운다. 확정된 달은 건너뛰고 실패하면 지금까지 것을 보존한다."""
+    months = month_list(today, int(cfg.get("months", 24)))
+    data["month_list"] = months  # 중간 저장본도 읽을 수 있게 먼저 기록
+    data.pop("layers", None)  # 이전(A/B 2기간) 형식은 버린다
+    rows = data.setdefault("months", {})
     ttl = int(cfg.get("ttl_days", 6))
+    warnings: list[str] = []
     try:
         for layer in [cfg["total"], *cfg["layers"]]:
-            cell = data["layers"].get(layer["id"])
-            if not force and cell and age_days(cell.get("fetched"), today) < ttl:
-                continue
-            a = ax.total(expr_of(cfg, layer), *per["a"])
-            b = ax.total(expr_of(cfg, layer), *per["b"])
-            data["layers"][layer["id"]] = {"a": a, "b": b, "fetched": today.isoformat()}
+            row = rows.setdefault(layer["id"], {})
+            for ym in months:
+                cell = row.get(ym)
+                if not force and cell and (is_final(cell, ym) or age_days(cell[1], today) < ttl):
+                    continue
+                start, end = month_range(ym)
+                row[ym] = [ax.total(expr_of(cfg, layer), start, end), today.isoformat()]
+            for ym in [k for k in row if k < months[0]]:  # 24개월보다 오래된 달은 버린다
+                del row[ym]
+            if on_layer_done:
+                on_layer_done()
     except PapersError as e:  # 지금까지 센 것은 보존하고 중단
         warnings.append(f"논문 신호 갱신 중단: {e}"[:200])
         log.warning("papers stopped: %s", e)
-    data["windows"] = {k: [v[0].isoformat(), v[1].isoformat()] for k, v in per.items()}
     data["warnings"] = warnings
     data["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="minutes")
     data["source"] = "arXiv API — cs.RO, 제출일 기준 · 설명 메타데이터 CC0"
@@ -115,12 +138,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     data = read_json(OUT / "papers.json", {})
     ax = Arxiv(pause=float(cfg.get("pause_seconds", 3.5)))
+    save = lambda: write_json(OUT / "papers.json", data)  # noqa: E731  — 층마다 저장해 중간에 멈춰도 이어서 채운다
     try:
-        collect(cfg, data, ax, datetime.now(timezone.utc).date(), args.force)
+        collect(cfg, data, ax, datetime.now(timezone.utc).date(), args.force, on_layer_done=save)
     finally:
-        if data.get("layers"):
-            write_json(OUT / "papers.json", data)
-    print(f"papers.json: 층 {len(data.get('layers', {}))}개, 요청 {ax.requests}회, 경고 {len(data.get('warnings', []))}")
+        if data.get("months"):
+            save()
+    done = sum(len(v) for v in data.get("months", {}).values())
+    print(f"papers.json: 월별 값 {done}개, 요청 {ax.requests}회, 경고 {len(data.get('warnings', []))}")
     return 0
 
 

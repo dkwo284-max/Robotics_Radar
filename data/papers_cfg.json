@@ -104,5 +104,6 @@
     "label": "로봇 논문 전체(cs.RO)",
     "q": ""
   },
-  "min_sample": 30
+  "min_sample": 30,
+  "months": 24
 }

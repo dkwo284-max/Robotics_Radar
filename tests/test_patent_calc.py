@@ -73,3 +73,14 @@ def test_block_hides_individual_records_unless_publishing_is_allowed():
     assert safe["ready"] and safe["recent"] == [] and all(r["recent"] == [] for r in safe["rows"])
     assert safe["rows"][0]["quality"]["granted"] == 0.4                     # 집계·비율은 그대로
     assert patent_calc.block(CFG, DATA, [])["recent"]                       # 허용된 경우에만 레코드 포함
+
+
+def test_hub_exposes_layer_links_without_any_collected_data():
+    cfg = {**CFG, "layers": [{**CFG["layers"][0], "paper": "qdd", "news_layer": "actuator"}, {**CFG["layers"][1], "paper": None, "news_layer": None}],
+           "total": {"id": "total", "label": "로봇 전체", "cpc": "cpc=B25J"},
+           "applicants": [{"id": "ubtech", "name": "UBTech", "company": "ubtech", "kind": "company", "home": "CN", "scope": "robot", "pa": ["ubtech"], "only": None},
+                          {"id": "sbb", "name": "SBB", "company": None, "kind": "kr_part", "home": "KR", "scope": "any", "pa": ["sbb tech"], "only": ["sw"]}]}
+    h = patent_calc.hub(cfg)
+    assert [(l["id"], l["paper"], l["news_layer"]) for l in h["layers"]] == [("sw", "qdd", "actuator"), ("screw", None, None)]
+    assert h["total"]["cpc"] == "cpc=B25J"
+    assert h["rows"][0]["q"] == 'pa="ubtech"' and h["rows"][0]["assignee"] == "ubtech" and h["rows"][1]["only"] == ["sw"]

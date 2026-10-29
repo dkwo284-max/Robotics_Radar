@@ -12,25 +12,38 @@ def arxiv_link(layer: dict) -> str:
 
 
 def block(cfg: dict, data: dict | None) -> dict:
+    """월별 값(data['months'])을 최근 12개월(A)·직전 12개월(B)로 합치고, 층별 월별 시계열(series)을 함께 낸다."""
     layers = [{"id": l["id"], "label": l["label"], "note": l["note"], "parts": l.get("parts", []), "link": arxiv_link(l)} for l in cfg["layers"]]
     base = {"ready": False, "layers": layers}
-    cells = (data or {}).get("layers") or {}
-    tot = cells.get("total")
-    if not tot or not tot.get("a"):
+    months = (data or {}).get("month_list") or []
+    cells = (data or {}).get("months") or {}
+    n = int(cfg.get("months", 24))
+    half = n // 2
+
+    def series(lid: str):
+        row = cells.get(lid)
+        if not row or len(months) < n or any(m not in row for m in months):
+            return None  # 아직 다 못 센 층은 화면에 올리지 않는다
+        return [row[m][0] for m in months]
+
+    ts = series("total")
+    if not ts or not sum(ts[half:]):
         return base
+    ta, tb = sum(ts[half:]), sum(ts[:half])
     min_sample = int(cfg.get("min_sample", 30))
     rows = []
     for l in cfg["layers"]:
-        c = cells.get(l["id"])
-        if not c:
+        sr = series(l["id"])
+        if sr is None:
             continue
-        a, b = c["a"], c["b"]
+        a, b = sum(sr[half:]), sum(sr[:half])
         rows.append({"id": l["id"], "label": l["label"], "note": l["note"], "parts": l.get("parts", []), "link": arxiv_link(l), "a": a, "b": b,
-                     "share_a": round(a / tot["a"], 5), "share_b": round(b / tot["b"], 5) if tot.get("b") else None,
-                     "growth": round(a / b, 2) if b else None, "small": a < min_sample})
+                     "share_a": round(a / ta, 5), "share_b": round(b / tb, 5) if tb else None,
+                     "growth": round(a / b, 2) if b else None, "small": a < min_sample, "series": sr})
     hum = next((r for r in rows if r["id"] == "humanoid"), None)
-    return {**base, "ready": True, "generated_at": data.get("generated_at"), "windows": data.get("windows"), "source": data.get("source"),
-            "total": {"a": tot["a"], "b": tot["b"], "growth": round(tot["a"] / tot["b"], 2) if tot.get("b") else None},
+    return {**base, "ready": True, "generated_at": data.get("generated_at"), "source": data.get("source"), "months": months,
+            "windows": {"a": [months[half], months[-1]], "b": [months[0], months[half - 1]]},
+            "total": {"a": ta, "b": tb, "growth": round(ta / tb, 2) if tb else None, "series": ts},
             "baseline_growth": hum["growth"] if hum else None, "rows": rows, "warnings": data.get("warnings", [])}
 
 
