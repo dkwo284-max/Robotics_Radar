@@ -140,7 +140,7 @@ def parse_feed(raw: bytes | str, company: str, lookback_days: int, lang: str) ->
     return out
 
 
-def collect(cfg: dict, client: httpx.Client, known: set[str]) -> list[dict]:
+def collect(cfg: dict, client: httpx.Client, known: set[str], stats: dict | None = None) -> list[dict]:
     """일반 소식(queries)과 특허·지재권 소식(patent_queries, topic=patent)을 모은다. 둘 다 키가 필요 없는 구글 뉴스 RSS."""
     ncfg = cfg["news"]
     fresh: list[dict] = []
@@ -153,12 +153,16 @@ def collect(cfg: dict, client: httpx.Client, known: set[str]) -> list[dict]:
                 continue
             got = 0
             for q, lang in queries:
+                if stats is not None:
+                    stats["queries"] = stats.get("queries", 0) + 1
                 try:
                     r = client.get(RSS[lang].format(q=quote_plus(q), d=days))
                     r.raise_for_status()
                     items = parse_feed(r.content, company, days, lang)
                 except Exception as e:  # noqa: BLE001
                     log.warning("news %s/%s failed: %s", topic, company, e)
+                    if stats is not None:
+                        stats["failed"] = stats.get("failed", 0) + 1
                     continue
                 for x in sorted(items, key=lambda x: x["date"], reverse=True):
                     key = re.sub(r"\W+", "", x["title"].lower())[:50]
@@ -249,15 +253,33 @@ def needs_retry(x: dict) -> bool:
     return not x.get("ai") or "layer" not in x
 
 
+def plan_window(ncfg: dict, old: dict, today: date) -> dict:
+    """이번 실행에서 가져올 기간. 30일 이력이 아직 없으면 한 번만 백필하고, 그다음부터는 마지막 수집 이후 새 기사만 가져온다."""
+    backfill = int(ncfg.get("backfill_days", 30))
+    if int(old.get("covered_days", 0)) < backfill:
+        return {"days": backfill, "per": int(ncfg.get("per_company_backfill", 8)),
+                "per_patent": int(ncfg.get("per_company_patent_backfill", 4)), "backfill": True}
+    try:
+        gap = (today - date.fromisoformat(str(old.get("generated_at", ""))[:10])).days
+    except ValueError:
+        gap = backfill
+    days = min(max(gap + 1, 2), int(ncfg.get("lookback_days", 7)))  # 하루 전부터 겹치게(누락 방지), 최대 lookback_days
+    return {"days": days, "per": int(ncfg.get("per_company", 3)), "per_patent": int(ncfg.get("per_company_patent", 2)), "backfill": False}
+
+
 def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client: httpx.Client | None = None,
                 signposts: list[dict] | None = None) -> dict:
     own = client is None
     client = client or httpx.Client(timeout=30, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (compatible; RoboticsRadar/1.0)"})
     try:
         items = {x["id"]: x for x in old.get("items", [])}
-        fresh = collect(cfg, client, set(items) | set(old.get("dropped", [])))
-        # 키가 없거나 상한에 걸려 제목만 저장된 최근 기사는 AI 를 쓸 수 있을 때 다시 분류한다(새 기사 먼저)
-        since = (date.today() - timedelta(days=int(cfg["news"].get("lookback_days", 7)))).isoformat()
+        win = plan_window(cfg["news"], old, date.today())
+        wcfg = {**cfg, "news": {**cfg["news"], "lookback_days": win["days"], "lookback_days_patent": win["days"],
+                                 "per_company": win["per"], "per_company_patent": win["per_patent"]}}
+        stats: dict = {}
+        fresh = collect(wcfg, client, set(items) | set(old.get("dropped", [])), stats)  # 이미 본 기사(id)는 건너뜀
+        # 키가 없거나 상한에 걸려 제목만 저장된 기사는 AI 를 쓸 수 있을 때 다시 분류한다(새 기사 먼저)
+        since = (date.today() - timedelta(days=int(cfg["news"].get("retry_days", 30)))).isoformat()
         retry = [{**x, "desc": ""} for x in items.values() if needs_retry(x) and x["date"] >= since] if llm.enabled else []
         limit = int(cfg["news"].get("max_ai_items", 40))
         todo = fresh + retry  # 새 기사 먼저, 그다음 태그가 없는 지난 기사
@@ -279,8 +301,13 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
         items[x["id"]] = x
     cutoff = (date.today() - timedelta(days=int(cfg["news"].get("keep_days", 120)))).isoformat()
     live = sorted((x for x in items.values() if x["date"] >= cutoff), key=lambda x: (x["date"], x["id"]), reverse=True)
-    log.info("news: %d new, %d kept, %d dropped", len(done), len(live), len(dropped))
-    return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="minutes"),
+    # 백필은 질의의 20% 넘게 실패하면 '이력 확보'로 치지 않고 다음 실행에서 다시 한다
+    ok = not stats.get("queries") or stats.get("failed", 0) <= 0.2 * stats["queries"]
+    covered = int(cfg["news"].get("backfill_days", 30)) if (win["backfill"] and ok) else int(old.get("covered_days", 0))
+    log.info("news: window %dd%s, %d new, %d kept, %d dropped, %d/%d queries failed", win["days"], " (backfill)" if win["backfill"] else "",
+             len(done), len(live), len(dropped), stats.get("failed", 0), stats.get("queries", 0))
+    return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="minutes"), "covered_days": covered,
+            "covered_from": (date.today() - timedelta(days=covered)).isoformat() if covered else None,
             "ai": "gemini" if llm.enabled else "none", "items": live,
             "proposals": proposals(done, companies, old.get("proposals", [])),
             "dropped": (old.get("dropped", []) + dropped)[-2000:], "warnings": [warn] if warn else []}

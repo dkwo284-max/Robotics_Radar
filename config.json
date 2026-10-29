@@ -281,7 +281,11 @@
         ]
       ]
     },
-    "lookback_days_patent": 30
+    "lookback_days_patent": 30,
+    "backfill_days": 30,
+    "per_company_backfill": 8,
+    "per_company_patent_backfill": 4,
+    "retry_days": 30
   },
   "tickers": {
     "tesla": "TSLA",
@@ -311,6 +315,8 @@
     "max_requests_per_run": 2,
     "daily_cap": 2,
     "expected_per_run": 1,
-    "timeout_seconds": 240
+    "timeout_seconds": 240,
+    "max_http_attempts": 3,
+    "enabled": true
   }
 }

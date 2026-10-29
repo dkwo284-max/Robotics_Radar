@@ -210,7 +210,7 @@ def news_block(news: dict, days: int = 45) -> list[dict]:
     cutoff = (date.fromisoformat(newest) - timedelta(days=days)).isoformat()
     keep = ("id", "date", "title", "title_ko", "summary_ko", "source", "url", "companies", "type", "importance", "ai", "query",
             "audience", "layer", "signpost", "topic")
-    return [{k: x.get(k) for k in keep} for x in news["items"] if x["date"] >= cutoff][:150]
+    return [{k: x.get(k) for k in keep} for x in news["items"] if x["date"] >= cutoff][:300]
 
 
 RM_NEWS = {"production": {"production", "supply"}, "product": {"product"}, "deploy": {"deploy", "partner"},
@@ -351,6 +351,9 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "scenarios": market["scenarios"],
         "bom": {**{k: v for k, v in market["bom"].items() if k != "items"}, "items": bom_items(market["bom"])},
         "news": nb,
+        "coverage": {"news_from": min((x["date"] for x in nb), default=None), "news_to": max((x["date"] for x in nb), default=None),
+                     "news_covered_from": news.get("covered_from"),
+                     "tracking_since": ((history.get("snapshots") or [{}])[0] or {}).get("date")},
         "changes": changes,
         "roadmap_watch": roadmap_watch(companies, nb, today),
         "signpost_moves": signpost_moves(strategy, nb, today),

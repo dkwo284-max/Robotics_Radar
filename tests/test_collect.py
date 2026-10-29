@@ -214,3 +214,94 @@ def test_patent_topic_drops_articles_without_patent_and_robot_words():
     got = news.collect(cfg, client, set())
     assert [x["title"] for x in got] == ["Tesla patent reveals touch skin for robot hands", "로봇 AI 특허 4건 등록"]
     assert "30d" in client.urls[0]                                                    # 특허 질의는 조회 기간을 30일로
+
+
+# ---------- 증분 수집 ----------
+def test_plan_window_backfills_once_then_only_new_days():
+    ncfg = {"backfill_days": 30, "lookback_days": 7, "per_company": 3, "per_company_patent": 2, "per_company_backfill": 8, "per_company_patent_backfill": 4}
+    today = date(2026, 10, 29)
+    first = news.plan_window(ncfg, {}, today)
+    assert first == {"days": 30, "per": 8, "per_patent": 4, "backfill": True}                 # 이력이 없으면 한 번 백필
+    assert news.plan_window(ncfg, {"covered_days": 30, "generated_at": "2026-10-29T03:00+00:00"}, today)["days"] == 2     # 오늘 이미 수집 — 겹치게 2일
+    assert news.plan_window(ncfg, {"covered_days": 30, "generated_at": "2026-10-27T03:00+00:00"}, today) == {"days": 3, "per": 3, "per_patent": 2, "backfill": False}
+    assert news.plan_window(ncfg, {"covered_days": 30, "generated_at": "2026-09-01T00:00+00:00"}, today)["days"] == 7        # 오래 쉬었어도 최대 lookback_days
+    assert news.plan_window(ncfg, {"covered_days": 10}, today)["backfill"] is True                                           # 이력이 모자라면 다시 백필
+
+
+def test_update_news_backfills_then_fetches_only_the_recent_window():
+    cfg = _news_cfg()
+    cfg["news"].update(backfill_days=30, lookback_days=7, max_ai_items=10)
+    c1 = _FakeClient()
+    out1 = news.update_news(cfg, {}, COMPANIES, FakeLLM(enabled=False), client=c1)
+    assert all("when:30d" in u for u in c1.urls) and out1["covered_days"] == 30 and out1["covered_from"]
+    c2 = _FakeClient()
+    out2 = news.update_news(cfg, out1, COMPANIES, FakeLLM(enabled=False), client=c2)
+    assert all("when:2d" in u for u in c2.urls)                                    # 이후에는 최근 이틀만 요청
+    assert out2["covered_days"] == 30
+
+
+def test_failed_backfill_is_not_counted_as_history():
+    class Down:
+        def get(self, url):
+            raise RuntimeError("network down")
+
+    cfg = _news_cfg()
+    cfg["news"].update(backfill_days=30, lookback_days=7)
+    out = news.update_news(cfg, {}, COMPANIES, FakeLLM(enabled=False), client=Down())
+    assert out["covered_days"] == 0                                                # 질의 대부분이 실패하면 다음 실행에서 다시 백필
+
+
+def test_prices_fetch_three_months_once_then_only_ten_days_and_merge():
+    import prices
+
+    class C:
+        def __init__(self):
+            self.urls = []
+
+        def get(self, url):
+            self.urls.append(url)
+            days = 70 if "range=3mo" in url else 3
+            start = 1_700_000_000 + (0 if "range=3mo" in url else 68 * 86400)
+            js = {"chart": {"result": [{"meta": {"currency": "USD"}, "timestamp": [start + i * 86400 for i in range(days)],
+                                        "indicators": {"quote": [{"close": [100 + (0 if "range=3mo" in url else 68) + i for i in range(days)]}]}}]}}
+
+            class R:
+                def raise_for_status(self):
+                    pass
+
+                def json(self):
+                    return js
+            return R()
+
+    cfg = {"tickers": {"tesla": "TSLA"}, "ticker_notes": {}}
+    c = C()
+    first = prices.update_prices(cfg, {}, client=c)
+    assert "range=3mo" in c.urls[0] and len(first["hist"]["tesla"]) == 70
+    c2 = C()
+    second = prices.update_prices(cfg, first, client=c2)
+    assert "range=10d" in c2.urls[0]                                                # 60일 넘게 쌓였으면 최근 구간만
+    assert len(second["hist"]["tesla"]) >= 70 and second["quotes"]["tesla"]["last"] == 170 and len(second["quotes"]["tesla"]["spark"]) == 60
+
+
+def test_gemini_http_attempts_are_capped_and_ai_can_be_switched_off(monkeypatch):
+    import httpx as hx
+
+    import llm as llm_mod
+
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.setattr(llm_mod.time, "sleep", lambda s: None)
+    calls = []
+
+    def handler(req):
+        calls.append(1)
+        return hx.Response(500, text="boom")
+
+    cfg = {"llm": {"models": ["m1", "m2", "m3", "m4"], "max_requests_per_run": 2, "max_http_attempts": 3}}
+    g = llm_mod.Gemini(cfg, client=hx.Client(transport=hx.MockTransport(handler)))
+    try:
+        g.json_call("s", "u", {})
+        raise AssertionError("should fail")
+    except llm_mod.LLMError:
+        pass
+    assert len(calls) == 3                                                          # 모델 4개 × 2회가 아니라 요청 1건당 HTTP 3회까지
+    assert llm_mod.Gemini({"llm": {"enabled": False}}).enabled is False             # 키가 있어도 AI 완전 끄기

@@ -18,8 +18,10 @@ class LLMError(RuntimeError):
 
 class Gemini:
     def __init__(self, cfg: dict, client: httpx.Client | None = None):
-        self.key = os.environ.get("GEMINI_API_KEY", "").strip()
         lc = cfg.get("llm", {})
+        # llm.enabled=false 면 키가 있어도 AI 를 전혀 쓰지 않는다(완전 무료 운영의 비상 스위치)
+        self.key = os.environ.get("GEMINI_API_KEY", "").strip() if lc.get("enabled", True) else ""
+        self.max_http = int(lc.get("max_http_attempts", 3))  # 요청 1건당 실제 HTTP 호출 상한(모델 바꿔 재시도·재시도 합산)
         self.models = list(lc.get("models", ["gemini-flash-latest"]))
         self.max_requests = int(lc.get("max_requests_per_run", 1))
         self.client = client or httpx.Client(timeout=float(lc.get("timeout_seconds", 240)))
@@ -41,8 +43,12 @@ class Gemini:
             "generationConfig": {"responseMimeType": "application/json", "responseSchema": schema, "maxOutputTokens": max_tokens},
         }
         last = None
+        http = 0
         for model in self.models:
             for attempt in range(2):
+                if http >= self.max_http:
+                    raise LLMError(last or "max_http_attempts reached")
+                http += 1
                 try:
                     r = self.client.post(URL.format(model=model), json=body, headers={"x-goog-api-key": self.key})
                 except httpx.TransportError as e:

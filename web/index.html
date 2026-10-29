@@ -350,7 +350,8 @@ details.fold[open] > summary::after { content: "접기"; }
     <section>
       <h2>무엇이 바뀌었나</h2>
       <p class="sub" id="chg-sub"></p>
-      <div class="chips" id="period" style="margin-bottom:10px"></div>
+      <div class="chips" id="period" style="margin-bottom:6px"></div>
+      <p class="sub" id="period-note" style="margin:0 0 10px" hidden></p>
       <div class="kpis" id="chg-kpis"></div>
       <div id="tile-detail" style="margin-top:10px" hidden></div>
     </section>
@@ -1141,6 +1142,12 @@ function renderHome() {
   const start = periodStart(period);
   $("#period").innerHTML = [["since", VISIT.prev ? `지난 방문(${VISIT.prev.slice(5).replace("-", "/")}) 이후` : null], ["7", "7일"], ["30", "30일"]]
     .filter(([, l]) => l).map(([id, l]) => `<button class="chip" data-period="${id}" aria-pressed="${id === period}">${l}</button>`).join("");
+  // 선택한 기간보다 수집된 범위가 짧으면 알려 준다 — 7일과 30일 결과가 같은 이유를 화면에서 바로 알 수 있게
+  const cov = D.coverage || {}, short = [];
+  if (cov.news_from && start < cov.news_from) short.push(`소식은 ${cov.news_from.slice(5).replace("-", "/")}부터`);
+  if (cov.tracking_since && start < cov.tracking_since) short.push(`데이터 변화 기록은 ${cov.tracking_since.slice(5).replace("-", "/")}부터`);
+  $("#period-note").hidden = !short.length;
+  $("#period-note").textContent = short.length ? `ⓘ 선택한 기간보다 수집된 범위가 짧아 7일·30일 결과가 같을 수 있어요 — ${short.join(", ")} 쌓여 있습니다. 매일 자동으로 쌓이고, 소식은 처음 한 번 30일치를 채웁니다.` : "";
 
   const chg = (D.changes || []).filter((c) => c.date >= start && c.roles.includes(role));
   const news = (D.news || []).filter((x) => x.date >= start && roleOf(x).includes(role));
