@@ -1597,6 +1597,7 @@ fetch("data/dashboard.json", { cache: "no-cache" }).then((r) => { if (!r.ok) thr
   const t = new Date(d.generated_at);
   $("#meta").innerHTML = `데이터 기준 ${esc(d.as_of.slice(5).replace("-", "/"))}<br><span style="font-size:.72rem">빌드 ${isNaN(t) ? "" : t.toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}</span>`;
   $("#foot").innerHTML = `<span><span class="b official">공식</span> 회사 발표 · <span class="b reported">보도</span> 언론·리서치 · <span class="b estimate">추정</span> 간접 계산·제3자 추정</span>
+    <span>특허·기술 방향 정보의 출처 유형 — <span class="b t3">링크 전용</span> 검색 결과로 연결만(데이터 저장 없음) · <span class="b reported">보도 기반</span> 뉴스 검색+AI 분류 · <span class="b estimate">분기 큐레이션</span> 공개 자료를 요약·출처 표기 · <span class="b estimate">논문 신호</span> arXiv 논문 수(선행 신호) · <span class="b official">EPO 집계</span> 선택 기능(기본 꺼짐)</span>
     <span>점수와 인사이트는 공개 정보를 바탕으로 한 분석이며 투자 권유가 아닙니다. 수치는 출처마다 다를 수 있어 각 항목에 출처를 붙였습니다.</span>
     ${d.warnings.length ? `<span class="warnbox">데이터 경고: ${d.warnings.map(esc).join(" / ")}</span>` : ""}`;
   route();

@@ -3,7 +3,7 @@
     python scripts/update.py              # 뉴스 + 주가 + 빌드 (+ 다이제스트 날이면 다이제스트)
     python scripts/update.py --no-news    # 주가 + 빌드
     python scripts/update.py --patents probe   # EPO OPS 키·검색식 점검만 (수집·빌드 안 함)
-    python scripts/update.py --patents skip    # 특허 수집 건너뜀 (기본 auto: 키가 있으면 이어서 수집)
+    python scripts/update.py --patents skip    # EPO 특허 집계 건너뜀 (기본 auto: patents_cfg.json 의 enabled=true 이고 키가 있을 때만 수집)
 """
 from __future__ import annotations
 

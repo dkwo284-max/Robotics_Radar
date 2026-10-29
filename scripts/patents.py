@@ -285,8 +285,13 @@ def age_days(stamp: str | None, today: date) -> int:
         return 10_000
 
 
+def enabled(cfg: dict) -> bool:
+    return bool(cfg.get("enabled"))
+
+
 def refresh_recent(ops: OPS, app: dict, cfg: dict, data: dict, today: date) -> None:
-    """최근 공개 특허(60일) + 12개월 품질 지표 — 기업(kind=company)만, 2회 검색."""
+    """12개월 품질 지표 + 최근 60일 건수 — 기업(kind=company)만, 2회 검색.
+    publish_records=true 일 때만 개별 특허 레코드(번호·제목·출원인)를 저장한다(기본은 건수·비율만)."""
     bud = cfg["budget"]
     rec = dict(data["applicants"].get(app["id"], {}))  # 검색이 끝까지 성공했을 때만 저장(중간 실패 시 빈 항목을 남기지 않는다)
     base = base_expr(app)
@@ -295,10 +300,13 @@ def refresh_recent(ops: OPS, app: dict, cfg: dict, data: dict, today: date) -> N
     refs = parse_refs(js)
     rec["quality"] = quality(refs, total, app.get("home", ""))
     r_start = today - timedelta(days=int(bud["recent_days"]))
-    n, js2 = ops.query(base, r_start, today, "1-8", "biblio", est=300_000)
-    items = parse_biblio(js2)
-    if not items and js2:  # biblio 파싱이 안 되면 번호만이라도
-        items = [{**r, "date": "", "title": "", "applicant": ""} for r in parse_refs(js2)]
+    if cfg.get("publish_records"):
+        n, js2 = ops.query(base, r_start, today, "1-8", "biblio", est=300_000)
+        items = parse_biblio(js2)
+        if not items and js2:  # biblio 파싱이 안 되면 번호만이라도
+            items = [{**r, "date": "", "title": "", "applicant": ""} for r in parse_refs(js2)]
+    else:
+        n, items = ops.query(base, r_start, today)[0], []  # 건수만
     rec["recent"] = items
     rec["recent_total"] = n
     rec["name"], rec["kind"], rec["company"], rec["home"] = app["name"], app["kind"], app.get("company"), app.get("home")
@@ -409,12 +417,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-searches", type=int, default=None)
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    cfg = read_json(SRC / "patents_cfg.json", {})
+    if not args.probe and not enabled(cfg):
+        log.info("EPO 특허 집계는 기본 꺼져 있습니다(data/patents_cfg.json 의 enabled) — 건너뜁니다")
+        return 0
+    today = datetime.now(timezone.utc).date()
     key, secret = os.environ.get("EPO_OPS_KEY", "").strip(), os.environ.get("EPO_OPS_SECRET", "").strip()
     if not key or not secret:
         log.warning("EPO_OPS_KEY / EPO_OPS_SECRET 이 없어 특허 수집을 건너뜁니다")
         return 0
-    cfg = read_json(SRC / "patents_cfg.json", {})
-    today = datetime.now(timezone.utc).date()
     bud = cfg["budget"]
     data = read_json(OUT / "patents.json", {})
     quota = Quota(data.setdefault("usage", {}) if not args.probe else {}, today, int(bud["weekly_cap_mb"]) * MB, int(bud["daily_cap_mb"]) * MB)

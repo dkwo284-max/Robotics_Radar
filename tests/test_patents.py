@@ -89,7 +89,7 @@ def test_search_handles_404_and_date_separator_fallback():
 
 
 def test_collect_respects_budget_and_resumes():
-    cfg = {"windows": {"years": 3}, "budget": {"max_searches": 6, "cell_ttl_days": 28, "recent_ttl_days": 6, "recent_days": 60, "quality_months": 12, "pause_seconds": 0},
+    cfg = {"publish_records": True, "windows": {"years": 3}, "budget": {"max_searches": 6, "cell_ttl_days": 28, "recent_ttl_days": 6, "recent_days": 60, "quality_months": 12, "pause_seconds": 0},
            "layers": [{"id": "sw", "cpc": "cpc=F16H49"}, {"id": "hand", "cpc": "cpc=B25J15/0009"}], "total": {"cpc": "cpc=B25J"},
            "applicants": [{"id": "ubtech", "name": "UBTech", "company": "ubtech", "kind": "company", "home": "CN", "scope": "robot", "pa": ["ubtech"]},
                           {"id": "harmonic", "name": "Harmonic", "company": None, "kind": "incumbent", "home": "JP", "scope": "any", "pa": ["harmonic drive"], "only": ["sw"]}]}
@@ -227,3 +227,26 @@ def test_failed_recent_refresh_leaves_no_partial_applicant_entry():
     data: dict = {}
     patents.collect(cfg, data, make_ops(handler), TODAY)
     assert data["applicants"] == {} and data["warnings"]
+
+
+def test_safe_mode_stores_no_individual_records_and_skips_the_biblio_call():
+    paths = []
+
+    def handler(req):
+        paths.append(req.url.path)
+        if auth_ok(req):
+            return httpx.Response(200, json={"access_token": "t", "expires_in": "1199"})
+        return httpx.Response(200, json=count_js(40, [("CN", "1", "A"), ("US", "2", "B2")]))
+
+    cfg = {"windows": {"years": 3}, "budget": {"max_searches": 4, "cell_ttl_days": 28, "recent_ttl_days": 6, "recent_days": 60, "quality_months": 12, "pause_seconds": 0},
+           "layers": [], "total": {"cpc": "cpc=B25J"},                       # publish_records 없음 = 안전 모드
+           "applicants": [{"id": "a", "name": "A", "company": "a", "kind": "company", "home": "CN", "scope": "robot", "pa": ["a"]}]}
+    data: dict = {}
+    patents.collect(cfg, data, make_ops(handler), TODAY)
+    rec = data["applicants"]["a"]
+    assert rec["recent"] == [] and rec["recent_total"] == 40 and rec["quality"]["total"] == 40   # 건수·비율만
+    assert not any(p.endswith("/biblio") for p in paths)                                         # 개별 서지 정보는 아예 요청하지 않음
+
+
+def test_epo_collection_is_off_unless_enabled():
+    assert patents.enabled({}) is False and patents.enabled({"enabled": False}) is False and patents.enabled({"enabled": True}) is True

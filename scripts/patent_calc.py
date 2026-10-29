@@ -30,6 +30,7 @@ def block(cfg: dict, data: dict | None, bom_items: list[dict]) -> dict:
     if not data or not data.get("cells"):
         return base
     cells, rec = data["cells"], data.get("applicants", {})
+    show = bool(cfg.get("publish_records"))  # 개별 특허 레코드는 허용된 경우에만 화면 데이터에 싣는다
     rows, recent = [], []
     for app in cfg["applicants"]:
         if app["kind"] != "company":
@@ -41,8 +42,9 @@ def block(cfg: dict, data: dict | None, bom_items: list[dict]) -> dict:
         r = rec.get(app["id"], {})
         rows.append({"id": app["company"], "name": app["name"], "home": app.get("home"), "q": pa_q(app), "total": tot,
                      "layers": {k: v for k, v in ls.items() if v}, "quality": r.get("quality"),
-                     "recent": r.get("recent", []), "recent_total": r.get("recent_total")})
-        recent += [{**it, "company": app["company"]} for it in r.get("recent", []) if it.get("title") or it.get("number")]
+                     "recent": r.get("recent", []) if show else [], "recent_total": r.get("recent_total")})
+        if show:
+            recent += [{**it, "company": app["company"]} for it in r.get("recent", []) if it.get("title") or it.get("number")]
     recent.sort(key=lambda x: x.get("date", ""), reverse=True)
 
     industry = []

@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import changes  # noqa: E402
 import patent_calc  # noqa: E402
 
-CFG = {"layers": [{"id": "sw", "label": "하모닉", "note": "", "cpc": "cpc=F16H49", "parts": ["reducer"]}, {"id": "screw", "label": "스크류", "note": "", "cpc": "cpc=F16H25/22", "parts": ["screw"]}],
+CFG = {"publish_records": True, "layers": [{"id": "sw", "label": "하모닉", "note": "", "cpc": "cpc=F16H49", "parts": ["reducer"]}, {"id": "screw", "label": "스크류", "note": "", "cpc": "cpc=F16H25/22", "parts": ["screw"]}],
        "ref": [{"name": "x"}], "ref_note": "n",
        "applicants": [
            {"id": "ubtech", "name": "UBTech", "company": "ubtech", "kind": "company", "home": "CN"},
@@ -66,3 +66,10 @@ def test_patent_baseline_moves_only_when_logged_or_new():
     assert out["ubtech"] == {"sw": 100, "screw": 80, "hand": 7}      # sw 는 작은 증가라 기준 유지, screw 는 기록돼 갱신, hand 는 새 칸
     assert out["figure"] == {"sw": 3}
     assert changes.keep_baseline(None, cur, [])["patents"] == cur["patents"]
+
+
+def test_block_hides_individual_records_unless_publishing_is_allowed():
+    safe = patent_calc.block({**CFG, "publish_records": False}, DATA, [])
+    assert safe["ready"] and safe["recent"] == [] and all(r["recent"] == [] for r in safe["rows"])
+    assert safe["rows"][0]["quality"]["granted"] == 0.4                     # 집계·비율은 그대로
+    assert patent_calc.block(CFG, DATA, [])["recent"]                       # 허용된 경우에만 레코드 포함
