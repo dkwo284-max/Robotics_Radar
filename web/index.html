@@ -1344,10 +1344,8 @@ function renderExec() {
     <span class="num">${fmtUnit(p.curated, p.unit)} → <b>${fmtUnit(p.proposed, p.unit)}</b></span>
     <span class="s">${esc(p.date)} ${p.as_of ? `· 기준 ${esc(p.as_of)} ` : ""}· ${esc(p.title)} ${link(p.url, "원문")}</span></div>`).join("");
   document.querySelectorAll("[data-lens]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lens === lens)));
-  $("#kpis").innerHTML = D.kpis[lens].map((k) => {
-    const tag = k.id ? "button" : "div";
-    return `<${tag} class="kpi"${k.id ? ` data-co="${esc(k.id)}"` : ""}><span class="l">${esc(k.label)}</span><span class="v">${esc(k.value)}</span><span class="s">${esc(k.sub)}</span></${tag}>`;
-  }).join("");
+  // 숫자 타일을 누르면 어떤 기업들인지(근거 목록)를 팝업으로 보여 준다
+  $("#kpis").innerHTML = D.kpis[lens].map((k, i) => `<button class="kpi" data-kpi="${lens}|${i}" style="cursor:pointer"><span class="l">${esc(k.label)} <span aria-hidden="true">ⓘ</span></span><span class="v">${esc(k.value)}</span><span class="s">${esc(k.sub)}</span></button>`).join("");
   $("#ins-sub").textContent = lens === "parts"
     ? "한국 제조·부품사가 누구에게, 어떤 부품으로, 언제 들어갈지"
     : "돈을 넣는다면 어디에, 어떤 방식이 비용 대비 효율적인지";
@@ -1853,6 +1851,16 @@ function openSheet(id) {
   $("#scrim").hidden = false; $("#sheet").hidden = false; document.body.classList.add("locked");
   $("#sheet").scrollTop = 0; $("#sh-x").focus();
 }
+function openKpi(key) {
+  const [lens, i] = key.split("|"), k = D.kpis[lens]?.[Number(i)], d = k?.detail;
+  if (!d) return;
+  $("#sh-title").innerHTML = `${esc(d.title)}<small>${esc(k.label)} · ${esc(k.value)}</small>`;
+  $("#sh-body").innerHTML = `<div>${d.note ? `<p class="sub" style="margin:0 0 10px">${esc(d.note)}${d.src ? ` ${link(d.src, "출처")}` : ""}</p>` : ""}
+    ${d.rows.length ? `<div class="list">${d.rows.map((r) => `<button class="row" data-co="${esc(r.id)}"><span class="t">${esc(byId[r.id]?.name_ko || r.id)}</span><span class="r num">${esc(r.text)}</span>${r.sub ? `<span class="s">${esc(r.sub)}</span>` : ""}</button>`).join("")}</div>
+      <p class="sub" style="margin:8px 0 0">기업을 누르면 상세 정보가 열립니다.</p>` : `<p class="sub" style="margin:0">개별 기업이 아니라 시장 전체 추정치라 기업 목록은 없습니다.</p>`}</div>`;
+  $("#scrim").hidden = false; $("#sheet").hidden = false; document.body.classList.add("locked");
+  $("#sheet").scrollTop = 0; $("#sh-x").focus();
+}
 function closeSheet() { $("#scrim").hidden = true; $("#sheet").hidden = true; document.body.classList.remove("locked"); }
 
 // ---------- 라우팅 · 이벤트 ----------
@@ -1866,9 +1874,10 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-hubtool],[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-pview],[data-hm],[data-lmsort],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
+  const t = e.target.closest("[data-kpi],[data-hubtool],[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-pview],[data-hm],[data-lmsort],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
   if (!t) return;
   if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
+  if (t.dataset.kpi) return openKpi(t.dataset.kpi);
   if (t.dataset.co) return openSheet(t.dataset.co);
   if (t.dataset.tile) { store.set("tile", store.get("tile", null) === t.dataset.tile ? null : t.dataset.tile); renderHome(); return; }
   if (t.dataset.pl) { setPatLayer(t.dataset.pl); return; }

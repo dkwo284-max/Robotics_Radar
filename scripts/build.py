@@ -93,19 +93,47 @@ def kpis(companies: list[dict], market: dict) -> dict:
     us = [c["calc"]["val_per_unit"] for c in body if c["calc"]["val_per_unit"] and c["country"] == "US"]
     cn = [c["calc"]["val_per_unit"] for c in body if c["calc"]["val_per_unit"] and c["country"] == "CN"]
     low_exec = [c for c in companies if c["scores"]["execution"][0] < 10]
+
+    def row(c: dict, text: str, sub: str = "") -> dict:
+        return {"id": c["id"], "text": text, "sub": sub}
+
+    def usd(v: float) -> str:
+        return f"${v / 1e6:.1f}M" if v >= 1e6 else f"${v / 1e3:.0f}K"
+
+    rounds = sorted(((c, r) for c in companies for r in c.get("funding", [])
+                     if r.get("amount") and months_back(as_of, r["date"]) < 12), key=lambda x: -x[1]["amount"])
+    by_attract = sorted(body, key=lambda c: -c["calc"]["attract"])[:5]
+    cn_body = sorted((c for c in body if c["country"] == "CN"), key=lambda c: -(c["calc"]["units"] or 0))
+    us_cn = sorted((c for c in body if c["calc"]["val_per_unit"] and c["country"] in ("US", "CN")), key=lambda c: -c["calc"]["val_per_unit"])
+    sc = lambda c, k: c["scores"][k][0]  # noqa: E731
     return {
         "parts": [
-            {"label": "고객 매력도 1위", "value": top["name_ko"], "sub": f"{top['calc']['attract']}점", "id": top["id"]},
-            {"label": "비중국 공급처 수요 고객", "value": f"{len(non_cn)}곳", "sub": "지정학 20+ · 개방성 15+"},
-            {"label": "2026 글로벌 출하 전망", "value": f"{stat['fy2026_units']['v'] / 1e4:.1f}만 대", "sub": "SAG·Counterpoint 중간"},
-            {"label": "중국 업체 출하 점유율", "value": f"{stat['china_share']['v'] * 100:.0f}%", "sub": "2026 상반기"},
+            {"label": "고객 매력도 1위", "value": top["name_ko"], "sub": f"{top['calc']['attract']}점", "id": top["id"],
+             "detail": {"title": "고객 매력도 상위 5곳", "note": "한국 부품사 입장에서 누가 우리 부품을 사 줄 가능성이 큰지(양산 규모·조달 개방성·지정학 접근성·지불 능력).",
+                        "rows": [row(c, f"{c['calc']['attract']}점", f"{c['country']} · Tier {c['calc']['tier']}") for c in by_attract]}},
+            {"label": "비중국 공급처 수요 고객", "value": f"{len(non_cn)}곳", "sub": "지정학 20+ · 개방성 15+",
+             "detail": {"title": f"비중국 공급처를 찾는 고객 {len(non_cn)}곳", "note": "지정학 접근성 20점 이상 그리고 조달 개방성 15점 이상인 하드웨어 기업.",
+                        "rows": [row(c, f"지정학 {sc(c, 'geo')} · 개방성 {sc(c, 'open')}", c["country"]) for c in sorted(non_cn, key=lambda c: -(sc(c, "geo") + sc(c, "open")))]}},
+            {"label": "2026 글로벌 출하 전망", "value": f"{stat['fy2026_units']['v'] / 1e4:.1f}만 대", "sub": "SAG·Counterpoint 중간",
+             "detail": {"title": "2026 글로벌 출하 전망", "note": stat["fy2026_units"].get("note", ""), "src": stat["fy2026_units"].get("src"), "rows": []}},
+            {"label": "중국 업체 출하 점유율", "value": f"{stat['china_share']['v'] * 100:.0f}%", "sub": "2026 상반기",
+             "detail": {"title": "중국 업체 출하 점유율(2026 상반기)", "note": stat["china_share"].get("note", ""), "src": stat["china_share"].get("src"),
+                        "rows": [row(c, f"누적 출하 {c['calc']['units']:,}대" if c["calc"]["units"] else "출하 수치 없음", "중국") for c in cn_body]}},
         ],
         "invest": [
-            {"label": "최근 12개월 공개 조달", "value": f"${raised_12m / 1000:.1f}B", "sub": f"{len(companies)}개사 합계"},
-            {"label": "IPO 파이프라인", "value": f"{len(pipeline)}곳", "sub": "준비~공모 진행"},
+            {"label": "최근 12개월 공개 조달", "value": f"${raised_12m / 1000:.1f}B", "sub": f"{len(companies)}개사 합계",
+             "detail": {"title": f"최근 12개월 공개 조달 {len(rounds)}건", "note": "기준일로부터 12개월 안에 공개된 투자 라운드(금액이 공개된 것만).",
+                        "rows": [row(c, f"${r['amount'] / 1000:.2f}B" if r["amount"] >= 1000 else f"${r['amount']}M", f"{r['date']} · {r.get('round', '')}") for c, r in rounds]}},
+            {"label": "IPO 파이프라인", "value": f"{len(pipeline)}곳", "sub": "준비~공모 진행",
+             "detail": {"title": f"IPO 파이프라인 {len(pipeline)}곳", "note": "상장 준비·신청·공모 진행 단계의 기업.",
+                        "rows": [row(c, c["listing"]["label"], c["listing"].get("note", "")) for c in sorted(pipeline, key=lambda c: -c["listing"]["stage"])]}},
             {"label": "밸류/누적 출하 (미국÷중국)", "value": f"{_median(us) / _median(cn):.0f}배" if us and cn else "-",
-             "sub": "중앙값 비교" if ratios else ""},
-            {"label": "실행 신뢰도 10점 미만", "value": f"{len(low_exec)}곳", "sub": "물량 보장 조항 필요"},
+             "sub": "중앙값 비교" if ratios else "",
+             "detail": {"title": "출하 1대당 기업가치(밸류÷누적 출하)", "note": f"미국 기업 중앙값 {usd(_median(us))}, 중국 기업 중앙값 {usd(_median(cn))}." if us and cn else "",
+                        "rows": [row(c, f"{usd(c['calc']['val_per_unit'])}/대", c["country"]) for c in us_cn]}},
+            {"label": "실행 신뢰도 10점 미만", "value": f"{len(low_exec)}곳", "sub": "물량 보장 조항 필요",
+             "detail": {"title": f"실행 신뢰도 10점 미만 {len(low_exec)}곳", "note": "발표한 양산 일정과 실제 진행이 어긋날 위험이 큰 기업 — 계약에 물량 보장 조항을 넣을 것.",
+                        "rows": [row(c, f"{sc(c, 'execution')}점", c["scores"]["execution"][1]) for c in sorted(low_exec, key=lambda c: sc(c, "execution"))]}},
         ],
     }
 
