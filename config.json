@@ -184,65 +184,69 @@
     "patent_queries": {
       "_market": [
         [
-          "humanoid robot patent OR lawsuit OR licensing",
+          "humanoid robot (patent OR patents OR lawsuit OR licensing)",
           "en"
         ],
         [
           "휴머노이드 로봇 특허",
           "ko"
+        ],
+        [
+          "\"embodied AI\" OR humanoid (patent OR 专利)",
+          "en"
         ]
       ],
       "tesla": [
         [
-          "Tesla Optimus patent OR lawsuit",
+          "Tesla Optimus (patent OR patents OR lawsuit OR \"trade secret\")",
           "en"
         ]
       ],
       "figure": [
         [
-          "\"Figure AI\" patent",
+          "\"Figure AI\" (patent OR patents OR lawsuit)",
           "en"
         ]
       ],
       "unitree": [
         [
-          "Unitree patent",
+          "Unitree (patent OR patents OR lawsuit)",
           "en"
         ]
       ],
       "bd": [
         [
-          "\"Boston Dynamics\" patent",
+          "\"Boston Dynamics\" (patent OR patents OR lawsuit)",
           "en"
         ]
       ],
       "ubtech": [
         [
-          "UBTech humanoid patent",
+          "UBTech (patent OR patents OR lawsuit)",
           "en"
         ]
       ],
       "agibot": [
         [
-          "AgiBot patent",
+          "AgiBot (patent OR patents)",
           "en"
         ]
       ],
       "agility": [
         [
-          "\"Agility Robotics\" patent",
+          "\"Agility Robotics\" (patent OR patents OR lawsuit)",
           "en"
         ]
       ],
       "apptronik": [
         [
-          "Apptronik patent",
+          "Apptronik (patent OR patents)",
           "en"
         ]
       ],
       "xpeng": [
         [
-          "XPeng humanoid patent",
+          "XPeng humanoid (patent OR patents)",
           "en"
         ]
       ],
@@ -272,11 +276,12 @@
       ],
       "nvidia": [
         [
-          "NVIDIA robotics patent",
+          "NVIDIA robotics (patent OR patents OR lawsuit)",
           "en"
         ]
       ]
-    }
+    },
+    "lookback_days_patent": 30
   },
   "tickers": {
     "tesla": "TSLA",

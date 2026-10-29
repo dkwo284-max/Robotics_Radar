@@ -102,6 +102,13 @@ SYSTEM = """당신은 휴머노이드·피지컬 AI 산업을 한국 제조·부
 모든 id 를 한 번씩 반환하세요."""
 
 
+# 특허·지재권 질의로 모은 기사는 제목·설명에 이런 단어가 있을 때만 남긴다 — 구글 뉴스는 본문 일치도 잡아서 일반 기사가 섞인다
+PATENT_RE = re.compile(r"patent|lawsuit|litigation|licens|infring|trade secret|intellectual propert|특허|지재권|지식재산|침해|소송|专利|诉讼", re.I)
+
+
+ROBOT_RE = re.compile(r"robot|humanoid|optimus|atlas|actuator|gripper|exoskeleton|embodied|physical ai|로봇|휴머노이드|피지컬|액추에이터|机器人", re.I)
+
+
 def item_id(link: str, title: str) -> str:
     return hashlib.sha1((link or title).encode("utf-8")).hexdigest()[:12]
 
@@ -136,11 +143,11 @@ def parse_feed(raw: bytes | str, company: str, lookback_days: int, lang: str) ->
 def collect(cfg: dict, client: httpx.Client, known: set[str]) -> list[dict]:
     """일반 소식(queries)과 특허·지재권 소식(patent_queries, topic=patent)을 모은다. 둘 다 키가 필요 없는 구글 뉴스 RSS."""
     ncfg = cfg["news"]
-    days = int(ncfg.get("lookback_days", 7))
     fresh: list[dict] = []
     seen_titles: set[str] = set()
-    for topic, per, by_company in (("news", int(ncfg.get("per_company", 3)), ncfg["queries"]),
-                                   ("patent", int(ncfg.get("per_company_patent", 2)), ncfg.get("patent_queries", {}))):
+    for topic, per, by_company, days in (("news", int(ncfg.get("per_company", 3)), ncfg["queries"], int(ncfg.get("lookback_days", 7))),
+                                         ("patent", int(ncfg.get("per_company_patent", 2)), ncfg.get("patent_queries", {}),
+                                          int(ncfg.get("lookback_days_patent", ncfg.get("lookback_days", 7))))):
         for company, queries in by_company.items():
             if company.startswith("_") and company != "_market":
                 continue
@@ -157,6 +164,10 @@ def collect(cfg: dict, client: httpx.Client, known: set[str]) -> list[dict]:
                     key = re.sub(r"\W+", "", x["title"].lower())[:50]
                     if x["id"] in known or key in seen_titles:
                         continue
+                    if topic == "patent":
+                        text = f"{x['title']} {x.get('desc', '')}"
+                        if not (PATENT_RE.search(text) and ROBOT_RE.search(text)):
+                            continue  # 특허·지재권 단어와 로봇 단어가 함께 있어야 한다(일반 소송·라이선스 기사 제외)
                     seen_titles.add(key)
                     fresh.append({**x, "topic": topic})
                     got += 1
@@ -170,7 +181,7 @@ def classify(items: list[dict], companies: list[dict], llm: Gemini, limit: int,
     """AI 분류 → (저장할 기사, 경고, 관련 없다고 본 id). 실패하거나 키가 없으면 제목만."""
     signposts = signposts or []
     plain = lambda x: {**x, "ai": False, "companies": [] if x["query"] == "_market" else [x["query"]], "type": "patent" if x.get("topic") == "patent" else "other",  # noqa: E731
-                       "title_ko": "", "summary_ko": "", "importance": 1, "audience": [], "layer": "none", "signpost": None, "facts": []}
+                       "title_ko": "", "summary_ko": "", "importance": 1, "audience": [], "layer": None, "signpost": None, "facts": []}  # layer None = 아직 분류 전
     if not items:
         return [], None, []
     if not llm.enabled:

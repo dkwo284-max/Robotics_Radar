@@ -123,7 +123,8 @@ class _FakeClient:
     def get(self, url):
         self.urls.append(url)
         n = len(self.urls)
-        item = (f"<item><title>Story {n} - Src</title><link>https://x.test/{n}</link><pubDate>{__import__('email.utils').utils.formatdate(usegmt=True)}</pubDate>"
+        kw = " robot patent" if "patent" in url else ""
+        item = (f"<item><title>Story {n}{kw} - Src</title><link>https://x.test/{n}</link><pubDate>{__import__('email.utils').utils.formatdate(usegmt=True)}</pubDate>"
                 f"<source url='https://s.test'>Src</source></item>")
         return _Resp(f"<?xml version='1.0'?><rss><channel>{item}</channel></rss>".encode())
 
@@ -196,3 +197,20 @@ def test_update_news_reclassifies_untagged_old_items_after_fresh_ones():
     out = news.update_news({"news": {**_news_cfg()["news"], "max_ai_items": 10, "queries": {"a": [["x", "en"]]}}}, old, COMPANIES, llm, client=_FakeClient())
     assert llm.calls[0][-1] == "old1" and llm.calls[0][0] != "old1"                                       # 새 기사 먼저
     assert next(x for x in out["items"] if x["id"] == "old1")["layer"] == "hand"
+
+
+def test_patent_topic_drops_articles_without_patent_and_robot_words():
+    class Client(_FakeClient):
+        def get(self, url):
+            self.urls.append(url)
+            titles = ["Canon hit with class-action lawsuit", "Tesla patent reveals touch skin for robot hands", "로봇 AI 특허 4건 등록"]
+            items = "".join(f"<item><title>{t} - Src</title><link>https://x.test/{i}</link><pubDate>{__import__('email.utils').utils.formatdate(usegmt=True)}</pubDate><source url='https://s.test'>Src</source></item>"
+                            for i, t in enumerate(titles))
+            return _Resp(f"<?xml version='1.0'?><rss><channel>{items}</channel></rss>".encode())
+
+    cfg = {"news": {"lookback_days": 7, "lookback_days_patent": 30, "per_company": 3, "per_company_patent": 5, "queries": {},
+                    "patent_queries": {"tesla": [["tesla patent", "en"]]}}}
+    client = Client()
+    got = news.collect(cfg, client, set())
+    assert [x["title"] for x in got] == ["Tesla patent reveals touch skin for robot hands", "로봇 AI 특허 4건 등록"]
+    assert "30d" in client.urls[0]                                                    # 특허 질의는 조회 기간을 30일로
