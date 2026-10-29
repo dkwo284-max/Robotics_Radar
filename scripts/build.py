@@ -1,0 +1,203 @@
+"""Robotics Radar 빌드: 큐레이션 데이터(data/*.json) → web/data/dashboard.json
+
+    python scripts/build.py           # 빌드
+    python scripts/build.py --check   # 검증만 (경고가 있으면 실패)
+
+Phase 1 은 표준 라이브러리만 쓴다. 점수·Tier·고객 매력도·자본효율·KPI 를 여기서 계산하고,
+화면(web/index.html)은 계산된 값만 그린다.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import sys
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+SRC = ROOT / "data"
+OUT = ROOT / "web" / "data"
+
+# 경쟁력 점수 축과 만점. 합계 100 → Tier
+AXES = {"tech": 30, "scale": 30, "capital": 20, "execution": 20}
+# 고객 매력도(부품사 관점): 양산 규모 30 + 조달 개방성 25 + 지정학 접근성 25 + 지불 능력 20
+ATTR_AXES = {"open": 25, "geo": 25}
+TIERS = [(70, 1), (50, 2), (0, 3)]
+IPO_STAGES = ["비상장", "IPO 준비", "신청·심사", "공모·상장 진행", "상장", "상장사 사업부·자회사"]
+USAGE_CAP = 2  # 허브와 공유하는 Gemini 하루 상한 (Phase 2 부터 사용)
+
+
+def load(name: str) -> dict:
+    return json.loads((SRC / name).read_text(encoding="utf-8"))
+
+
+def tier_of(total: int) -> int:
+    return next(t for floor, t in TIERS if total >= floor)
+
+
+def fact_v(c: dict, key: str):
+    f = c.get(key)
+    return f.get("v") if isinstance(f, dict) else None
+
+
+def score_company(c: dict, warnings: list[str]) -> dict:
+    s = c["scores"]
+    for axis, top in {**AXES, **ATTR_AXES}.items():
+        v = s.get(axis, [0])[0]
+        if not 0 <= v <= top:
+            warnings.append(f"{c['id']}: {axis} 점수 {v} 가 0~{top} 범위를 벗어남")
+    total = sum(s[a][0] for a in AXES)
+    out = {"total": total, "tier": tier_of(total)}
+    if c["group"] == "body":
+        # 양산 규모(scale)와 지불 능력(capital)은 경쟁력 점수를 그대로 쓴다
+        out["attract"] = s["scale"][0] + s["open"][0] + s["geo"][0] + s["capital"][0]
+    else:
+        out["attract"] = None  # 두뇌 레이어는 부품 구매 고객이 아님
+    return out
+
+
+def efficiency(c: dict) -> dict:
+    """자본효율: 밸류 ÷ 누적 출하, 조달액 ÷ 누적 출하 (USD M → 대당 USD)."""
+    units = fact_v(c, "cum_units")
+    val = fact_v(c, "valuation")
+    raised = fact_v(c, "funding_total")
+    per = lambda m: round(m * 1e6 / units) if m and units else None  # noqa: E731
+    return {"units": units, "val_per_unit": per(val), "raised_per_unit": per(raised)}
+
+
+def bom_items(bom: dict) -> list[dict]:
+    items = []
+    for it in bom["items"]:
+        asp = None if it.get("module") else round(bom["unit_bom_2026"] * it["share"] / it["qty"])
+        items.append({**it, "asp": asp, "per_unit": round(bom["unit_bom_2026"] * it["share"])})
+    return items
+
+
+def months_back(as_of: str, ym: str) -> float:
+    d0 = date.fromisoformat(as_of)
+    y, m = int(ym[:4]), int(ym[5:7])
+    return (d0.year - y) * 12 + (d0.month - m)
+
+
+def kpis(companies: list[dict], market: dict) -> dict:
+    as_of = market["as_of"]
+    body = [c for c in companies if c["group"] == "body"]
+    stat = {s["k"]: s for s in market["stats"]}
+    top = max(body, key=lambda c: c["calc"]["attract"])
+    non_cn = [c for c in body if c["scores"]["geo"][0] >= 20 and c["scores"]["open"][0] >= 15]
+    raised_12m = sum(r["amount"] for c in companies for r in c.get("funding", [])
+                     if r.get("amount") and months_back(as_of, r["date"]) < 12)
+    pipeline = [c for c in companies if 1 <= c["listing"]["stage"] <= 3]
+    ratios = [c["calc"]["val_per_unit"] for c in body if c["calc"]["val_per_unit"]]
+    us = [c["calc"]["val_per_unit"] for c in body if c["calc"]["val_per_unit"] and c["country"] == "US"]
+    cn = [c["calc"]["val_per_unit"] for c in body if c["calc"]["val_per_unit"] and c["country"] == "CN"]
+    low_exec = [c for c in companies if c["scores"]["execution"][0] < 10]
+    return {
+        "parts": [
+            {"label": "고객 매력도 1위", "value": top["name_ko"], "sub": f"{top['calc']['attract']}점", "id": top["id"]},
+            {"label": "비중국 공급처 수요 고객", "value": f"{len(non_cn)}곳", "sub": "지정학 20+ · 개방성 15+"},
+            {"label": "2026 글로벌 출하 전망", "value": f"{stat['fy2026_units']['v'] / 1e4:.1f}만 대", "sub": "SAG·Counterpoint 중간"},
+            {"label": "중국 업체 출하 점유율", "value": f"{stat['china_share']['v'] * 100:.0f}%", "sub": "2026 상반기"},
+        ],
+        "invest": [
+            {"label": "최근 12개월 공개 조달", "value": f"${raised_12m / 1000:.1f}B", "sub": f"{len(companies)}개사 합계"},
+            {"label": "IPO 파이프라인", "value": f"{len(pipeline)}곳", "sub": "준비~공모 진행"},
+            {"label": "밸류/누적 출하 (미국÷중국)", "value": f"{_median(us) / _median(cn):.0f}배" if us and cn else "-",
+             "sub": "중앙값 비교" if ratios else ""},
+            {"label": "실행 신뢰도 10점 미만", "value": f"{len(low_exec)}곳", "sub": "물량 보장 조항 필요"},
+        ],
+    }
+
+
+def _median(xs: list[float]) -> float:
+    xs = sorted(xs)
+    n = len(xs)
+    return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
+
+
+def validate(companies: list[dict], market: dict, warnings: list[str]) -> None:
+    ids = [c["id"] for c in companies]
+    if len(ids) != len(set(ids)):
+        warnings.append("회사 id 중복")
+    known = set(ids)
+    for ins in market["insights"]:
+        for e in ins["evidence"]:
+            if e not in known:
+                warnings.append(f"인사이트 '{ins['title']}': 근거 id {e} 없음")
+    for ev in market["events"]:
+        for e in ev["ids"]:
+            if e not in known:
+                warnings.append(f"이벤트 '{ev['title']}': id {e} 없음")
+    share = sum(i["share"] for i in market["bom"]["items"])
+    if not math.isclose(share, 1.0, abs_tol=0.005):
+        warnings.append(f"BOM 비중 합계가 {share:.3f} (1.0 이어야 함)")
+    for name in ("bear", "base", "bull"):
+        sc = market["scenarios"][name]
+        if len(sc["units"]) != len(market["scenarios"]["years"]) or len(sc["ex_china"]) != len(sc["units"]):
+            warnings.append(f"시나리오 {name} 길이 불일치")
+
+
+def build() -> tuple[dict, list[str]]:
+    raw = load("companies.json")
+    market = load("market.json")
+    warnings: list[str] = []
+    companies = raw["companies"]
+    for c in companies:
+        c["calc"] = {**score_company(c, warnings), **efficiency(c)}
+    validate(companies, market, warnings)
+    # 경쟁력 내림차순, 같으면 고객 매력도
+    companies.sort(key=lambda c: (-c["calc"]["total"], -(c["calc"]["attract"] or 0)))
+    events = sorted(market["events"], key=lambda e: e["date"], reverse=True)
+    out = {
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M+00:00"),
+        "as_of": raw["as_of"],
+        "axes": {**AXES, **ATTR_AXES},
+        "ipo_stages": IPO_STAGES,
+        "companies": companies,
+        "kpis": kpis(companies, market),
+        "insights": market["insights"],
+        "events": events,
+        "policies": sorted(market["policies"], key=lambda p: p["date"], reverse=True),
+        "stats": market["stats"],
+        "share_h1_2026": market["share_h1_2026"],
+        "scenarios": market["scenarios"],
+        "bom": {**{k: v for k, v in market["bom"].items() if k != "items"}, "items": bom_items(market["bom"])},
+        "warnings": warnings,
+    }
+    return out, warnings
+
+
+def write_usage(today: str) -> None:
+    """허브가 읽는 AI 사용량 장부. Phase 1 은 AI 를 쓰지 않으므로 상한만 기록한다."""
+    path = OUT / "ai-usage.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        data = {"days": {}}
+    data.update(app="robotics-radar", provider="gemini", cap=USAGE_CAP, updated=today)
+    data.setdefault("days", {})
+    cutoff = (date.fromisoformat(today) - timedelta(days=30)).isoformat()
+    data["days"] = {k: v for k, v in sorted(data["days"].items()) if k >= cutoff}
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--check", action="store_true")
+    args = ap.parse_args(argv)
+    out, warnings = build()
+    for w in warnings:
+        print("경고:", w, file=sys.stderr)
+    if args.check:
+        return 1 if warnings else 0
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "dashboard.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    write_usage(datetime.now(timezone.utc).date().isoformat())
+    tiers = {t: sum(1 for c in out["companies"] if c["calc"]["tier"] == t) for t in (1, 2, 3)}
+    print(f"dashboard.json: {len(out['companies'])}개사, Tier {tiers}, 경고 {len(warnings)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,652 @@
+{
+  "_about": "큐레이션 기준값. 모든 수치는 {v, as_of, kind, src}: kind = official(회사 공식) / reported(언론·리서치 보도) / estimate(추정·간접 계산). 금액은 USD 백만(M). 환산: 1 USD = 7.1 CNY = 1,400 KRW = 7.8 HKD. scores 는 [점수, 근거] — tech·scale 0~30, capital·execution 0~20, open·geo 0~25.",
+  "as_of": "2026-10-29",
+  "companies": [
+    {
+      "id": "tesla", "name": "Tesla Optimus", "name_ko": "테슬라 옵티머스", "country": "US", "group": "body",
+      "segment": ["humanoid"], "one_liner": "자동차 양산 역량으로 휴머노이드 원가 곡선을 끌어내리려는 최대 변수. 일정 신뢰도는 낮음",
+      "listing": {"stage": 5, "label": "상장사 사업부", "ticker": "TSLA"},
+      "products": [{"name": "Optimus Gen 3 (V3)", "year": 2026, "note": "프렌치몬트 고속 라인 초기 생산"}],
+      "cum_units": {"v": null, "as_of": "2026-10", "kind": "reported", "note": "공식 누적 대수 미공개. 8월 주당 수백 대 수준 보도", "src": "https://notateslaapp.com/news/4866/tesla-officially-begins-optimus-robot-production"},
+      "target_2026": {"v": null, "kind": "reported", "note": "연말까지 주당 1,000대 이상 연속 라인 목표 보도. 연간 목표치는 미확인(부품 1.5만 대분 발주 보도)", "src": "https://notateslaapp.com/news/4866/tesla-officially-begins-optimus-robot-production"},
+      "capacity": {"v": 1000000, "as_of": "2026-10", "kind": "reported", "note": "프레몬트 연 100만 대 라인 대부분 설치(머스크 10/21 발언). 기가텍사스 대형 공장은 건설 중", "src": "https://notateslaapp.com/news/4866/tesla-officially-begins-optimus-robot-production"},
+      "price": {"v": 20000, "kind": "reported", "note": "목표 판매가 $20,000 수준", "src": "https://trendforce.com/news/2026/09/21/news-tesla-reportedly-audits-china-suppliers-for-optimus-gen-3-ramp-eyes-20000-price-target/"},
+      "production": [
+        {"year": 2025, "target": 5000, "actual": null, "kind": "reported", "note": "2025년 약 5,000대 목표를 제시했으나 공식 실적 미공개·대폭 미달로 평가"},
+        {"year": 2026, "target": null, "actual": null, "kind": "reported", "note": "Q3 실적발표에서 '고속 라인 초기 생산' 시작 언급"}
+      ],
+      "funding": [],
+      "customers": ["테슬라 자사 공장(1차)", "외부 판매 계획"],
+      "partners": [],
+      "sourcing": {"mode": "자체 설계 + 중국 공급사 조립", "suppliers": ["Sanhua(회전 액추에이터 모듈)", "Tuopu(리니어 액추에이터)", "Leaderdrive·Shuanghuan(감속기)", "Wolong(프레임리스 모터)", "Wuzhou Xinchun·Hengli(롤러스크류)"], "note": "Gen 3 램프 앞두고 중국 공급사 감사. 공급사들이 멕시코·태국·미국 라인 구축 중 → 비중국 대체 수요가 생기는 구간", "src": "https://counterpointresearch.com/cn/insights/blog-tesla-to-leverage-ev-experience-and-chinese-partners-to-ace-humanoids-market-unlock-huge-revenue-potential"},
+      "scores": {
+        "tech": [26, "자체 액추에이터·손 설계, 자율주행 AI 스택 공유"],
+        "scale": [22, "연 100만 대급 라인 설치, 주당 수백 대 생산 보도. 공식 실적은 미공개"],
+        "capital": [20, "상장 모회사의 현금 창출력"],
+        "execution": [8, "2025년 목표 대폭 미달, 일정 반복 연기"],
+        "open": [12, "설계는 내재화, 부품은 인증 공급사에 위탁 — 진입하려면 테슬라 인증 필요"],
+        "geo": [16, "미국 생산이지만 중국 공급망 의존도 높음. 공급사 해외 이전 중"]
+      },
+      "roadmap": [
+        {"when": "2026-Q3", "type": "production", "title": "프레몬트 고속 라인 초기 생산 시작", "status": "done"},
+        {"when": "2026-Q4", "type": "production", "title": "주당 1,000대 이상 연속 라인 목표", "status": "planned"},
+        {"when": "2027", "type": "production", "title": "기가텍사스 대형 공장 가동 목표", "status": "planned"}
+      ],
+      "risks": ["일정·물량 발표 신뢰도", "중국 부품 의존(관세·규제)", "외부 판매 시점 불확실"]
+    },
+    {
+      "id": "figure", "name": "Figure AI", "name_ko": "피규어 AI", "country": "US", "group": "body",
+      "segment": ["humanoid"], "one_liner": "가장 높은 밸류의 비상장 휴머노이드. BotQ 자체 공장과 Helix VLA 로 BMW 현장 투입",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "Figure 03", "year": 2025, "note": "Helix VLA 탑재, 가정·산업 겸용"}],
+      "valuation": {"v": 39000, "as_of": "2025-09", "kind": "official", "note": "Series C post-money. 2026년 세컨더리 시세는 이보다 낮다는 시각도 있음", "src": "https://seekingalpha.com/news/4495255-figure-raises-1b-in-series-c-hits-39b-valuation-to-scale-humanoid-robot-deployment"},
+      "funding_total": {"v": 1850, "as_of": "2025-09", "kind": "estimate", "note": "출처별 $0.75B~1.9B 로 엇갈림", "src": "https://komo.ai/directory/figure-ai-funding"},
+      "cum_units": {"v": 1000, "as_of": "2026-07", "kind": "reported", "note": "7/23 Figure 03 누적 1,000대(CEO 발언 인용 보도). 공식 최신치는 4/29 350대+", "src": "https://runtimewire.com/article/figure-reportedly-built-1000th-humanoid-robot-san-jose"},
+      "capacity": {"v": 12000, "as_of": "2025-03", "kind": "official", "note": "BotQ 1세대 라인 연 1.2만 대 설계, 시간당 1대 생산 시연", "src": "https://ai2.work/blog/figure-builds-its-1-000th-humanoid-robot-as-botq-hits-one-per-hour"},
+      "production": [
+        {"year": 2025, "target": null, "actual": 150, "kind": "estimate", "note": "제3자 추정 약 150대"},
+        {"year": 2026, "target": null, "actual": 1000, "kind": "reported", "note": "7월까지 누적 약 1,000대"}
+      ],
+      "funding": [
+        {"date": "2024-02", "round": "Series B", "amount": 675, "val": 2600, "kind": "official"},
+        {"date": "2025-09", "round": "Series C", "amount": 1000, "val": 39000, "kind": "official", "src": "https://news.bloombergtax.com/private-equity/robotics-startup-figure-ai-valued-at-39-billion-in-new-funding"}
+      ],
+      "customers": ["BMW 스파턴버그(2026.6 Figure 03 투입)"],
+      "partners": ["Parkway VC(리드)", "NVIDIA", "Brookfield"],
+      "sourcing": {"mode": "자체 설계·자체 조립(BotQ), 부품 외부 조달", "suppliers": [], "note": "공급사 공개 정보 적음. 미국 내 조립 → 비중국 부품 선호 가능성"},
+      "scores": {
+        "tech": [26, "Helix VLA, Figure 03 완성도, 자체 액추에이터"],
+        "scale": [16, "BotQ 시간당 1대, 누적 약 1,000대(보도)"],
+        "capital": [18, "누적 약 $1.9B, 밸류 $39B"],
+        "execution": [13, "생산 램프는 발표와 대체로 부합, 상용 배치 규모는 불투명"],
+        "open": [15, "자체 조립, 부품은 외부 조달 구조"],
+        "geo": [22, "미국 내 생산 — 비중국 공급망 수요"]
+      },
+      "roadmap": [
+        {"when": "2025-10", "type": "product", "title": "Figure 03 공개", "status": "done"},
+        {"when": "2026-04", "type": "production", "title": "BotQ 시간당 1대, 350대+ 출하(공식)", "status": "done"},
+        {"when": "2026-06", "type": "deploy", "title": "BMW 스파턴버그 투입", "status": "done"},
+        {"when": "2026-07", "type": "production", "title": "누적 1,000대(보도)", "status": "done"}
+      ],
+      "risks": ["밸류 대비 매출 미미", "배치 규모 미공개", "차기 라운드 밸류 하락 가능성"]
+    },
+    {
+      "id": "unitree", "name": "Unitree", "name_ko": "유니트리", "country": "CN", "group": "body",
+      "segment": ["humanoid", "quadruped"], "one_liner": "흑자를 내는 저가 대량 출하 1위권. 커촹반 상장으로 자본력까지 확보",
+      "listing": {"stage": 3, "label": "커촹반 공모 진행·상장 확인 필요", "note": "4,045만 주(약 10%) 신주, 8/10 청약. 첫 거래일 미확인", "src": "https://autonews.gasgoo.com/articles/news/unitree-launches-star-market-ipo-issuance-process-subscriptions-open-august-10-2083181368883253248"},
+      "products": [{"name": "G1 / H2 / R1", "year": 2025, "note": "R1 약 $5,900부터"}, {"name": "Go2 / B2 (사족)", "year": 2023, "note": ""}],
+      "valuation": {"v": 9000, "as_of": "2026-08", "kind": "reported", "note": "상장 공모가 기준 약 $9B 보도", "src": "https://www.caixinglobal.com/2026-05-26/unitree-fast-tracks-shanghai-ipo-with-target-valuation-of-62-billion-102447449.html"},
+      "revenue": {"v": 240, "as_of": "2025", "kind": "official", "note": "2025 매출 약 17억 위안, 순이익 약 2.8억 위안. 2026 상반기 매출 11.5억 위안(+48.5%)", "src": "https://kr-asia.com/unitree-targets-ipo-after-revenue-quadruples-on-robotics-demand"},
+      "cum_units": {"v": 11400, "as_of": "2026-06", "kind": "estimate", "note": "2025 휴머노이드 5,500대+ (공식) + 2026 상반기 약 5,900대(SAG)", "src": "https://www.thestandard.com.hk/innovation/article/340494/Global-humanoid-robot-shipments-surge-300pc-in-H1-led-by-Agibot"},
+      "target_2026": {"v": 15000, "kind": "reported", "note": "2026 출하 1만~2만 대 전망(중간값)", "src": "https://interestingengineering.com/ai-robotics/china-unitree-ipo-humanoid-robot"},
+      "production": [
+        {"year": 2025, "target": null, "actual": 5500, "kind": "official", "note": "휴머노이드(바퀴형 제외)"},
+        {"year": 2026, "target": 15000, "actual": 5900, "kind": "reported", "note": "상반기 실적(SAG). 목표는 1~2만 대"}
+      ],
+      "funding": [{"date": "2026-08", "round": "IPO(커촹반)", "amount": null, "val": 9000, "kind": "reported"}],
+      "customers": ["연구·교육 기관", "엔터테인먼트", "NVIDIA GR00T 레퍼런스 휴머노이드(H2 Plus 섀시)"],
+      "partners": ["NVIDIA"],
+      "sourcing": {"mode": "수직계열화(모터·관절 자체 생산)", "suppliers": [], "note": "중국 내 원가 우위 공급망"},
+      "scores": {
+        "tech": [22, "보행·운동 제어 최상위, 범용 조작 AI 는 상대적 약점"],
+        "scale": [27, "2025 5,500대+, 2026 상반기 약 5,900대 — 출하 2위"],
+        "capital": [17, "흑자 + 상장 자금"],
+        "execution": [18, "발표 대비 출하 실적 일관"],
+        "open": [6, "핵심 부품 자체 생산"],
+        "geo": [3, "중국 공급망 + 미국 규제 리스크(매출 13% 미국)"]
+      },
+      "roadmap": [
+        {"when": "2025-10", "type": "product", "title": "H2 공개", "status": "done"},
+        {"when": "2026-06", "type": "ipo", "title": "커촹반 상장 심사(6/1)", "status": "done"},
+        {"when": "2026-08", "type": "ipo", "title": "공모 청약(8/10)", "status": "done"},
+        {"when": "2026-H2", "type": "product", "title": "NVIDIA GR00T 레퍼런스 휴머노이드 공급", "status": "planned"}
+      ],
+      "risks": ["미국의 중국 로봇 규제(GUARD Act 등)", "저가 경쟁 심화", "범용 AI 경쟁력"]
+    },
+    {
+      "id": "bd", "name": "Boston Dynamics", "name_ko": "보스턴 다이나믹스", "country": "US", "group": "body", "parent": "hyundai",
+      "segment": ["humanoid", "quadruped"], "one_liner": "기술 최상위 + 현대차그룹 수요. 상용 휴머노이드는 2028년 본격화, IPO 는 2029~30 관측",
+      "listing": {"stage": 5, "label": "현대차그룹 자회사", "note": "소프트뱅크 지분 인수로 100% 자회사화 진행. 2027 IPO 가능성 낮음(현대차 임원)", "src": "https://www.thestar.com.my/tech/tech-news/2026/09/14/exclusive-ipo-for-humanoid-robot-maker-boston-dynamics-unlikely-in-2027-executive-says"},
+      "products": [{"name": "Atlas (전동)", "year": 2026, "note": "CES 2026 양산형 공개"}, {"name": "Spot / Stretch", "year": 2020, "note": "상용 판매 중"}],
+      "valuation": {"v": null, "as_of": "2026-09", "kind": "estimate", "note": "IPO 시 $70B+ 관측도 있으나 근거 약함"},
+      "revenue": {"v": null, "as_of": "2025", "kind": "official", "note": "2025 순손실 5,284억 원"},
+      "capacity": {"v": 30000, "as_of": "2026-01", "kind": "official", "note": "현대차그룹, 2028년까지 연 3만 대 로봇 공장(미국)", "src": "https://www.axios.com/2026/01/05/hyundai-humanoid-robots-boston-dynamics"},
+      "production": [{"year": 2028, "target": 30000, "actual": null, "kind": "official", "note": "연간 생산능력 목표"}],
+      "funding": [],
+      "customers": ["현대차 메타플랜트 조지아(2028 투입)"],
+      "partners": ["Google DeepMind(Gemini Robotics, CES 2026)", "Toyota Research Institute"],
+      "sourcing": {"mode": "자체 설계, 그룹 공급망 활용 가능", "suppliers": [], "note": "현대차그룹 계열 부품사와의 연계 가능성 — 한국 부품사의 가장 가까운 접점"},
+      "scores": {
+        "tech": [27, "하드웨어·제어 최상위, DeepMind 모델 결합"],
+        "scale": [14, "2028년 연 3만 대 계획, 현재 휴머노이드 출하는 소량"],
+        "capital": [18, "현대차그룹 지원"],
+        "execution": [12, "상용 휴머노이드 지연·적자 지속"],
+        "open": [14, "그룹 공급망 + 외부 조달 혼합"],
+        "geo": [24, "한국 모그룹 — 한국 부품사 접근성 최상"]
+      },
+      "roadmap": [
+        {"when": "2026-01", "type": "product", "title": "양산형 Atlas 공개 + DeepMind 제휴", "status": "done"},
+        {"when": "2028", "type": "production", "title": "연 3만 대 로봇 공장 + 조지아 공장 투입", "status": "planned"},
+        {"when": "2029~30", "type": "ipo", "title": "IPO 관측 시점", "status": "planned"}
+      ],
+      "risks": ["적자 지속", "상용화 일정", "IPO 지연"]
+    },
+    {
+      "id": "ubtech", "name": "UBTech", "name_ko": "유비테크", "country": "CN", "group": "body",
+      "segment": ["humanoid"], "one_liner": "자동차 공장 수주로 앞서가는 홍콩 상장 휴머노이드. 2026 캐파 1만 대+",
+      "listing": {"stage": 4, "label": "홍콩 상장", "ticker": "9880.HK"},
+      "products": [{"name": "Walker S2", "year": 2025, "note": "자동 배터리 교체, 산업용"}],
+      "orders": {"v": 197, "as_of": "2025", "kind": "official", "note": "2025 휴머노이드 수주 14억 위안", "src": "https://www.sz.gov.cn/en_szgov/business/news/content/post_12612615.html"},
+      "capacity": {"v": 10000, "as_of": "2026-01", "kind": "official", "note": "2026 산업용 휴머노이드 캐파 1만 대 이상(이전 계획 5,000대에서 상향)", "src": "https://www.sz.gov.cn/en_szgov/business/news/content/post_12612615.html"},
+      "production": [{"year": 2025, "target": 500, "actual": null, "kind": "official", "note": "2025.11 양산 시작, 수백 대 첫 인도"}],
+      "funding": [],
+      "customers": ["자동차 공장(BYD·지리 등, 보도)", "Airbus(2026.1)", "데이터 수집 센터"],
+      "partners": [],
+      "sourcing": {"mode": "중국 공급망 중심", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [20, "산업용 Walker S2, 배터리 자동 교체"],
+        "scale": [22, "수주 14억 위안, 2026 캐파 1만 대+"],
+        "capital": [16, "상장사, 다만 누적 적자"],
+        "execution": [14, "양산 착수는 발표대로, 2026 인도 실적 미확인"],
+        "open": [8, "중국 내 조달"],
+        "geo": [5, "중국"]
+      },
+      "roadmap": [
+        {"when": "2025-11", "type": "production", "title": "Walker S2 양산·인도 시작", "status": "done"},
+        {"when": "2026-01", "type": "deploy", "title": "Airbus 계약", "status": "done"},
+        {"when": "2026", "type": "production", "title": "캐파 1만 대+", "status": "planned"}
+      ],
+      "risks": ["적자", "해외 진출 시 규제"]
+    },
+    {
+      "id": "agibot", "name": "AgiBot", "name_ko": "애지봇(즈위안)", "country": "CN", "group": "body",
+      "segment": ["humanoid", "wheeled"], "one_liner": "2026 상반기 출하 점유율 1위(44%). 홍콩 IPO 를 멈추고 500억 위안 사모 라운드로 선회",
+      "listing": {"stage": 1, "label": "홍콩 IPO 보류(사모 라운드 우선)", "note": "7/24 홍콩 IPO 착수 → 10월 보류 보도, 빨라야 2027.2 상장. 상하이 상장사 Swancor(688585) 지배권 보유", "src": "https://autonews.gasgoo.com/articles/news/agibot-launches-hong-kong-ipo-process-2082120389458100225"},
+      "products": [{"name": "Yuanzheng A2 / Lingxi X2 / G2", "year": 2025, "note": ""}],
+      "valuation": {"v": 7000, "as_of": "2026-10", "kind": "reported", "note": "신규 라운드 500억 위안 밸류 보도", "src": "https://eu.36kr.com/en/p/4025612762763138"},
+      "cum_units": {"v": 15000, "as_of": "2026-06", "kind": "official", "note": "누적 1.5만 대 출하(회사 발표)", "src": "https://cryptobriefing.com/agibot-hong-kong-ipo-humanoid-robotics/"},
+      "production": [
+        {"year": 2025, "target": null, "actual": 5168, "kind": "reported", "note": "Omdia 추정"},
+        {"year": 2026, "target": null, "actual": 8400, "kind": "reported", "note": "상반기(SAG). Counterpoint 는 약 9,700대"}
+      ],
+      "funding": [{"date": "2026-10", "round": "신규 사모(진행)", "amount": 180, "val": 7000, "kind": "reported", "src": "https://eu.36kr.com/en/p/4025612762763138"}],
+      "customers": ["제조·서비스·데이터 수집"],
+      "partners": ["Swancor(상장 자회사)"],
+      "sourcing": {"mode": "중국 공급망 + 자체 관절", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [21, "제품 라인업 다양, 데이터 수집 인프라"],
+        "scale": [28, "2026 상반기 출하 1위(약 8,400대)"],
+        "capital": [18, "500억 위안 밸류 라운드 + 상장 자회사"],
+        "execution": [17, "출하 실적 견조, IPO 일정은 변경"],
+        "open": [7, "중국 내 조달"],
+        "geo": [4, "중국"]
+      },
+      "roadmap": [
+        {"when": "2025-07", "type": "ipo", "title": "Swancor 지배권 인수", "status": "done"},
+        {"when": "2026-06", "type": "production", "title": "누적 1.5만 대", "status": "done"},
+        {"when": "2026-07", "type": "ipo", "title": "홍콩 IPO 착수", "status": "done"},
+        {"when": "2026-10", "type": "ipo", "title": "IPO 보류·사모 라운드", "status": "delayed"},
+        {"when": "2027-02", "type": "ipo", "title": "홍콩 상장 가능 시점(최초, 보도)", "status": "planned"}
+      ],
+      "risks": ["IPO 일정 변동", "중국 정부의 과잉 경쟁 경고"]
+    },
+    {
+      "id": "agility", "name": "Agility Robotics", "name_ko": "어질리티 로보틱스", "country": "US", "group": "body",
+      "segment": ["humanoid"], "one_liner": "물류 현장 유료 배치가 가장 앞선 미국 업체. SPAC 으로 나스닥 상장 진행(AGLT)",
+      "listing": {"stage": 3, "label": "SPAC 합병 진행", "ticker": "AGLT(예정)", "note": "Churchill Capital XI 합병, 2026 Q4 종결 예상", "src": "https://www.geekwire.com/2026/digit-maker-agility-robotics-to-go-public-in-2-5b-deal-heres-what-the-filings-say-about-its-finances/"},
+      "products": [{"name": "Digit 4", "year": 2024, "note": ""}, {"name": "Digit 5", "year": 2026, "note": "주문 $300M+ 보도"}],
+      "valuation": {"v": 2100, "as_of": "2026-09", "kind": "reported", "note": "합병 거래 $2.1~2.5B", "src": "https://www.geekwire.com/2026/digit-maker-agility-robotics-to-go-public-in-2-5b-deal-heres-what-the-filings-say-about-its-finances/"},
+      "funding_total": {"v": 640, "as_of": "2026-09", "kind": "reported", "note": "Amazon 펀드·SoftBank·NVentures", "src": "https://www.kucoin.com/news/flash/agility-to-pursue-spac-listing-via-ccxi-in-q4-secures-640m-in-private-financing"},
+      "cum_units": {"v": 100, "as_of": "2026", "kind": "estimate", "note": "9개 시설 약 100대(미검증)", "src": "https://sacra.com/c/agility-robotics/"},
+      "capacity": {"v": 10000, "as_of": "2024", "kind": "official", "note": "RoboFab(오리건) 연 1만 대 설계"},
+      "production": [],
+      "funding": [{"date": "2026-09", "round": "SPAC + PIPE", "amount": 640, "val": 2100, "kind": "reported"}],
+      "customers": ["Schaeffler", "GXO", "Toyota 캐나다", "Mercado Libre"],
+      "partners": ["Amazon(파일럿 후 차세대 대기)", "NVIDIA"],
+      "sourcing": {"mode": "자체 설계·RoboFab 조립, 부품 외부 조달", "suppliers": ["Schaeffler(투자자·고객)"], "note": "대당 회수기간 1.1년(회사 주장)"},
+      "scores": {
+        "tech": [18, "물류 특화, 안전 인증 추진"],
+        "scale": [14, "유료 배치 최다권, 다만 약 100대 수준"],
+        "capital": [12, "상장으로 자금 확보 예정"],
+        "execution": [13, "고객 확보는 꾸준, 물량 확대는 차세대 대기"],
+        "open": [18, "외부 부품 조달 구조"],
+        "geo": [23, "미국 — 비중국 공급망"]
+      },
+      "roadmap": [
+        {"when": "2026", "type": "product", "title": "Digit 5 출시", "status": "planned"},
+        {"when": "2026-Q4", "type": "ipo", "title": "SPAC 합병 종결·나스닥 상장", "status": "planned"},
+        {"when": "2027-H1", "type": "deploy", "title": "GXO 배치 확대", "status": "planned"}
+      ],
+      "risks": ["SPAC 이후 주가 변동", "운영비 $10~12/시간 절감 필요"]
+    },
+    {
+      "id": "apptronik", "name": "Apptronik", "name_ko": "앱트로닉", "country": "US", "group": "body",
+      "segment": ["humanoid"], "one_liner": "Jabil 위탁생산 + Google DeepMind 모델. 부품사 입장에서 진입 문이 가장 넓은 미국 업체",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "Apollo", "year": 2023, "note": ""}, {"name": "Apollo 2", "year": 2026, "note": "22자유도 손, Gemini Robotics 2 구동"}],
+      "valuation": {"v": 5000, "as_of": "2026-02", "kind": "reported", "note": "$5B~5.5B 보도, 회사 미공개", "src": "https://news.crunchbase.com/venture/ai-humanoid-robot-funding-apptronik/"},
+      "funding_total": {"v": 1000, "as_of": "2026-02", "kind": "official", "note": "Series A 누적 $935M+, 총 약 $1B", "src": "https://apptronik.com/news-collection/apptronik-closes-over-935-million-series-a"},
+      "production": [],
+      "funding": [
+        {"date": "2025-02", "round": "Series A", "amount": 415, "val": null, "kind": "official"},
+        {"date": "2026-02", "round": "Series A-X", "amount": 520, "val": 5000, "kind": "official", "src": "https://www.therobotreport.com/apptronik-brings-in-another-520m-to-ramp-up-apollo-production/"}
+      ],
+      "customers": ["Mercedes-Benz", "GXO"],
+      "partners": ["Jabil(위탁생산)", "Google DeepMind", "John Deere·AT&T(투자)"],
+      "sourcing": {"mode": "Jabil 위탁생산 — 외부 조달 중심", "suppliers": ["Jabil"], "note": "EMS 위탁 구조라 부품 공급사 다변화 여지가 큼"},
+      "scores": {
+        "tech": [20, "Apollo 2 + Gemini Robotics 2"],
+        "scale": [10, "파일럿 단계, 출하 미공개"],
+        "capital": [15, "누적 약 $1B"],
+        "execution": [12, "자금 조달은 순조, 양산 실적은 미확인"],
+        "open": [22, "위탁생산 구조로 외부 부품 조달 개방도 최상"],
+        "geo": [23, "미국"]
+      },
+      "roadmap": [
+        {"when": "2026-02", "type": "funding", "title": "$520M 추가 조달", "status": "done"},
+        {"when": "2026", "type": "product", "title": "Apollo 2 공개", "status": "done"},
+        {"when": "2027", "type": "production", "title": "Jabil 통한 양산 확대", "status": "planned"}
+      ],
+      "risks": ["양산 실적 부재", "DeepMind 모델 의존"]
+    },
+    {
+      "id": "1x", "name": "1X", "name_ko": "1X 테크놀로지스", "country": "NO", "group": "body",
+      "segment": ["humanoid"], "one_liner": "가정용 휴머노이드 NEO 로 소비자 시장을 가장 먼저 연 업체",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "NEO", "year": 2025, "note": "$20,000 또는 월 $499"}],
+      "valuation": {"v": 820, "as_of": "2024-01", "kind": "official", "note": "마지막 확정 밸류(Series B). 2025.9 $10B 목표로 최대 $1B 조달 협상 보도 — 종결 미확인", "src": "https://www.therundown.ai/articles/norways-1x-to-raise-1b"},
+      "funding_total": {"v": 136, "as_of": "2024-01", "kind": "reported", "note": "확정 기준"},
+      "price": {"v": 20000, "kind": "official"},
+      "target_2026": {"v": 10000, "kind": "reported", "note": "첫해 1만 대 사전예약 5일 만에 완판 보도", "src": "https://gulfnews.com/technology/consumer-electronics/meet-neo-the-20000-humanoid-assistant-aiming-to-fully-automate-your-home-chores-1.500325447"},
+      "production": [{"year": 2026, "target": 10000, "actual": null, "kind": "reported", "note": "헤이워드 공장 가동(4/30, 보도). 인도 시작 여부는 출처 엇갈림"}],
+      "funding": [{"date": "2024-01", "round": "Series B", "amount": 100, "val": 820, "kind": "official"}],
+      "customers": ["가정(사전예약)", "EQT 포트폴리오사(2026~30 최대 1만 대)"],
+      "partners": ["EQT", "NVIDIA"],
+      "sourcing": {"mode": "자체 설계(텐던 구동), 미국 공장 조립", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [19, "가정용 안전 설계, 텐던 구동"],
+        "scale": [12, "1만 대 예약, 공장 가동 보도"],
+        "capital": [11, "대형 라운드 협상 중(미확정)"],
+        "execution": [11, "2026 인도 약속 이행 여부 확인 필요"],
+        "open": [15, "자체 구동계 비중 높음"],
+        "geo": [20, "노르웨이·미국"]
+      },
+      "roadmap": [
+        {"when": "2025-10", "type": "product", "title": "NEO 사전예약", "status": "done"},
+        {"when": "2026", "type": "deploy", "title": "가정 인도 시작", "status": "planned"}
+      ],
+      "risks": ["가정 환경 안전·신뢰성", "자금 조달 미확정"]
+    },
+    {
+      "id": "galbot", "name": "Galbot", "name_ko": "갤봇(인허퉁융)", "country": "CN", "group": "body",
+      "segment": ["humanoid", "wheeled"], "one_liner": "리테일·약국 바퀴형 휴머노이드. 국가 반도체 펀드 등 전략 투자자 다수, 홍콩 IPO 준비",
+      "listing": {"stage": 1, "label": "홍콩 IPO 준비", "note": "주식회사 전환 완료", "src": "https://www.caixinglobal.com/2026-03-03/galbot-raises-362-million-in-fresh-funding-eyes-hong-kong-ipo-102418742"},
+      "products": [{"name": "Galbot G1", "year": 2024, "note": "바퀴형 양팔"}],
+      "valuation": {"v": 3000, "as_of": "2025-12", "kind": "reported", "note": "2026.3 라운드 밸류 미공개", "src": "https://cdn.dealstreetasia.com/stories/galbot-raises-over-300m-467245"},
+      "cum_units": {"v": 2300, "as_of": "2026-06", "kind": "reported", "note": "2025 1,200대+ + 2026 상반기 1,100대+(중국 매체)", "src": "https://www.huxiu.com/article/4894444.html"},
+      "production": [{"year": 2025, "target": null, "actual": 1200, "kind": "reported", "note": ""}],
+      "funding": [
+        {"date": "2025-12", "round": "신규", "amount": 300, "val": 3000, "kind": "reported"},
+        {"date": "2026-03", "round": "신규", "amount": 352, "val": null, "kind": "official", "src": "https://technode.com/2026/03/02/humanoid-robot-maker-galbot-raises-rmb-2-5-billion/"}
+      ],
+      "customers": ["Bosch", "Toyota", "CATL", "BAIC", "SAIC(보도)"],
+      "partners": ["China Mobile", "국가 반도체 펀드", "Sinopec"],
+      "sourcing": {"mode": "중국 공급망", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [18, "시뮬레이션 데이터 기반 조작 모델"],
+        "scale": [16, "누적 약 2,300대, 출하 3위권"],
+        "capital": [15, "2개 라운드 약 $650M"],
+        "execution": [13, "주주사 발주 비중 검증 필요"],
+        "open": [7, "중국 내 조달"],
+        "geo": [4, "중국"]
+      },
+      "roadmap": [
+        {"when": "2026-03", "type": "funding", "title": "25억 위안 조달", "status": "done"},
+        {"when": "2027", "type": "ipo", "title": "홍콩 IPO", "status": "planned"}
+      ],
+      "risks": ["주주사 매출 의존"]
+    },
+    {
+      "id": "fourier", "name": "Fourier", "name_ko": "푸리에", "country": "CN", "group": "body",
+      "segment": ["humanoid"], "one_liner": "재활 로봇 기반의 케어용 휴머노이드. 유료 배치 확인이 아직 부족",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "GR-3", "year": 2025, "note": "케어·서비스용"}],
+      "funding_total": {"v": 240, "as_of": "2025-08", "kind": "reported", "note": "Series E 약 8억 위안 + 2025.8 3억 위안", "src": "https://sacra.com/c/fourier"},
+      "production": [],
+      "funding": [{"date": "2025-08", "round": "추가", "amount": 43, "val": null, "kind": "reported"}],
+      "customers": ["재활·의료 기관"],
+      "partners": [],
+      "sourcing": {"mode": "자체 액추에이터", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [15, "재활 로봇 액추에이터 노하우"],
+        "scale": [8, "GR 시리즈 유료 배치 미확인"],
+        "capital": [10, "누적 약 $240M"],
+        "execution": [10, "사전판매 위주"],
+        "open": [8, "자체 액추에이터"],
+        "geo": [4, "중국"]
+      },
+      "roadmap": [{"when": "2026", "type": "deploy", "title": "GR-3 상용 판매", "status": "planned"}],
+      "risks": ["상용 실적 부재"]
+    },
+    {
+      "id": "xpeng", "name": "XPeng IRON", "name_ko": "샤오펑 아이언", "country": "CN", "group": "body",
+      "segment": ["humanoid"], "one_liner": "자체 AI 칩(튜링)을 쓰는 완성차 계열 휴머노이드. 2026년 말 양산, 2027 상반기 인도",
+      "listing": {"stage": 5, "label": "상장사 사업부", "ticker": "XPEV"},
+      "products": [{"name": "IRON", "year": 2025, "note": "60+ 관절, 튜링 AI 칩"}],
+      "valuation": {"v": 6300, "as_of": "2026-09", "kind": "reported", "note": "로봇 부문 $900M+ 조달, 밸류 $6.3B+", "src": "https://xpengswitzerland.pr.co/270350-xpeng-s-humanoid-robot-iron-leaves-its-production-line-on-its-own-feet/"},
+      "production": [{"year": 2026, "target": null, "actual": null, "kind": "official", "note": "9월 전용 라인 가동(자동화 80%+), 연말 양산"}],
+      "funding": [{"date": "2026-09", "round": "로봇 부문 조달", "amount": 900, "val": 6300, "kind": "reported"}],
+      "customers": ["매장·쇼핑몰(1차)"],
+      "partners": [],
+      "sourcing": {"mode": "자체 칩 + 그룹 공급망", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [19, "자체 AI 칩, 차량 AI 공유"],
+        "scale": [12, "라인 가동, 인도는 2027"],
+        "capital": [16, "부문 $900M+ 조달"],
+        "execution": [12, "일정이 2026 양산 → 2027 인도로 조정"],
+        "open": [6, "그룹 내 조달"],
+        "geo": [4, "중국"]
+      },
+      "roadmap": [
+        {"when": "2026-09", "type": "production", "title": "전용 생산라인 가동", "status": "done"},
+        {"when": "2026-Q4", "type": "production", "title": "양산", "status": "planned"},
+        {"when": "2027-H1", "type": "deploy", "title": "인도 시작", "status": "planned"},
+        {"when": "2027-H2", "type": "deploy", "title": "유럽 진출", "status": "planned"}
+      ],
+      "risks": ["인도 일정"]
+    },
+    {
+      "id": "sanctuary", "name": "Sanctuary AI", "name_ko": "생추어리 AI", "country": "CA", "group": "body",
+      "segment": ["humanoid"], "one_liner": "정교한 손 기술은 강점이나 경영진 교체·자금 압박",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "Phoenix", "year": 2023, "note": "유압 손"}],
+      "funding_total": {"v": 140, "as_of": "2026-06", "kind": "official", "note": "회사 주장 $140M+"},
+      "production": [],
+      "funding": [{"date": "2026-05", "round": "전략 투자(Zeon)", "amount": null, "val": null, "kind": "reported"}],
+      "customers": [],
+      "partners": ["Zeon"],
+      "sourcing": {"mode": "자체 손·유압", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [15, "손 조작 정밀도"],
+        "scale": [3, "양산 없음"],
+        "capital": [5, "소규모 조달, 140명"],
+        "execution": [6, "2024 구조조정, 2026.6 CEO 교체"],
+        "open": [15, "부품 외부 조달 여지"],
+        "geo": [20, "캐나다"]
+      },
+      "roadmap": [{"when": "2026-06", "type": "org", "title": "CEO 교체(Daniel Friedmann)", "status": "done"}],
+      "risks": ["자금 소진", "인수 대상 가능성"],
+      "src": "https://thelogic.co/briefing/sanctuary-ai-names-former-longtime-mda-boss-as-new-ceo/"
+    },
+    {
+      "id": "neura", "name": "Neura Robotics", "name_ko": "노이라 로보틱스", "country": "DE", "group": "body",
+      "segment": ["humanoid"], "one_liner": "유럽 최대 조달. 협동로봇 기반에서 4NE-1 휴머노이드로 확장",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "4NE-1", "year": 2025, "note": "€98,000(20대 이상 €60,000)"}],
+      "valuation": {"v": 7000, "as_of": "2026-06", "kind": "reported", "note": "회사 미확인", "src": "https://implicator.ai/neura-raises-up-to-1-4-billion-as-humanoid-funding-outruns-robot-revenue"},
+      "price": {"v": 105000, "kind": "official", "note": "€98,000"},
+      "production": [{"year": 2026, "target": null, "actual": null, "kind": "reported", "note": "본격 출하는 2026년 말"}],
+      "funding": [{"date": "2026-06", "round": "Series C(마일스톤 조건)", "amount": 1400, "val": 7000, "kind": "official", "src": "https://letsdatascience.com/news/neura-robotics-raises-14b-funding-round-99f9053b"}],
+      "customers": ["수주잔고 $1B+ (회사 주장)"],
+      "partners": ["Tether(리드)", "NVIDIA", "Amazon", "Qualcomm", "Bosch"],
+      "sourcing": {"mode": "자체 개발 + 유럽 공급망", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [16, "협동로봇 기술 기반"],
+        "scale": [8, "본격 출하 전"],
+        "capital": [16, "최대 $1.4B(조건부)"],
+        "execution": [9, "출하 일정 지연 이력"],
+        "open": [16, "유럽 공급망 활용"],
+        "geo": [22, "독일"]
+      },
+      "roadmap": [
+        {"when": "2026-06", "type": "funding", "title": "Series C 최대 $1.4B", "status": "done"},
+        {"when": "2026-Q4", "type": "production", "title": "4NE-1 본격 출하", "status": "planned"}
+      ],
+      "risks": ["조건부 자금", "높은 판매가"]
+    },
+    {
+      "id": "humanoid", "name": "Humanoid (UK)", "name_ko": "휴머노이드(영국)", "country": "UK", "group": "body",
+      "segment": ["wheeled"], "one_liner": "Schaeffler 1,000대 주문 + Bosch 위탁생산. 바퀴형 HMND 01",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "HMND 01", "year": 2025, "note": "바퀴형 양팔, 220cm"}],
+      "valuation": {"v": 1350, "as_of": "2026-07", "kind": "official", "src": "https://aibusiness.com/robotics/uk-robot-maker-humanoid-valued-1-35-billion"},
+      "funding_total": {"v": 270, "as_of": "2026-07", "kind": "official"},
+      "production": [{"year": 2027, "target": 500, "actual": null, "kind": "reported", "note": "2027 수백 대, 2030 15만 대 목표(공격적)"}],
+      "funding": [{"date": "2026-07", "round": "Series A", "amount": 152, "val": 1350, "kind": "official"}],
+      "customers": ["Schaeffler(1,000대)", "사전주문 3.4만 대(구속력 없음)"],
+      "partners": ["Bosch(위탁생산)", "Schaeffler", "Prime Movers Lab"],
+      "sourcing": {"mode": "Bosch 위탁생산", "suppliers": ["Bosch", "Schaeffler"], "note": "유럽 부품사 중심"},
+      "scores": {
+        "tech": [13, "바퀴형으로 난이도 낮춤"],
+        "scale": [9, "4분기 베타 배치"],
+        "capital": [11, "누적 $270M"],
+        "execution": [11, "초기 단계"],
+        "open": [20, "위탁생산"],
+        "geo": [23, "영국·유럽"]
+      },
+      "roadmap": [{"when": "2026-Q4", "type": "deploy", "title": "고객사 베타 배치", "status": "planned"}],
+      "risks": ["사전주문의 구속력"]
+    },
+    {
+      "id": "kepler", "name": "Kepler", "name_ko": "케플러", "country": "CN", "group": "body",
+      "segment": ["humanoid"], "one_liner": "K2 양산·인도 진행, 수천 대 가계약(보도)",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "K2 Bumblebee", "year": 2025, "note": ""}],
+      "production": [{"year": 2025, "target": null, "actual": null, "kind": "reported", "note": "9월 양산 시작, 수천 대 가계약"}],
+      "funding": [],
+      "customers": [],
+      "partners": [],
+      "sourcing": {"mode": "중국 공급망", "suppliers": [], "note": ""},
+      "scores": {"tech": [13, ""], "scale": [10, "양산 시작"], "capital": [7, "공개 정보 적음"], "execution": [10, ""], "open": [6, ""], "geo": [4, "중국"]},
+      "roadmap": [],
+      "risks": ["정보 부족"],
+      "src": "https://en.jiemian.com/article/13765547.html"
+    },
+    {
+      "id": "engineai", "name": "EngineAI", "name_ko": "엔진AI(중칭)", "country": "CN", "group": "body",
+      "segment": ["humanoid"], "one_liner": "홍콩 비공개 상장 신청($1.5B)",
+      "listing": {"stage": 2, "label": "홍콩 비공개 신청", "note": "2026.4, CICC·CITIC 주관(보도)", "src": "https://ecosistemastartup.com/?p=88475"},
+      "products": [{"name": "SE01 / PM01", "year": 2025, "note": ""}],
+      "valuation": {"v": 1500, "as_of": "2026-04", "kind": "reported"},
+      "production": [],
+      "funding": [],
+      "customers": [], "partners": [],
+      "sourcing": {"mode": "중국 공급망", "suppliers": [], "note": ""},
+      "scores": {"tech": [13, ""], "scale": [10, ""], "capital": [10, "상장 추진"], "execution": [9, ""], "open": [6, ""], "geo": [4, "중국"]},
+      "roadmap": [{"when": "2026-04", "type": "ipo", "title": "홍콩 비공개 상장 신청", "status": "done"}],
+      "risks": []
+    },
+    {
+      "id": "leju", "name": "Leju Robotics", "name_ko": "러쥐 로보틱스", "country": "CN", "group": "body",
+      "segment": ["humanoid"], "one_liner": "텐센트 투자, 선전 촹예반 IPO 신청 접수",
+      "listing": {"stage": 2, "label": "촹예반 IPO 신청 접수", "note": "2026.5.19 접수(트래커 기준)", "src": "https://theresarobotforthat.com/humanoid-reality-index/funding-ipo-timeline/"},
+      "products": [{"name": "Kuavo", "year": 2024, "note": ""}],
+      "production": [],
+      "funding": [{"date": "2025-10", "round": "Pre-IPO", "amount": 210, "val": null, "kind": "reported", "src": "https://media.dealstreetasia.com/stories/humanoid-robot-maker-leju-raises-funding-460790"}],
+      "customers": [], "partners": ["Tencent"],
+      "sourcing": {"mode": "중국 공급망", "suppliers": [], "note": ""},
+      "scores": {"tech": [12, ""], "scale": [11, ""], "capital": [11, "Pre-IPO 약 15억 위안"], "execution": [11, ""], "open": [6, ""], "geo": [4, "중국"]},
+      "roadmap": [{"when": "2026-05", "type": "ipo", "title": "촹예반 상장 신청", "status": "done"}],
+      "risks": []
+    },
+    {
+      "id": "rainbow", "name": "Rainbow Robotics", "name_ko": "레인보우로보틱스", "country": "KR", "group": "body", "kr_watch": true,
+      "segment": ["humanoid", "wheeled"], "one_liner": "삼성전자 최대주주(35%). RB-Y1 쿠팡 물류센터 실증",
+      "listing": {"stage": 4, "label": "코스닥 상장", "ticker": "277810.KQ"},
+      "products": [{"name": "RB-Y1", "year": 2024, "note": "바퀴형 양팔"}, {"name": "HUBO 계열", "year": 2005, "note": ""}],
+      "production": [],
+      "funding": [],
+      "customers": ["쿠팡(실증)", "삼성전자"],
+      "partners": ["삼성전자"],
+      "sourcing": {"mode": "자체 액추에이터 + 국내 조달", "suppliers": [], "note": "삼성 계열 수직화 가능성"},
+      "scores": {
+        "tech": [14, "국내 최장 휴머노이드 이력"],
+        "scale": [7, "실증 단계"],
+        "capital": [14, "삼성 자회사"],
+        "execution": [12, ""],
+        "open": [14, "자체 액추에이터 비중"],
+        "geo": [25, "한국"]
+      },
+      "roadmap": [{"when": "2026", "type": "deploy", "title": "쿠팡 물류센터 실증", "status": "done"}],
+      "risks": ["삼성 전략 종속"],
+      "src": "https://www.koreabizreview.com/articles/kbr-analysis-kbr-research-notes-robot-20260619-33gp"
+    },
+    {
+      "id": "doosan", "name": "Doosan Robotics", "name_ko": "두산로보틱스", "country": "KR", "group": "body", "kr_watch": true,
+      "segment": ["cobot", "humanoid"], "one_liner": "협동로봇 데이터 → 2028 산업용 휴머노이드 PoC 의 3단계 로드맵",
+      "listing": {"stage": 4, "label": "유가증권 상장", "ticker": "454910.KS"},
+      "products": [{"name": "협동로봇 + 스캔앤고", "year": 2026, "note": "CES 2026 혁신상"}],
+      "production": [],
+      "funding": [],
+      "customers": [], "partners": [],
+      "sourcing": {"mode": "외부 조달 중심", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [11, "작업 지능 우선 전략"],
+        "scale": [5, "휴머노이드는 2028 PoC"],
+        "capital": [13, "그룹 지원"],
+        "execution": [11, ""],
+        "open": [18, "외부 부품 조달"],
+        "geo": [25, "한국"]
+      },
+      "roadmap": [{"when": "2028", "type": "product", "title": "산업용 휴머노이드 PoC", "status": "planned"}],
+      "risks": ["휴머노이드 진입 늦음"],
+      "src": "https://v.daum.net/v/WK1WUVZvjE"
+    },
+    {
+      "id": "lg", "name": "LG Electronics", "name_ko": "LG전자", "country": "KR", "group": "body", "kr_watch": true,
+      "segment": ["humanoid", "service"], "one_liner": "액추에이터 브랜드 '악시움' 출범 + NVIDIA 와 차세대 이족 휴머노이드(CES 2027). 부품 경쟁자이자 고객",
+      "listing": {"stage": 5, "label": "상장사 사업부", "ticker": "066570.KS"},
+      "products": [{"name": "클로이드(홈로봇)", "year": 2026, "note": "CES 2026"}, {"name": "악시움(액추에이터)", "year": 2026, "note": ""}],
+      "production": [],
+      "funding": [],
+      "customers": [], "partners": ["Bear Robotics(경영권, 2025.1)", "NVIDIA(이족 휴머노이드 MOU)"],
+      "sourcing": {"mode": "액추에이터·센서·배터리 그룹 내재화", "suppliers": [], "note": "LG 가 NVIDIA 레퍼런스에 액추에이터·센서·배터리 공급 예정"},
+      "scores": {
+        "tech": [13, "부품 내재화 진행"],
+        "scale": [5, "휴머노이드 출시 전"],
+        "capital": [18, "대기업"],
+        "execution": [11, ""],
+        "open": [10, "핵심 부품 내재화 → 진입 여지 제한"],
+        "geo": [25, "한국"]
+      },
+      "roadmap": [
+        {"when": "2026-01", "type": "product", "title": "클로이드·악시움 공개", "status": "done"},
+        {"when": "2027-01", "type": "product", "title": "NVIDIA 협력 이족 휴머노이드 공개(CES 2027)", "status": "planned"}
+      ],
+      "risks": [],
+      "src": "https://news.mtn.co.kr/news-detail/2026011216404297188"
+    },
+    {
+      "id": "samsung", "name": "Samsung Electronics", "name_ko": "삼성전자", "country": "KR", "group": "body", "kr_watch": true,
+      "segment": ["humanoid"], "one_liner": "RX사업추진실로 로봇 조직 통합. 자사 제조 현장 우선 투입 전략",
+      "listing": {"stage": 5, "label": "상장사 사업부", "ticker": "005930.KS"},
+      "products": [],
+      "production": [],
+      "funding": [],
+      "customers": ["삼성 자사 공장(1차)"], "partners": ["레인보우로보틱스(35%)"],
+      "sourcing": {"mode": "그룹 + 국내 협력사", "suppliers": ["에스비비테크(감속기 공급 레퍼런스, 증권 리포트)"], "note": ""},
+      "scores": {
+        "tech": [12, "구체 제품 미공개"],
+        "scale": [4, "공식 양산 계획 미공개"],
+        "capital": [20, "대기업"],
+        "execution": [10, ""],
+        "open": [16, "국내 협력사 조달 관행"],
+        "geo": [25, "한국"]
+      },
+      "roadmap": [],
+      "risks": ["전략 비공개"],
+      "src": "https://dealsite.co.kr/articles/159348"
+    },
+    {
+      "id": "hyundai", "name": "Hyundai Motor Group", "name_ko": "현대차그룹", "country": "KR", "group": "body", "kr_watch": true,
+      "segment": ["humanoid"], "one_liner": "보스턴 다이나믹스 모회사이자 최대 수요처. 2028 연 3만 대 로봇 공장",
+      "listing": {"stage": 5, "label": "상장사(그룹)", "ticker": "005380.KS"},
+      "products": [],
+      "capacity": {"v": 30000, "as_of": "2026-01", "kind": "official", "note": "2028년까지 연 3만 대", "src": "https://www.axios.com/2026/01/05/hyundai-humanoid-robots-boston-dynamics"},
+      "production": [{"year": 2028, "target": 30000, "actual": null, "kind": "official", "note": ""}],
+      "funding": [],
+      "customers": ["현대차·기아 공장"], "partners": ["Boston Dynamics(100% 자회사화 진행)"],
+      "sourcing": {"mode": "그룹 부품 계열사 + 외부", "suppliers": [], "note": "그룹 계열 부품사·국내 협력사 연계 가능성"},
+      "scores": {
+        "tech": [14, "BD 기술 보유"],
+        "scale": [12, "2028 연 3만 대 계획"],
+        "capital": [20, "그룹 자금"],
+        "execution": [12, ""],
+        "open": [18, "자동차 협력사 구매 체계"],
+        "geo": [25, "한국"]
+      },
+      "roadmap": [
+        {"when": "2026-01", "type": "production", "title": "연 3만 대 공장 계획 발표", "status": "done"},
+        {"when": "2028", "type": "deploy", "title": "조지아 메타플랜트 Atlas 투입", "status": "planned"}
+      ],
+      "risks": ["BD 적자 부담"]
+    },
+    {
+      "id": "nvidia", "name": "NVIDIA", "name_ko": "엔비디아", "country": "US", "group": "brain",
+      "segment": ["chip", "model"], "one_liner": "Jetson Thor + GR00T 로 로봇 두뇌의 사실상 표준. 유니트리 섀시로 레퍼런스 휴머노이드까지",
+      "listing": {"stage": 4, "label": "상장", "ticker": "NVDA"},
+      "products": [{"name": "Jetson Thor", "year": 2025, "note": ""}, {"name": "Isaac GR00T 레퍼런스 휴머노이드", "year": 2026, "note": "유니트리 H2 Plus + Sharpa 손, 2026 말 공급"}],
+      "production": [], "funding": [],
+      "customers": ["대부분의 휴머노이드 업체", "LG(이족 휴머노이드 MOU)"], "partners": ["Unitree", "LG", "Figure", "Agility", "1X"],
+      "sourcing": {"mode": "", "suppliers": [], "note": ""},
+      "scores": {
+        "tech": [28, "컴퓨트·시뮬레이션·모델 풀스택"],
+        "scale": [22, "업계 다수 채택"],
+        "capital": [20, ""],
+        "execution": [17, "발표 일정 대체로 이행"],
+        "open": [0, ""], "geo": [0, ""]
+      },
+      "roadmap": [
+        {"when": "2026-05", "type": "product", "title": "GR00T 레퍼런스 휴머노이드 공개(GTC 타이베이)", "status": "done"},
+        {"when": "2026-H2", "type": "product", "title": "레퍼런스 휴머노이드 공급", "status": "planned"}
+      ],
+      "risks": [],
+      "src": "https://qz.com/nvidia-isaac-gr00t-humanoid-robot-platform-academic-research-060126"
+    },
+    {
+      "id": "deepmind", "name": "Google DeepMind", "name_ko": "구글 딥마인드", "country": "US", "group": "brain",
+      "segment": ["model"], "one_liner": "Gemini Robotics 2 로 Apptronik·BD 등 파트너 로봇을 구동",
+      "listing": {"stage": 5, "label": "상장사 사업부", "ticker": "GOOGL"},
+      "products": [{"name": "Gemini Robotics 2 / ER 2 / On-Device 2", "year": 2026, "note": "7/30 공개. ER 2 만 개발자 프리뷰"}],
+      "production": [], "funding": [],
+      "customers": [], "partners": ["Apptronik", "Boston Dynamics", "Franka", "Agile Robots"],
+      "sourcing": {"mode": "", "suppliers": [], "note": ""},
+      "scores": {"tech": [27, "VLA + 체화 추론 모델"], "scale": [10, "파트너 한정 배포"], "capital": [20, ""], "execution": [15, ""], "open": [0, ""], "geo": [0, ""]},
+      "roadmap": [
+        {"when": "2026-01", "type": "partner", "title": "Boston Dynamics 제휴", "status": "done"},
+        {"when": "2026-07", "type": "product", "title": "Gemini Robotics 2 공개", "status": "done"}
+      ],
+      "risks": [],
+      "src": "https://www.therobotreport.com/google-deepmind-says-gemini-robotics-2-enables-full-body-control/"
+    },
+    {
+      "id": "pi", "name": "Physical Intelligence", "name_ko": "피지컬 인텔리전스", "country": "US", "group": "brain",
+      "segment": ["model"], "one_liner": "π 시리즈 범용 로봇 모델. 상용화 일정 미정",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "π0 → π0.7", "year": 2026, "note": "약 6개월 주기"}],
+      "valuation": {"v": 5600, "as_of": "2025-11", "kind": "official", "note": "2026.3 $11B+ 밸류 $1B 협상 보도(종결 미확인)", "src": "https://dealroom.co/news/127095-robot-ai-startup-physical-intelligence-seeks-1b-at-11b-valuation/"},
+      "funding_total": {"v": 1070, "as_of": "2025-11", "kind": "reported"},
+      "production": [],
+      "funding": [{"date": "2025-11", "round": "Series B", "amount": 600, "val": 5600, "kind": "official"}],
+      "customers": [], "partners": [],
+      "sourcing": {"mode": "", "suppliers": [], "note": ""},
+      "scores": {"tech": [24, "오픈 모델 연구 선도"], "scale": [4, "상용 매출 미미"], "capital": [16, ""], "execution": [13, "모델 출시 주기 준수"], "open": [0, ""], "geo": [0, ""]},
+      "roadmap": [{"when": "2026", "type": "funding", "title": "$11B+ 밸류 라운드 협상", "status": "planned"}],
+      "risks": ["수익화 경로"]
+    },
+    {
+      "id": "skild", "name": "Skild AI", "name_ko": "스킬드 AI", "country": "US", "group": "brain",
+      "segment": ["model"], "one_liner": "어떤 로봇에도 쓰는 '옴니 바디 브레인'. 소프트뱅크 주도 $14B 밸류",
+      "listing": {"stage": 0, "label": "비상장"},
+      "products": [{"name": "Skild Brain", "year": 2025, "note": ""}],
+      "valuation": {"v": 14000, "as_of": "2026-01", "kind": "reported", "src": "https://fintool.com/news/skild-ai-14-billion-valuation-robotics"},
+      "production": [],
+      "funding": [{"date": "2026-01", "round": "신규", "amount": 1400, "val": 14000, "kind": "reported"}],
+      "customers": [], "partners": ["SoftBank", "NVIDIA", "Bezos Expeditions"],
+      "sourcing": {"mode": "", "suppliers": [], "note": ""},
+      "scores": {"tech": [21, ""], "scale": [7, "매출 약 $30M(자체 주장)"], "capital": [18, ""], "execution": [12, ""], "open": [0, ""], "geo": [0, ""]},
+      "roadmap": [{"when": "2026-01", "type": "funding", "title": "$1.4B 조달, $14B 밸류", "status": "done"}],
+      "risks": ["밸류 대비 매출"]
+    }
+  ]
+}

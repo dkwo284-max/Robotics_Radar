@@ -1,0 +1,16 @@
+{
+  "name": "로봇 레이더 · Robotics Radar",
+  "short_name": "로봇 레이더",
+  "description": "휴머노이드·피지컬 AI 기업의 양산·자금·IPO·부품 기회",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#0f1720",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

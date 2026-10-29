@@ -1,0 +1,121 @@
+{
+  "_about": "시장 통계·시나리오·부품 BOM·정책·이벤트·인사이트. 수치 형식은 companies.json 과 같음.",
+  "as_of": "2026-10-29",
+
+  "stats": [
+    {"k": "h1_2026_units", "label": "2026 상반기 글로벌 출하", "v": 19100, "kind": "reported", "note": "SAG 기준. Counterpoint 는 2.2만 대+", "src": "https://www.thestandard.com.hk/innovation/article/340494/Global-humanoid-robot-shipments-surge-300pc-in-H1-led-by-Agibot"},
+    {"k": "china_share", "label": "중국 업체 출하 점유율(2026 상반기)", "v": 0.97, "kind": "reported", "note": "수요의 85%+ 도 중국 고객", "src": "https://techrepublic.com/article/news-humanoid-robot-shipments-chinese-vendors"},
+    {"k": "fy2026_units", "label": "2026 연간 출하 전망", "v": 55000, "kind": "estimate", "note": "SAG 약 6만 대, Counterpoint 5만 대+ 의 중간", "src": "https://cryptobriefing.com/china-dominates-humanoid-robot-shipments-2026/"},
+    {"k": "fy2026_revenue", "label": "2026 산업 매출 전망", "v": 1600, "kind": "reported", "note": "USD M, SAG", "src": "https://cryptobriefing.com/china-dominates-humanoid-robot-shipments-2026/"},
+    {"k": "bom_2025", "label": "대당 BOM(2025 말)", "v": 35000, "kind": "estimate", "note": "BofA Institute. 2030~35년 $13~17k 로 하락 전망", "src": "https://www.outlookbusiness.com/deeptech/humanoid-robots-could-cost-just-13000-by-2035-heres-what-that-means-for-global-ai-race"}
+  ],
+
+  "share_h1_2026": [
+    {"name": "AgiBot", "id": "agibot", "v": 0.44},
+    {"name": "Unitree", "id": "unitree", "v": 0.31},
+    {"name": "기타 중국", "v": 0.22},
+    {"name": "중국 외", "v": 0.03}
+  ],
+
+  "scenarios": {
+    "_note": "글로벌 휴머노이드 연간 출하(대)와 중국 외 고객 비중. Base 는 SAG(2030 최대 50만 대)·Counterpoint 전망, Bull 은 테슬라·현대차 계획 이행, Bear 는 과거 발표 대비 이행률을 반영한 추정.",
+    "years": [2026, 2027, 2028, 2029, 2030],
+    "bear": {"label": "Bear", "units": [50000, 80000, 120000, 170000, 230000], "ex_china": [0.04, 0.06, 0.09, 0.12, 0.15], "why": "중국 저가 물량 중심, 미국 업체 램프 지연"},
+    "base": {"label": "Base", "units": [55000, 120000, 220000, 350000, 500000], "ex_china": [0.05, 0.10, 0.16, 0.22, 0.28], "why": "SAG 2030 50만 대, 테슬라·현대차 일부 이행"},
+    "bull": {"label": "Bull", "units": [60000, 180000, 400000, 750000, 1200000], "ex_china": [0.06, 0.15, 0.25, 0.32, 0.38], "why": "테슬라 주당 1,000대+ 램프, 현대차 2028 연 3만 대 이행"}
+  },
+
+  "bom": {
+    "_note": "휴머노이드 1대 부품 원가 비중(합 100%). X.PIN 2026 중국 BOM(감속기 21·모터 19·스크류 19·센서 14·제어기 12·구조 10%), Morgan Stanley(액추에이터 약 56%), BofA(회전 16·리니어 14개) 공개 요약을 바탕으로 컴퓨트·배터리·손을 더해 재구성한 추정치. 단가 = 대당 BOM × 비중 ÷ 수량.",
+    "unit_bom_2026": 30000,
+    "src": "https://humanoid.guide/?p=17836",
+    "items": [
+      {"id": "reducer", "name": "정밀 감속기(하모닉·사이클로이드)", "share": 0.16, "qty": 16, "decline": 0.10, "barrier": "H",
+       "incumbents": ["Harmonic Drive Systems (JP)", "Leaderdrive 绿的谐波 (CN)", "Shuanghuan (CN)"],
+       "kr": [{"name": "에스비비테크", "status": "후보", "note": "삼성전자 공급 레퍼런스, 휴머노이드 레퍼런스는 아직 미진(증권 리포트)"}],
+       "note": "액추에이터 중 기술 난도 최상. 고급품 개당 $800~1,500, 중국산은 그 이하"},
+      {"id": "screw", "name": "행성 롤러스크류(리니어)", "share": 0.14, "qty": 14, "decline": 0.12, "barrier": "H",
+       "incumbents": ["Wuzhou Xinchun (CN)", "Hengli Hydraulic (CN)", "Shuanglin (CN)", "Schaeffler (DE)", "Rollvis (CH)"],
+       "kr": [],
+       "note": "리니어 모듈 원가의 약 40%. 테슬라 인증 공급사가 모두 중국계 — 국내 공급 레퍼런스 미확인(공백)"},
+      {"id": "motor", "name": "프레임리스 토크모터", "share": 0.14, "qty": 30, "decline": 0.10, "barrier": "M",
+       "incumbents": ["Kollmorgen (US)", "Wolong Electric (CN)"],
+       "kr": [{"name": "삼현", "status": "후보", "note": "휴머노이드 액추에이터 포트폴리오 구축 계획 보도"}],
+       "note": ""},
+      {"id": "driver", "name": "서보 드라이버·관절 제어기", "share": 0.09, "qty": 30, "decline": 0.10, "barrier": "M",
+       "incumbents": ["Elmo (IL)", "Inovance (CN)"],
+       "kr": [{"name": "패러데이다이나믹스", "status": "후보", "note": "모터·감속기·제어기 자체 설계·제작"}],
+       "note": ""},
+      {"id": "actuator", "name": "통합 액추에이터 모듈(조립)", "share": 0.0, "qty": 30, "decline": 0.10, "barrier": "M", "module": true,
+       "incumbents": ["Sanhua (CN)", "Tuopu (CN)"],
+       "kr": [{"name": "로보티즈", "status": "공급 레퍼런스", "note": "다이나믹셀-Q, 해외 휴머노이드 공급 레퍼런스(증권 리포트)"}, {"name": "LG전자(악시움)", "status": "진출", "note": "CES 2026 액추에이터 브랜드 출범"}],
+       "note": "위 부품을 묶은 모듈 단위 공급. 비중은 구성 부품에 포함(중복 집계 방지)"},
+      {"id": "encoder", "name": "엔코더·관절 센서", "share": 0.04, "qty": 60, "decline": 0.08, "barrier": "M",
+       "incumbents": ["Renishaw (UK)", "중국 다수"], "kr": [], "note": ""},
+      {"id": "ftsensor", "name": "6축 힘/토크 센서", "share": 0.06, "qty": 4, "decline": 0.12, "barrier": "H",
+       "incumbents": ["ATI (US)", "중국 다수"],
+       "kr": [{"name": "에이딘로보틱스", "status": "후보·검증 필요", "note": "F/T 센서 전문"}], "note": "손목·발목"},
+      {"id": "tactile", "name": "촉각 센서", "share": 0.03, "qty": 10, "decline": 0.15, "barrier": "M",
+       "incumbents": ["Sharpa", "PaXini (CN)"], "kr": [], "note": "손가락 끝 패드"},
+      {"id": "hand", "name": "덱스터러스 핸드 구동부", "share": 0.08, "qty": 2, "decline": 0.12, "barrier": "H",
+       "incumbents": ["Sharpa", "Inspire Robots (CN)", "자체 설계(테슬라·피규어)"], "kr": [], "note": "22자유도급 손이 표준화되는 중"},
+      {"id": "camera", "name": "카메라·비전 모듈", "share": 0.04, "qty": 6, "decline": 0.10, "barrier": "L",
+       "incumbents": ["Sony 센서 (JP)", "Orbbec (CN)"],
+       "kr": [{"name": "삼성전기 / LG이노텍", "status": "역량 보유", "note": "모바일·차량 카메라 모듈 강자, 휴머노이드 공급 레퍼런스 미확인"}], "note": ""},
+      {"id": "compute", "name": "온보드 컴퓨트(SoC)", "share": 0.08, "qty": 1, "decline": 0.08, "barrier": "H",
+       "incumbents": ["NVIDIA Jetson Thor (US)", "자체 칩(테슬라·샤오펑)"], "kr": [], "note": "메모리·패키징은 간접 기회"},
+      {"id": "battery", "name": "배터리팩", "share": 0.05, "qty": 1, "decline": 0.08, "barrier": "M",
+       "incumbents": ["CATL (CN)", "자체 팩"],
+       "kr": [{"name": "LG에너지솔루션 / 삼성SDI", "status": "역량 보유", "note": "LG 는 NVIDIA 협력 휴머노이드에 배터리 공급 예정"}], "note": ""},
+      {"id": "structure", "name": "경량 구조재·하네스", "share": 0.09, "qty": 1, "decline": 0.06, "barrier": "L",
+       "incumbents": ["Xusheng (CN, 관절 하우징)"], "kr": [], "note": "알루미늄·마그네슘 다이캐스팅, 케이블"}
+    ]
+  },
+
+  "policies": [
+    {"date": "2025-04", "country": "KR", "title": "K-휴머노이드 연합 출범", "note": "약 40개 기관, 2030 휴머노이드 최강국 목표", "src": "https://www.etoday.co.kr/news/view/2460901"},
+    {"date": "2025-09", "country": "KR", "title": "2026 피지컬 AI 예산 4,022억 원(전년 2,149억)", "note": "휴머노이드·핵심부품 개발", "src": "https://www.kukinews.com/article/view/kuk202509010187"},
+    {"date": "2026-03", "country": "CN", "title": "15차 5개년 계획: 체화 지능을 미래산업으로", "note": "동시에 150개+ 난립에 대한 거품 경고(보도)", "src": "https://designnews.com/automation/china-s-15th-five-year-plan-positions-robotics-ai-to-drive-growth"},
+    {"date": "2026-03", "country": "US", "title": "American Security Robotics Act 발의", "note": "연방정부의 중국산 휴머노이드 구매 금지", "src": "https://www.fdd.org/analysis/2026/03/27/as-chinese-robotics-industry-surges-senate-considers-limited-federal-procurement-ban/"},
+    {"date": "2026-06", "country": "US", "title": "GUARD Act 발의", "note": "안보 위협 중국 로봇 수입 금지 검토(FCC Covered List)", "src": "https://interestingengineering.com/military/us-ban-china-humanoid-robots-military"},
+    {"date": "2026-09", "country": "KR", "title": "2027년부터 국산 휴머노이드 구매·실증 예산", "note": "R&D 중심 → 초기 수요 창출로 확대", "src": "https://www.heraldk.com/article/2026070800301413488"}
+  ],
+
+  "events": [
+    {"date": "2026-10-21", "ids": ["tesla"], "type": "production", "title": "테슬라, 프레몬트 고속 라인에서 옵티머스 초기 생산 시작", "kind": "reported", "src": "https://notateslaapp.com/news/4866/tesla-officially-begins-optimus-robot-production"},
+    {"date": "2026-10-14", "ids": ["agibot"], "type": "ipo", "title": "애지봇, 홍콩 IPO 보류하고 500억 위안 밸류 사모 라운드", "kind": "reported", "src": "https://eu.36kr.com/en/p/4025612762763138"},
+    {"date": "2026-10-12", "ids": ["xpeng"], "type": "production", "title": "샤오펑 IRON 연말 양산, 2027 상반기 인도·하반기 유럽", "kind": "reported", "src": "https://technode.com/2026/10/13/xpeng-plans-humanoid-robot-deliveries-in-2027-and-european-rollout-later-that-year/"},
+    {"date": "2026-09-21", "ids": ["tesla"], "type": "supply", "title": "테슬라, Gen 3 램프 앞두고 중국 공급사 감사·$20k 가격 목표", "kind": "reported", "src": "https://trendforce.com/news/2026/09/21/news-tesla-reportedly-audits-china-suppliers-for-optimus-gen-3-ramp-eyes-20000-price-target/"},
+    {"date": "2026-09-14", "ids": ["bd", "hyundai"], "type": "ipo", "title": "보스턴 다이나믹스 2027 IPO 가능성 낮음(현대차 임원)", "kind": "reported", "src": "https://www.thestar.com.my/tech/tech-news/2026/09/14/exclusive-ipo-for-humanoid-robot-maker-boston-dynamics-unlikely-in-2027-executive-says"},
+    {"date": "2026-09-07", "ids": ["xpeng"], "type": "production", "title": "샤오펑 IRON 전용 생산라인 가동", "kind": "official", "src": "https://xpengswitzerland.pr.co/270350-xpeng-s-humanoid-robot-iron-leaves-its-production-line-on-its-own-feet/"},
+    {"date": "2026-09", "ids": ["agility"], "type": "ipo", "title": "어질리티, SPAC 합병으로 나스닥 상장 추진(AGLT)", "kind": "reported", "src": "https://www.geekwire.com/2026/digit-maker-agility-robotics-to-go-public-in-2-5b-deal-heres-what-the-filings-say-about-its-finances/"},
+    {"date": "2026-08-10", "ids": ["unitree"], "type": "ipo", "title": "유니트리 커촹반 공모 청약", "kind": "reported", "src": "https://autonews.gasgoo.com/articles/news/unitree-launches-star-market-ipo-issuance-process-subscriptions-open-august-10-2083181368883253248"},
+    {"date": "2026-07-30", "ids": ["deepmind", "apptronik", "bd"], "type": "product", "title": "Gemini Robotics 2 공개 — Apptronik Apollo 2 손 제어", "kind": "reported", "src": "https://www.therobotreport.com/google-deepmind-says-gemini-robotics-2-enables-full-body-control/"},
+    {"date": "2026-07-24", "ids": ["agibot"], "type": "ipo", "title": "애지봇 홍콩 IPO 착수", "kind": "reported", "src": "https://autonews.gasgoo.com/articles/news/agibot-launches-hong-kong-ipo-process-2082120389458100225"},
+    {"date": "2026-07-23", "ids": ["figure"], "type": "production", "title": "피규어, Figure 03 누적 1,000대(보도)", "kind": "reported", "src": "https://runtimewire.com/article/figure-reportedly-built-1000th-humanoid-robot-san-jose"},
+    {"date": "2026-07", "ids": ["humanoid"], "type": "funding", "title": "Humanoid(영국) $152M Series A, $1.35B 밸류", "kind": "official", "src": "https://aibusiness.com/robotics/uk-robot-maker-humanoid-valued-1-35-billion"},
+    {"date": "2026-06-30", "ids": ["figure"], "type": "deploy", "title": "Figure 03, BMW 스파턴버그 공장 투입", "kind": "reported", "src": "https://www.all-ai.de/news/beitrage2026/figure03-herstellung-steigerung"},
+    {"date": "2026-06-10", "ids": ["neura"], "type": "funding", "title": "노이라 Series C 최대 $1.4B(테더 주도)", "kind": "official", "src": "https://letsdatascience.com/news/neura-robotics-raises-14b-funding-round-99f9053b"},
+    {"date": "2026-06", "ids": ["unitree", "agibot"], "type": "policy", "title": "미 하원 GUARD Act 발의 — 중국 로봇 수입 금지 검토", "kind": "reported", "src": "https://interestingengineering.com/military/us-ban-china-humanoid-robots-military"},
+    {"date": "2026-05-31", "ids": ["nvidia", "unitree"], "type": "product", "title": "NVIDIA GR00T 레퍼런스 휴머노이드(유니트리 H2 Plus) 공개", "kind": "official", "src": "https://qz.com/nvidia-isaac-gr00t-humanoid-robot-platform-academic-research-060126"},
+    {"date": "2026-05-19", "ids": ["leju"], "type": "ipo", "title": "러쥐 로보틱스 촹예반 IPO 신청 접수", "kind": "reported", "src": "https://theresarobotforthat.com/humanoid-reality-index/funding-ipo-timeline/"},
+    {"date": "2026-04-29", "ids": ["figure"], "type": "production", "title": "피규어 BotQ 시간당 1대, 350대+ 출하", "kind": "official", "src": "https://ai2.work/blog/figure-s-botq-factory-hits-one-humanoid-robot-per-hour"},
+    {"date": "2026-04", "ids": ["engineai"], "type": "ipo", "title": "엔진AI 홍콩 비공개 상장 신청($1.5B)", "kind": "reported", "src": "https://ecosistemastartup.com/?p=88475"},
+    {"date": "2026-03", "ids": ["galbot"], "type": "funding", "title": "갤봇 25억 위안 조달, 홍콩 IPO 준비", "kind": "official", "src": "https://technode.com/2026/03/02/humanoid-robot-maker-galbot-raises-rmb-2-5-billion/"},
+    {"date": "2026-02", "ids": ["apptronik"], "type": "funding", "title": "앱트로닉 $520M 추가 조달(누적 약 $1B)", "kind": "official", "src": "https://apptronik.com/news-collection/apptronik-closes-over-935-million-series-a"},
+    {"date": "2026-01-05", "ids": ["hyundai", "bd", "deepmind"], "type": "production", "title": "현대차그룹 2028 연 3만 대 로봇 공장 + BD·딥마인드 제휴", "kind": "official", "src": "https://www.axios.com/2026/01/05/hyundai-humanoid-robots-boston-dynamics"},
+    {"date": "2026-01", "ids": ["skild"], "type": "funding", "title": "스킬드 AI $1.4B 조달, $14B 밸류", "kind": "reported", "src": "https://fintool.com/news/skild-ai-14-billion-valuation-robotics"},
+    {"date": "2026-01", "ids": ["lg"], "type": "product", "title": "LG전자 액추에이터 브랜드 '악시움'·홈로봇 '클로이드' 공개", "kind": "official", "src": "https://news.mtn.co.kr/news-detail/2026011216404297188"}
+  ],
+
+  "insights": [
+    {"lens": "parts", "title": "미국 로봇사의 비중국 부품 수요가 가장 큰 기회", "body": "출하의 97%가 중국 업체이고 중국 업체는 부품을 자국에서 조달한다. 반면 미국 의회는 중국 로봇 구매·수입 제한을 추진 중이고, 테슬라 공급사들도 멕시코·태국·미국으로 라인을 옮기고 있다. 물량은 작아도 '중국 외 공급처'라는 자리가 비어 있는 시장은 미국·유럽 로봇사다.", "action": "영업 우선순위: 앱트로닉(위탁생산)·어질리티·피규어 → 현대차그룹/BD. 중국 로봇사는 후순위", "evidence": ["apptronik", "agility", "figure", "tesla"], "conf": "M"},
+    {"lens": "parts", "title": "롤러스크류는 국내 공급 레퍼런스가 비어 있는 품목", "body": "리니어 액추에이터 원가의 약 40%가 행성 롤러스크류인데, 테슬라 인증을 받은 곳은 모두 중국 업체로 보도된다. 감속기(에스비비테크)·액추에이터 모듈(로보티즈·LG)과 달리 국내 후보가 확인되지 않는다. 정밀 가공·열처리 역량이 있는 부품사라면 진입 장벽은 높지만 경쟁도 적다.", "action": "롤러스크류·볼스크류 기술 보유 여부 점검, Schaeffler 등 유럽 업체와의 기술 제휴 검토", "evidence": ["tesla"], "conf": "M"},
+    {"lens": "parts", "title": "현대차그룹은 국내 부품사의 가장 가까운 대량 고객", "body": "현대차그룹은 2028년까지 연 3만 대 로봇 공장을 짓고 조지아 공장에 Atlas 를 투입한다. 자동차 협력사 구매 체계가 그대로 이어질 가능성이 높아 국내 부품사에 접근성이 가장 좋다. 다만 BD 의 적자와 IPO 지연은 일정 리스크다.", "action": "2027년 상반기까지 BD·현대차 로봇 부품 RFQ 대응 체계 준비", "evidence": ["hyundai", "bd"], "conf": "H"},
+    {"lens": "parts", "title": "단가는 매년 8~15% 하락 — 물량 계약에는 가격 하락 조항이 기본", "body": "대당 BOM 은 2025년 말 약 $35k 에서 2030~35년 $13~17k 로 떨어질 전망이다. 테슬라는 $20k 판매가를 목표로 공급사를 감사하고 있다. 물량이 늘어도 개당 매출은 빠르게 줄어든다.", "action": "투자 회수 계산 시 연 10% 단가 하락을 기본 가정으로", "evidence": ["tesla"], "conf": "M"},
+    {"lens": "invest", "title": "미국 업체 밸류는 출하 1대당 중국 업체의 수십 배", "body": "피규어는 누적 약 1,000대에 $39B, 애지봇은 1.5만 대에 약 $7B, 유니트리는 약 1.1만 대에 약 $9B 다. 지분 투자로 들어가면 미국 업체는 기대가 이미 가격에 반영돼 있고, 중국 업체는 지정학 리스크가 크다.", "action": "지분 투자보다 공급 계약·공동 개발로 실물 수요에 연결되는 쪽이 비용 대비 효율이 높음", "evidence": ["figure", "agibot", "unitree"], "conf": "M"},
+    {"lens": "invest", "title": "IPO 창이 열렸지만 일정은 흔들린다", "body": "유니트리는 커촹반 공모를 마쳤고 어질리티는 SPAC 으로 4분기 상장을 노린다. 반면 애지봇은 홍콩 IPO 를 보류했고 BD 는 2029~30년으로 밀렸다. 상장 이후 주가가 피어 밸류의 기준점이 된다.", "action": "유니트리·어질리티 상장 후 주가를 업계 밸류 기준점으로 모니터링", "evidence": ["unitree", "agility", "agibot", "bd"], "conf": "H"},
+    {"lens": "invest", "title": "실행 신뢰도 낮은 곳과의 설비 연동 계약은 물량 보장이 필수", "body": "테슬라는 2025년 목표를 크게 밑돌았고 노이라·1X 는 출하 일정이 미뤄진 이력이 있다. 상대의 발표 물량을 믿고 설비를 늘리면 가동률 리스크를 떠안게 된다.", "action": "최소 구매 물량(take-or-pay)·선급금 조항, 단계별 설비 증설", "evidence": ["tesla", "neura", "1x"], "conf": "H"},
+    {"lens": "invest", "title": "두뇌 레이어에 돈이 몰리지만 매출은 아직 작다", "body": "스킬드 AI($14B)와 피지컬 인텔리전스($5.6B→$11B+ 협상)가 2026년 1분기에만 약 $2.5B 를 모았지만 상용 매출은 미미하다. 하드웨어 부품사에게 두뇌 레이어는 직접 고객이 아니다.", "action": "부품사 투자 우선순위는 몸(하드웨어) 레이어. 두뇌 레이어는 파트너십 모니터링만", "evidence": ["skild", "pi", "nvidia"], "conf": "M"}
+  ]
+}

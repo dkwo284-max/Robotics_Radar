@@ -1,0 +1,44 @@
+name: Robotics Radar build
+
+# Phase 1: 큐레이션 데이터(data/*.json)가 바뀌면 검증·빌드해 GitHub Pages 로 배포합니다.
+# 빌드 결과(web/data)는 커밋하지 않고 배포 산출물에만 담습니다. Phase 2(뉴스·공시 자동 수집)에서 예약 실행을 추가합니다.
+on:
+  push:
+    branches: [main]
+    paths: ["data/**", "scripts/**", "web/**", "tests/**", ".github/workflows/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: radar
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pytest
+      - run: python -m pytest -q
+      - run: python scripts/build.py --check
+      - run: python scripts/build.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: web }
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v4

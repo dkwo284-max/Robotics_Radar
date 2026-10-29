@@ -1,0 +1,5 @@
+__pycache__/
+.pytest_cache/
+.venv/
+# 빌드 결과는 GitHub Actions 가 만들어 Pages 에 바로 배포합니다
+web/data/
