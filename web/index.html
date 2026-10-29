@@ -71,7 +71,12 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 .tabbar a[aria-current="page"]::before { content: ""; position: absolute; top: 0; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--ink); }
 
 main { padding-block: 16px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 28px); }
-.panel { display: grid; gap: 28px; }
+.panel { display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); }  /* 단일 열도 minmax(0,1fr) — 안 그러면 가장 넓은 내용(표·가로 스크롤 목록)에 맞춰 화면 전체가 넓어진다 */
+.panel > * { min-width: 0; max-width: 100%; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overflow-x: clip; }
+.tl, .card, details, .list { max-width: 100%; }
+@media (max-width: 800px) { select, input, textarea { font-size: 16px; } }  /* iOS 는 16px 미만 입력창을 누르면 화면을 확대한다 */
 section > h2 { margin: 0 0 2px; font-size: 1.05rem; font-weight: 700; display: flex; align-items: baseline; gap: 8px; }
 .sub { margin: 0 0 12px; color: var(--muted); font-size: 0.83rem; }
 .card { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 14px; box-shadow: var(--card-shadow); min-width: 0; }
@@ -511,7 +516,7 @@ details.fold[open] > summary::after { content: "접기"; }
         <div class="card" id="hub-tool-build" style="margin-bottom:10px" hidden>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><select id="hb-co" aria-label="출원인"></select><select id="hb-ly" aria-label="기술 층"></select></div>
           <div id="hb-out"></div></div>
-        <div class="card" id="hub-tool-gloss" style="margin-bottom:10px" hidden><div id="hub-gloss" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 16px"></div></div>
+        <div class="card" id="hub-tool-gloss" style="margin-bottom:10px" hidden><div id="hub-gloss" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:4px 16px"></div></div>
         <div class="chips" id="hub-site" style="margin-bottom:10px"></div>
         <div id="hub-co" style="margin-bottom:10px"></div>
         <div id="hub-cards"></div>
@@ -524,7 +529,7 @@ details.fold[open] > summary::after { content: "접기"; }
       <section id="pref-sec" class="full">
         <h2>특허 지형 <span class="b estimate">분기 큐레이션</span></h2>
         <p class="sub" id="pref-sub"></p>
-        <div class="ins" id="pref-dots" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))"></div>
+        <div class="ins" id="pref-dots" style="grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))"></div>
         <h3 style="margin:14px 0 8px;font-size:0.9rem">이벤트 타임라인</h3>
         <div id="pref-timeline"></div>
         <h3 style="margin:14px 0 8px;font-size:0.9rem">근거 커버리지</h3>
@@ -586,7 +591,7 @@ details.fold[open] > summary::after { content: "접기"; }
       <h2>점수 민감도 <span class="b estimate">가중치 시험</span></h2>
       <p class="sub" id="sens-sub"></p>
       <div class="chips" id="sens-presets" style="margin-bottom:8px"></div>
-      <div id="sens-sliders" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;margin-bottom:10px"></div>
+      <div id="sens-sliders" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:6px 18px;margin-bottom:10px"></div>
       <div class="list" id="sens"></div>
     </section>
   </div>
@@ -1153,7 +1158,7 @@ function renderPaperSignals(chartSel, subSel) {
   const base = P.baseline_growth;
   const rows = P.rows;
   const vals = rows.flatMap((r) => [r.a, r.b]).filter((v) => v > 0);
-  const lo = Math.log10(Math.max(1, Math.min(...vals))), hi = Math.log10(Math.max(...vals)), DW = 132;
+  const lo = Math.log10(Math.max(1, Math.min(...vals))), hi = Math.log10(Math.max(...vals)), DW = innerWidth < 400 ? 92 : 132;
   const pos = (v) => 6 + ((Math.log10(Math.max(v, 1)) - lo) / (hi - lo || 1)) * (DW - 12);
   const pl = Object.fromEntries(HUB().layers.filter((l) => l.paper).map((l) => [l.paper, l.id]));
   const ticks = [10, 100, 1000, 10000].filter((v) => v >= Math.pow(10, lo) && v <= Math.pow(10, hi));
