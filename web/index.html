@@ -92,14 +92,14 @@ button.row:hover { background: var(--raised); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 10px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
 .chip[aria-pressed="true"] { border-color: var(--ink); font-weight: 600; }
-.chip.co { padding: 2px 9px; font-size: 0.74rem; }
+.chip.co { padding: 3px 9px; font-size: 0.76rem; }
 select { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 10px; width: 100%; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 label.ctl { display: grid; grid-template-columns: 92px minmax(0, 1fr) 56px; gap: 10px; align-items: center; font-size: 0.84rem; color: var(--muted); }
 label.ctl output { text-align: right; color: var(--ink); font-weight: 600; }
 
 /* 배지 */
-.b { display: inline-flex; align-items: center; font-size: 0.68rem; font-weight: 600; padding: 2px 7px; border-radius: 6px; white-space: nowrap; letter-spacing: 0.02em; }
+.b { display: inline-flex; align-items: center; font-size: 0.72rem; font-weight: 600; padding: 2px 7px; border-radius: 6px; white-space: nowrap; letter-spacing: 0.02em; }
 .b.official { color: var(--good); background: color-mix(in oklab, var(--good) 13%, transparent); }
 .b.reported { color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, transparent); }
 .b.estimate { color: var(--warn); background: color-mix(in oklab, var(--warn) 14%, transparent); }
@@ -250,7 +250,47 @@ table.spec tr[data-co]:hover td { background: var(--raised); }
 table.spec td.na { color: var(--muted); }
 .yr { font-family: var(--font-data); font-size: 0.8rem; font-weight: 600; padding: 8px 14px; background: var(--raised); border-top: 1px solid var(--line); }
 .yr:first-child { border-top: 0; }
-footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; }
+footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; margin-top: 28px; }
+.themebtn { border: 1px solid var(--line); background: var(--surface); border-radius: 50%; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer; flex: none; }
+.themebtn svg.i { width: 18px; height: 18px; }
+.subnav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 54px); z-index: 5; background: var(--bg); padding: 8px 0; margin: -8px 0 -12px; overflow-x: auto; flex-wrap: nowrap; }
+details.fold > summary { list-style: none; cursor: pointer; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::after { content: "펼치기"; float: right; font-size: 0.74rem; color: var(--muted); font-weight: 400; }
+details.fold[open] > summary::after { content: "접기"; }
+.sheet details.fold { border-top: 1px solid var(--line); padding-top: 12px; }
+.sheet details.fold > summary h3 { display: inline; margin: 0; }
+.sumcard { display: grid; gap: 10px; padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+.sumcard .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.navbtns { display: flex; justify-content: space-between; gap: 8px; }
+.navbtns button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem; color: var(--muted); }
+.chart.rel { position: relative; }
+.tip { position: absolute; pointer-events: none; z-index: 3; background: var(--ink); color: var(--bg); font-size: 0.76rem; line-height: 1.45; padding: 7px 9px; border-radius: 8px; box-shadow: var(--shadow); max-width: 200px; }
+.chart circle.bub.dim { opacity: 0.18 !important; }
+.chart circle.bub.hl { stroke: var(--ink); stroke-width: 2.5; }
+.quad { fill: var(--muted); font-size: 10px; opacity: 0.8; }
+.steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; width: 120px; }
+.steps i { height: 6px; border-radius: 3px; background: var(--raised); border: 1px solid var(--line); }
+.steps i.on { background: var(--accent); border-color: var(--accent); }
+.tl { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.tl .col { min-width: 210px; flex: 1; display: grid; gap: 6px; align-content: start; }
+.tl .col h4 { margin: 0; font-family: var(--font-data); font-size: 0.82rem; }
+.tl .it { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 9px; font-size: 0.78rem; text-align: left; cursor: pointer; }
+.tl .it small { display: block; color: var(--muted); }
+.cmp { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.cmp th, .cmp td { padding: 6px 4px; border-top: 1px solid var(--line); text-align: right; }
+.cmp th:first-child, .cmp td:first-child { text-align: left; }
+.cmp tr.on td { font-weight: 700; }
+@media (min-width: 1100px) {
+  body { padding-left: 88px; }
+  .wrap { max-width: 1180px; }
+  main .panel { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; column-gap: 24px; }
+  main .panel > .seg, main .panel > .panel, main .panel > .full, main .panel > nav { grid-column: 1 / -1; }
+  .tabbar { top: 0; bottom: 0; right: auto; width: 88px; border-top: 0; border-right: 1px solid var(--line); padding-bottom: 0; }
+  .tabbar .in { grid-template-columns: 1fr; grid-auto-rows: 68px; height: auto; padding-top: 64px; }
+  .tabbar a[aria-current="page"]::before { top: auto; left: 0; width: 3px; height: 30px; border-radius: 0 3px 3px 0; }
+  main { padding-bottom: 48px; }
+}
 .warnbox { font-size: 0.8rem; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--bad); }
 </style>
 </head>
@@ -259,6 +299,7 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
   <div class="wrap">
     <div class="brand"><img src="icon.svg" alt=""><h1>로봇 레이더</h1></div>
     <div class="meta" id="meta">불러오는 중…</div>
+    <button class="themebtn" id="theme" aria-label="화면 테마 바꾸기" title="테마: 자동"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></svg></button>
   </div>
 </header>
 
@@ -277,6 +318,7 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
       <p class="sub" id="chg-sub"></p>
       <div class="chips" id="period" style="margin-bottom:10px"></div>
       <div class="kpis" id="chg-kpis"></div>
+      <div id="tile-detail" style="margin-top:10px" hidden></div>
     </section>
     <section id="digest-sec" hidden>
       <h2>이번 주 요약</h2>
@@ -366,7 +408,6 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
         <div class="chips" id="gaps"></div>
       </section>
     </div>
-    <footer class="note" id="foot"></footer>
   </div>
 
   <!-- 경쟁 지형 -->
@@ -379,7 +420,7 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
       <h2 id="map-title"></h2>
       <p class="sub" id="map-sub"></p>
       <div class="chips" id="groups" style="margin-bottom:10px"></div>
-      <div class="chart"><svg id="bubble" viewBox="0 0 360 320" role="img" aria-label="기업 위치 버블 차트"></svg>
+      <div class="chart rel" id="bubble-box"><svg id="bubble" viewBox="0 0 360 320" role="img" aria-label="기업 위치 버블 차트"></svg><div class="tip" id="bub-tip" hidden></div>
         <div class="legend" id="bubble-legend"></div></div>
     </section>
     <section>
@@ -397,12 +438,13 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
       <div class="card calc">
         <select id="c-item" aria-label="부품"></select>
         <div class="seg" role="group" aria-label="시나리오" id="c-scn"></div>
+        <div class="outs" id="c-out"></div>
+        <table class="cmp" id="c-cmp"></table>
         <label class="ctl">대당 수량<input type="range" id="c-qty" min="1" max="60" step="1"><output id="o-qty"></output></label>
         <label class="ctl">단가(USD)<input type="range" id="c-asp" min="10" max="3000" step="10"><output id="o-asp"></output></label>
         <label class="ctl">연 단가 하락<input type="range" id="c-dec" min="0" max="25" step="1"><output id="o-dec"></output></label>
         <label class="ctl">목표 점유율<input type="range" id="c-share" min="1" max="50" step="1"><output id="o-share"></output></label>
         <label style="display:flex;gap:8px;align-items:center;font-size:0.84rem"><input type="checkbox" id="c-exc"> 중국 외 고객만 (국내 부품사의 현실적 접근 시장)</label>
-        <div class="outs" id="c-out"></div>
         <svg id="c-chart" viewBox="0 0 360 150" role="img" aria-label="연도별 매출 기회"></svg>
         <p class="sub" style="margin:0" id="c-note"></p>
       </div>
@@ -412,7 +454,7 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
       <p class="sub" id="bom-sub"></p>
       <div class="chart" id="bom"></div>
     </section>
-    <section>
+    <section class="full">
       <h2>로봇 스펙 비교</h2>
       <p class="sub" id="spec-sub"></p>
       <div class="card" style="padding:0;overflow-x:auto"><table class="spec" id="spec"></table></div>
@@ -425,6 +467,7 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
     <section>
       <h2>부품별 진입 지도</h2>
       <p class="sub">기존 공급사와 국내 후보. 빨간 점선은 국내 공급 레퍼런스가 확인되지 않은 공백 품목입니다</p>
+      <div class="chips" id="comp-filter" style="margin-bottom:10px"></div>
       <div class="ins" id="comps"></div>
     </section>
   </div>
@@ -447,9 +490,14 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
       <div class="list" id="prod"></div>
     </section>
     <section>
+      <h2>말한 대로 만드는가 (Say-Do)</h2>
+      <p class="sub">실행 신뢰도 점수(과거 발표 대비 달성 이력, 20점 만점)와 확인된 목표·실적. 낮을수록 발표 물량을 할인해 봐야 합니다</p>
+      <div class="chart" id="saydo"></div>
+    </section>
+    <section class="full">
       <h2>다가오는 마일스톤</h2>
-      <p class="sub">양산·배치·제품 일정 (계획 단계)</p>
-      <div class="list" id="miles"></div>
+      <p class="sub">양산·배치·제품 일정 (계획 단계) — 옆으로 넘겨 보세요</p>
+      <div class="tl" id="miles"></div>
     </section>
   </div>
 
@@ -458,12 +506,13 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
     <section id="quotes-sec" hidden>
       <h2>관련 상장사 주가</h2>
       <p class="sub" id="quotes-sub"></p>
+      <div class="chips" id="q-sort" style="margin-bottom:10px"></div>
       <div class="list" id="quotes"></div>
     </section>
     <section>
       <h2>IPO 파이프라인</h2>
-      <p class="sub">상장 단계별 기업. 탭하면 상세</p>
-      <div class="list kanban" id="kanban"></div>
+      <p class="sub">비상장 → IPO 준비 → 신청·심사 → 공모 → 상장. 상장사 사업부·자회사(테슬라·현대차 등)는 제외</p>
+      <div class="list" id="kanban"></div>
     </section>
     <section>
       <h2>출하 1대당 밸류</h2>
@@ -484,12 +533,17 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
 
   <!-- 전략 -->
   <div class="panel" id="p-strat" data-panel hidden>
-    <section>
+    <nav class="chips subnav" aria-label="전략 탭 바로가기">
+      <button class="chip" data-jump="s-opts">의사결정</button><button class="chip" data-jump="s-signs">신호</button>
+      <button class="chip" data-jump="s-cty">국가</button><button class="chip" data-jump="s-apps">용도</button>
+      <button class="chip" data-jump="s-tech">기술 로드맵</button><button class="chip" data-jump="s-rm">제품 로드맵</button>
+    </nav>
+    <section id="s-opts">
       <h2>진입 방식 비교</h2>
       <p class="sub">한국 부품사가 휴머노이드 시장에 들어가는 다섯 가지 방법. 고르면 아래 계산기 기본값이 바뀝니다</p>
       <div class="ins" id="opts"></div>
     </section>
-    <section>
+    <section id="s-npv">
       <h2>투자 회수 계산기</h2>
       <p class="sub">2026~2030 영업이익으로 초기 투자를 회수하는지. 매출은 부품 탭 계산기 결과를 그대로 씁니다</p>
       <div class="card calc">
@@ -501,36 +555,37 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
         <p class="sub" style="margin:0" id="n-note"></p>
       </div>
     </section>
-    <section>
+    <section id="s-signs">
       <h2>주시할 신호</h2>
       <p class="sub">일어나면 전략을 바꿔야 하는 사건과 대응</p>
       <div class="ins" id="signs"></div>
     </section>
-    <section>
+    <section id="s-cty">
       <h2>국가 경쟁력</h2>
       <p class="sub">6개 축 0~10점(공개 정보 기반 분석). 칩을 눌러 강조</p>
       <div class="chips" id="cty-chips" style="margin-bottom:10px"></div>
       <div class="chart"><svg id="radar" class="radar" viewBox="0 0 360 300" role="img" aria-label="국가 경쟁력 레이더"></svg></div>
       <div class="ins" id="cty" style="margin-top:10px"></div>
     </section>
-    <section>
+    <section id="s-apps" class="full">
       <h2>용도별 집중도</h2>
       <p class="sub">기업이 어느 현장을 노리는지(진할수록 집중). 아래는 용도별 상용화 시점</p>
       <div class="card" style="padding:10px 8px"><table class="heat" id="heat"></table></div>
       <div class="list" id="apps" style="margin-top:10px"></div>
     </section>
-    <section>
+    <section id="s-tech" class="full">
       <h2>기술 로드맵</h2>
       <p class="sub">산업 공통 기술 스택의 진화와 부품사에 주는 의미</p>
       <div class="ins" id="tech"></div>
     </section>
-    <section>
+    <section id="s-rm" class="full">
       <h2>제품·사업 로드맵</h2>
       <p class="sub">27개사 로드맵을 연도별로. 빨간색은 지연·변경</p>
       <div class="chips" id="rm-filter" style="margin-bottom:10px"></div>
       <div class="list" id="rm"></div>
     </section>
   </div>
+  <footer class="note" id="foot"></footer>
 </main>
 
 <nav class="tabbar" aria-label="화면">
@@ -590,13 +645,14 @@ const pct = (v) => (v == null ? "-" : `<span class="${v >= 0 ? "up" : "down"}">$
 const newsTitle = (x) => esc(x.title_ko || x.title);
 function newsRow(x, chips = true) {
   const imp = x.importance >= 3 ? '<span class="imp3">핵심</span>' : x.importance === 2 ? '<span class="b reported">주목</span>' : "";
-  return `<div class="ev"><span class="d">${esc(x.date.slice(2).replace(/-/g, "."))}</span><span class="t">${newsTitle(x)}${x.summary_ko ? `<small>${esc(x.summary_ko)}</small>` : ""}</span>
+  return `<div class="ev"><span class="d">${esc(x.date.slice(2).replace(/-/g, "."))}</span><span class="t">${newB(x.date)} ${newsTitle(x)}${x.summary_ko ? `<small>${esc(x.summary_ko)}</small>` : ""}</span>
     <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${link(x.url, "원문")}</span></div>`;
 }
 const ROLE_BY_TYPE = { funding: ["exec"], ipo: ["exec"], policy: ["exec"], org: ["exec"], production: ["exec", "strategy"],
   product: ["strategy", "engineer"], deploy: ["strategy"], partner: ["exec", "strategy"], supply: ["exec", "engineer"], other: [] };
 const roleOf = (x) => (x.ai ? (x.audience?.length ? x.audience : ROLE_BY_TYPE[x.type] || []) : ["exec"]);
 const ROLE_NAME = { exec: "경영진", strategy: "기술전략", engineer: "엔지니어" };
+const ROLE_SUBJ = { exec: "경영진이", strategy: "기술전략팀이", engineer: "엔지니어가" };
 const LAYER = { actuator: "액추에이터", hand: "손", battery: "배터리", sensor: "센서", ai: "AI·칩", safety: "안전·표준", cost: "원가" };
 const CHG_KIND = { tier: "Tier", score: "점수", attract: "매력도", listing: "상장", fact: "수치", roadmap: "로드맵", signpost: "신호", spec: "스펙" };
 const TYPE_RM = { product: "제품", production: "양산", deploy: "배치", ipo: "상장", funding: "자금", partner: "제휴", org: "조직" };
@@ -624,9 +680,32 @@ function renderHome() {
   const key = news.filter((x) => x.importance >= 3);
   const spMoves = (D.news || []).filter((x) => x.date >= start && x.signpost);
   $("#chg-sub").textContent = `${ROLE_NAME[role]} 관점 · ${start.slice(5).replace("-", "/")} 이후`;
-  const tiles = [["데이터 변화", `${chg.length}건`], ["소식", `${news.length}건`], ["핵심 소식", `${key.length}건`],
-    role === "engineer" ? ["스펙 변화", `${chg.filter((c) => c.kind === "spec").length}건`] : ["신호 관련 소식", `${spMoves.length}건`]];
-  $("#chg-kpis").innerHTML = tiles.map(([l, v]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span></div>`).join("");
+  // 숫자 타일: 누르면 무엇을 센 숫자인지 설명 + 해당 항목을 바로 아래에 펼친다
+  const chgRow = (c) => `<div class="ev"><span class="d">${esc(c.date.slice(2).replace(/-/g, "."))}</span><span class="t">${esc(c.title)}</span><span class="m"><span class="b t3">${CHG_KIND[c.kind] || c.kind}</span>${c.company ? coChip(c.company) : ""}</span></div>`;
+  const specChg = chg.filter((c) => c.kind === "spec");
+  const tiles = [
+    { id: "chg", label: "데이터 변화", items: chg, row: chgRow,
+      help: "큐레이션 기준값이 이 기간에 바뀐 기록입니다. 점수·Tier·상장 단계·핵심 수치(밸류·출하 등)·로드맵 상태·신호 상태·로봇 스펙이 바뀌면 하루 단위로 쌓입니다." },
+    { id: "news", label: "소식", items: news, row: (x) => newsRow(x),
+      help: `이 기간 자동 수집된 기사 중 ${ROLE_SUBJ[role]} 볼 것으로 분류된 기사입니다. AI 가 대상(경영진·기술전략·엔지니어)을 붙이고, AI 분류 전 기사는 유형으로 추정합니다.` },
+    { id: "key", label: "핵심 소식", items: key, row: (x) => newsRow(x),
+      help: "위 소식 중 AI 가 중요도 3(의사결정에 영향 — 1억 달러 이상 조달, 상장 단계 변화, 양산 일정 변경, 대형 고객 계약, 규제 통과)으로 매긴 기사입니다." },
+    role === "engineer"
+      ? { id: "spec", label: "스펙 변화", items: specChg, row: chgRow,
+          help: "추적 중인 로봇 14종의 스펙(키·무게·자유도·손 자유도·가반하중·작동시간·가격·구동 방식)이 바뀐 기록입니다. 전체 표는 부품 탭에 있습니다." }
+      : { id: "sign", label: "신호 관련 소식", items: spMoves, row: (x) => newsRow(x),
+          help: "전략 탭의 '주시할 신호'(테슬라 외부 판매, 미국 규제, 현대차 RFQ 등)와 AI 가 직접 관련 있다고 짝지은 기사입니다." },
+  ];
+  const openTile = store.get("tile", null);
+  $("#chg-kpis").innerHTML = tiles.map((t) => `<button class="kpi" data-tile="${t.id}" aria-expanded="${openTile === t.id}" style="cursor:pointer${openTile === t.id ? ";border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)" : ""}">
+    <span class="l">${t.label} <span aria-hidden="true">ⓘ</span></span><span class="v">${t.items.length}건</span><span class="s">${openTile === t.id ? "접기" : "눌러서 보기"}</span></button>`).join("");
+  const ot = tiles.find((t) => t.id === openTile);
+  $("#tile-detail").hidden = !ot;
+  if (ot) {
+    $("#tile-detail").innerHTML = `<p class="sub" style="margin:0 0 8px">${esc(ot.help)}</p>
+      <div class="list news">${ot.items.slice(0, 8).map(ot.row).join("") || `<div class="empty">${start.slice(5).replace("-", "/")} 이후로는 해당 항목이 없습니다</div>`}</div>
+      ${ot.items.length > 8 ? `<p class="sub" style="margin:6px 0 0">외 ${ot.items.length - 8}건은 아래 목록에서 볼 수 있습니다</p>` : ""}`;
+  }
 
   // 주간 다이제스트
   const dg = D.digest, dr = dg?.roles?.[role];
@@ -647,7 +726,7 @@ function renderHome() {
 
   // 역할별 소식
   const m = D.news_meta || {};
-  $("#rnews-title").textContent = `${ROLE_NAME[role]}이 볼 소식`;
+  $("#rnews-title").textContent = `${ROLE_SUBJ[role]} 볼 소식`;
   $("#news-sub").textContent = `${m.ai === "gemini" ? "Gemini 가 대상·중요도를 분류" : "AI 분류 없이 제목만"} · 매일 아침 자동 수집${(m.warnings || []).length ? " · " + m.warnings.join(" ") : ""}`;
   const nf = store.get(`nf-${role}`, "all");
   const filters = role === "engineer" ? [["all", "전체"], ...Object.entries(LAYER)] : [["all", "전체"], ["imp", "주목 이상"]];
@@ -683,12 +762,12 @@ function renderExec() {
     ? "한국 제조·부품사가 누구에게, 어떤 부품으로, 언제 들어갈지"
     : "돈을 넣는다면 어디에, 어떤 방식이 비용 대비 효율적인지";
   $("#insights").innerHTML = D.insights.filter((i) => i.lens === lens).map((i) => `
-    <article class="card">
-      <h3>${esc(i.title)}</h3>
-      <p>${esc(i.body)}</p>
-      <div class="act"><b>권고</b>${esc(i.action)}</div>
-      <div class="foot"><span class="b ${i.conf}">${CONF[i.conf]}</span>${i.evidence.map(coChip).join("")}</div>
-    </article>`).join("");
+    <details class="card fold">
+      <summary><h3 style="display:inline">${esc(i.title)}</h3></summary>
+      <div class="act" style="margin-top:8px"><b>권고</b>${esc(i.action)}</div>
+      <p style="margin-top:8px">${esc(i.body)}</p>
+      <div class="foot" style="margin-top:8px"><span class="b ${i.conf}">${CONF[i.conf]}</span>${i.evidence.map(coChip).join("")}</div>
+    </details>`).join("");
   $("#events").innerHTML = D.events.slice(0, 10).map((e) => `
     <div class="ev"><span class="d">${esc(e.date.slice(2).replace(/-/g, "."))}</span><span class="t">${esc(e.title)}</span>
       <span class="m">${kindB(e.kind)}${e.ids.map(coChip).join("")}${link(e.src)}</span></div>`).join("");
@@ -772,6 +851,11 @@ function renderMap() {
   g += `<text x="${L}" y="${T - 2}">${attract ? "↑ 접근성" : "↑ 기술"}</text>`;
   const pts = list.map((c) => ({ c, x: sx(c.scores.scale[0]), y: sy(yOf(c)), r: 4 + c.scores.capital[0] * 0.45 }))
     .sort((a, b) => b.r - a.r);
+  const xm = sx(xMax / 2), ym = sy((yMin + yMax) / 2);
+  g += `<line x1="${xm}" x2="${xm}" y1="${T}" y2="${H - B}" style="stroke:var(--muted);stroke-dasharray:3 4;opacity:.5"/><line x1="${L}" x2="${W - R}" y1="${ym}" y2="${ym}" style="stroke:var(--muted);stroke-dasharray:3 4;opacity:.5"/>`;
+  const Q = attract ? ["접근 쉬움 · 물량 적음", "핵심 고객", "후순위", "물량 많음 · 접근 어려움"] : ["기술 선도", "리더", "추격", "양산 선도"];
+  g += `<text class="quad" x="${L + 4}" y="${T + 10}">${Q[0]}</text><text class="quad" x="${W - R - 4}" y="${T + 10}" text-anchor="end">${Q[1]}</text>`
+    + `<text class="quad" x="${L + 4}" y="${H - B - 4}">${Q[2]}</text><text class="quad" x="${W - R - 4}" y="${H - B - 4}" text-anchor="end">${Q[3]}</text>`;
   g += pts.map((p) => `<circle class="bub${p.c.group === "brain" ? " brain" : ""}" data-co="${esc(p.c.id)}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}" style="fill:${cColor(p.c.country)};${p.c.group === "brain" ? `stroke:${cColor(p.c.country)}` : ""};opacity:.85"><title>${esc(p.c.name_ko)}</title></circle>`).join("");
   // 라벨: 오른쪽 → 왼쪽 → 위 → 아래 순으로 빈 자리를 찾고, 없으면 생략(아래 순위 목록에 모두 있음)
   const boxes = [];
@@ -852,6 +936,9 @@ function renderCalc() {
     ["2030 우리 매출 기회", usd(last.ours)],
     ["2026~30 누적 매출", usd(sum)],
   ];
+  const cmp = ["bear", "base", "bull"].map((k) => { const rs = calcRows({ ...st, scn: k }); return [k, rs.at(-1).ours, rs.reduce((a, r) => a + r.ours, 0)]; });
+  $("#c-cmp").innerHTML = `<tr><th>시나리오 비교</th><th>2030 매출</th><th>5년 누적</th></tr>` + cmp.map(([k, y30, sum]) =>
+    `<tr class="${k === st.scn ? "on" : ""}"><td>${D.scenarios[k].label}</td><td class="num">${usd(y30)}</td><td class="num">${usd(sum)}</td></tr>`).join("");
   $("#c-out").innerHTML = out.map(([l, v]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span></div>`).join("");
   const W = 360, H = 150, B = 18, T = 14, max = Math.max(...rows.map((r) => r.ours)) || 1, bw = 44;
   $("#c-chart").innerHTML = rows.map((r, i) => {
@@ -895,14 +982,18 @@ function renderParts() {
   $("#bom-sub").textContent = `대당 BOM 약 $${D.bom.unit_bom_2026.toLocaleString()}(2026 추정) 중 비중. 액추에이터 계열(감속기·모터·스크류·드라이버·엔코더)이 절반 이상`;
   $("#bom").innerHTML = items.map((i) => `<div class="hbar"><span class="n">${esc(i.name)}</span><span class="track"><i style="width:${(i.share / max) * 100}%"></i></span><span class="v">${Math.round(i.share * 100)}%</span></div>`).join("")
     + `<p class="sub" style="margin:8px 4px 0">${esc(D.bom._note)} ${link(D.bom.src)}</p>`;
-  $("#comps").innerHTML = D.bom.items.map((i) => `
-    <article class="card comp">
-      <div class="hd"><b>${esc(i.name)}</b><span class="b ${i.barrier}">${BARRIER[i.barrier]}</span>${i.kr.length ? "" : `<span class="b gap">국내 후보 없음</span>`}</div>
+  const cf = store.get("compFilter", "all");
+  const CF = [["all", "전체"], ["gap", "국내 공백만"], ["H", "진입 난도 상"], ["kr", "국내 후보 있음"]];
+  $("#comp-filter").innerHTML = CF.map(([id, l]) => `<button class="chip" data-cf="${id}" aria-pressed="${id === cf}">${l}</button>`).join("");
+  const comps = D.bom.items.filter((i) => cf === "all" || (cf === "gap" ? !i.kr.length : cf === "kr" ? i.kr.length : i.barrier === cf));
+  $("#comps").innerHTML = comps.map((i) => `
+    <details class="card comp fold">
+      <summary class="hd"><b>${esc(i.name)}</b><span class="b ${i.barrier}">${BARRIER[i.barrier]}</span>${i.kr.length ? `<span class="b official">국내 ${i.kr.length}</span>` : `<span class="b gap">국내 후보 없음</span>`}${i.module ? "" : `<span class="muted" style="font-size:.76rem">비중 ${Math.round(i.share * 100)}% · $${i.asp.toLocaleString()}</span>`}</summary>
       <div class="kv">${i.module ? "<span>구성 부품을 묶은 모듈 단위</span>" : `<span>비중 <b>${Math.round(i.share * 100)}%</b></span><span>대당 <b>${i.qty}</b>개</span><span>개당 <b>$${i.asp.toLocaleString()}</b></span><span>연 하락 <b>${Math.round(i.decline * 100)}%</b></span>`}</div>
       <div class="who"><span class="k">기존</span>${esc(i.incumbents.join(" · "))}</div>
       ${i.kr.length ? `<div class="who"><span class="k">국내</span>${i.kr.map((k) => `<b>${esc(k.name)}</b> <span class="b ${k.status.includes("레퍼런스") || k.status === "진출" ? "official" : "estimate"}">${esc(k.status)}</span> <span class="muted">${esc(k.note)}</span>`).join("<br>")}</div>` : ""}
       ${i.note ? `<div class="who muted">${esc(i.note)}</div>` : ""}
-    </article>`).join("");
+    </details>`).join("") || '<div class="empty">조건에 맞는 부품이 없습니다</div>';
 }
 
 // ---------- 양산 ----------
@@ -939,7 +1030,17 @@ function renderProd() {
   }).join("");
   const miles = D.companies.flatMap((c) => c.roadmap.filter((r) => r.status === "planned" && ["production", "deploy", "product"].includes(r.type)).map((r) => ({ ...r, c })))
     .sort((a, b) => a.when.localeCompare(b.when));
-  $("#miles").innerHTML = miles.map((m) => `<button class="row" data-co="${esc(m.c.id)}"><span class="t">${esc(m.title)}</span><span class="r mono muted">${esc(m.when)}</span><span class="s">${esc(m.c.name_ko)}</span></button>`).join("");
+  const byYear = {};
+  for (const m of miles) (byYear[m.when.slice(0, 4)] ||= []).push(m);
+  $("#miles").innerHTML = Object.entries(byYear).map(([y, ms]) => `<div class="col"><h4>${y} <span class="muted" style="font-weight:400">${ms.length}</span></h4>
+    ${ms.map((m) => `<button class="it" data-co="${esc(m.c.id)}">${esc(m.title)}<small>${esc(m.c.name_ko)} · ${esc(m.when)}</small></button>`).join("")}</div>`).join("");
+  const sd = D.companies.filter((c) => c.group === "body" && !c.kr_watch).sort((a, b) => b.scores.execution[0] - a.scores.execution[0]);
+  $("#saydo").innerHTML = sd.map((c) => {
+    const e = c.scores.execution[0], pr = (c.production || []).find((r) => r.target && r.actual);
+    const col = e >= 15 ? "var(--good)" : e >= 10 ? "var(--warn)" : "var(--bad)";
+    return `<div class="hbar" data-co="${esc(c.id)}" style="cursor:pointer;grid-template-columns:110px minmax(0,1fr) 40px"><span class="n">${esc(c.name_ko.replace(/\(.*\)/, ""))}</span><span class="track"><i style="width:${(e / 20) * 100}%;background:${col}"></i></span><span class="v">${e}</span></div>
+      <p class="sub" style="margin:-2px 4px 6px 120px;font-size:.74rem">${pr ? `${pr.year} 목표 ${units(pr.target)} · 실적 ${units(pr.actual)} (${Math.round((pr.actual / pr.target) * 100)}%) · ` : ""}${esc(c.scores.execution[1] || "")}</p>`;
+  }).join("");
 }
 
 // ---------- 자본·IPO ----------
@@ -947,21 +1048,29 @@ function renderCapital() {
   const qs = Object.entries(D.quotes || {}).filter(([id]) => byId[id]);
   $("#quotes-sec").hidden = !qs.length;
   $("#quotes-sub").textContent = "최근 3개월 종가 추이 · 1주·1개월 변화 (Yahoo Finance, 매일 갱신)";
-  $("#quotes").innerHTML = qs.sort((a, b) => Math.abs(b[1].chg_1w ?? 0) - Math.abs(a[1].chg_1w ?? 0)).map(([id, q]) => `
+  const qsort = store.get("qsort", "1w");
+  $("#q-sort").innerHTML = [["1w", "1주 변화 큰 순"], ["1m", "1개월 변화 큰 순"], ["name", "이름순"]].map(([k, l]) => `<button class="chip" data-qs="${k}" aria-pressed="${k === qsort}">${l}</button>`).join("");
+  const qkey = { "1w": (q) => -Math.abs(q.chg_1w ?? 0), "1m": (q) => -Math.abs(q.chg_1m ?? 0) }[qsort];
+  qs.sort((a, b) => (qkey ? qkey(a[1]) - qkey(b[1]) : byId[a[0]].name_ko.localeCompare(byId[b[0]].name_ko)));
+  $("#quotes").innerHTML = qs.map(([id, q]) => `
     <button class="row" data-co="${esc(id)}" style="grid-template-columns:minmax(0,1fr) auto auto">
       <span class="t">${esc(byId[id].name_ko)} <span class="mono muted" style="font-size:.74rem">${esc(q.symbol)}</span></span>
       ${spark(q.spark)}
       <span class="r"><b class="num">${q.last.toLocaleString("ko-KR")}</b> <span class="muted" style="font-size:.72rem">${esc(q.currency || "")}</span><br><span style="font-size:.76rem">1주 ${pct(q.chg_1w)} · 1개월 ${pct(q.chg_1m)}</span></span>
       ${q.note ? `<span class="s">${esc(q.note)}</span>` : ""}</button>`).join("");
-  const stages = [1, 2, 3, 4];
-  $("#kanban").innerHTML = stages.map((s) => {
-    const cs = D.companies.filter((c) => c.listing.stage === s);
-    return `<div class="stage"><span class="h">${esc(D.ipo_stages[s])}<small>${cs.length}곳</small></span><span class="chips">${cs.map((c) => coChip(c.id)).join("") || '<span class="muted" style="font-size:.8rem">없음</span>'}</span></div>`;
-  }).join("") + `<div class="stage"><span class="h">비상장<small>${D.companies.filter((c) => c.listing.stage === 0).length}곳</small></span><span class="chips">${D.companies.filter((c) => c.listing.stage === 0).map((c) => coChip(c.id)).join("")}</span></div>`;
+  const ipo = D.companies.filter((c) => c.listing.stage <= 4).sort((a, b) => b.listing.stage - a.listing.stage || b.calc.total - a.calc.total);
+  $("#kanban").innerHTML = ipo.map((c) => `<button class="row" data-co="${esc(c.id)}" style="grid-template-columns:minmax(0,1fr) auto">
+    <span class="t">${esc(c.name_ko)} ${c.listing.ticker ? `<span class="mono muted" style="font-size:.72rem">${esc(c.listing.ticker)}</span>` : ""}</span>
+    <span class="steps" aria-label="${esc(D.ipo_stages[c.listing.stage])}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k <= c.listing.stage ? "on" : ""}"></i>`).join("")}</span>
+    <span class="s">${esc(c.listing.label)}${c.listing.note ? ` — ${esc(c.listing.note)}` : ""}</span></button>`).join("");
 
   const vpu = D.companies.filter((c) => c.calc.val_per_unit).sort((a, b) => b.calc.val_per_unit - a.calc.val_per_unit);
   const lmax = Math.log10(vpu[0]?.calc.val_per_unit || 10), lmin = Math.log10(Math.min(...vpu.map((c) => c.calc.val_per_unit))) - 0.3;
   $("#vpu").innerHTML = vpu.map((c) => `<div class="hbar" data-co="${esc(c.id)}" style="cursor:pointer"><span class="n"><i class="dot" style="background:${cColor(c.country)}"></i> ${esc(c.name_ko)}</span><span class="track"><i style="width:${((Math.log10(c.calc.val_per_unit) - lmin) / (lmax - lmin)) * 100}%;background:${cColor(c.country)}"></i></span><span class="v">${usd(c.calc.val_per_unit)}</span></div>`).join("")
+    + (() => {
+      const ticks = [1e5, 1e6, 1e7, 1e8].filter((t) => Math.log10(t) >= lmin && Math.log10(t) <= lmax + 0.01);
+      return `<div style="display:grid;grid-template-columns:128px minmax(0,1fr) 64px;gap:10px;padding:0 4px"><span></span><span style="position:relative;height:14px;font-size:.68rem;color:var(--muted)">${ticks.map((t) => `<span style="position:absolute;left:${((Math.log10(t) - lmin) / (lmax - lmin)) * 100}%;translate:-50% 0">${usd(t)}</span>`).join("")}</span><span></span></div>`;
+    })()
     + `<p class="sub" style="margin:8px 4px 0">로그 눈금. 밸류 ${vpu.map((c) => `${c.name_ko} ${usdM(c.valuation.v)}/${units(c.calc.units)}`).join(" · ")}</p>`;
 
   const vals = D.companies.filter((c) => c.valuation?.v).sort((a, b) => b.valuation.v - a.valuation.v);
@@ -1095,23 +1204,40 @@ function openSheet(id) {
   const props = (D.proposals || []).filter((p) => p.company === id);
   const srcs = [...new Set([c.src, c.listing.src, c.sourcing?.src, ...FACTS.map(([k]) => c[k]?.src), ...(c.funding || []).map((r) => r.src)].filter(safeUrl))];
   $("#sh-title").innerHTML = `${esc(c.name_ko)} ${tierB(c)}<small>${esc(c.name)} · ${esc(COUNTRY[c.country] || c.country)} · ${esc(c.listing.label)}${c.listing.ticker ? ` (${esc(c.listing.ticker)})` : ""}</small>`;
+  const order = D.companies.map((x) => x.id), at = order.indexOf(id);
+  const prev = byId[order[(at - 1 + order.length) % order.length]], next = byId[order[(at + 1) % order.length]];
+  const keyFact = ["cum_units", "valuation", "capacity", "funding_total"].find((k) => c[k]?.v != null);
+  const kf = keyFact ? FACTS.find(([k]) => k === keyFact) : null;
+  const lastChg = (D.changes || []).find((x) => x.company === id);
+  const lastNews = nws[0];
+  const specs = (D.specs?.models || []).filter((m) => m.company === id);
+  const fold = (title, body, open = false) => (body ? `<details class="fold"${open ? " open" : ""}><summary><h3>${title}</h3></summary><div style="margin-top:8px">${body}</div></details>` : "");
   $("#sh-body").innerHTML = `
-    <p style="margin:0">${esc(c.one_liner)}</p>
-    <div><h3>경쟁력 ${c.calc.total}점 · Tier ${c.calc.tier}</h3>${scoreRows(["tech", "scale", "capital", "execution"])}</div>
-    ${c.calc.attract != null ? `<div><h3>고객 매력도 ${c.calc.attract}점 <span class="muted" style="font-weight:400;font-size:.78rem">양산·자본은 위 점수 그대로</span></h3>${scoreRows(["open", "geo"])}</div>` : ""}
-    ${facts ? `<div><h3>핵심 수치</h3><div class="facts">${facts}</div></div>` : ""}
-    ${props.length ? `<div><h3>검증 대기 (AI 추출)</h3>${props.map((p) => `<div class="rm"><span class="w">${esc(p.date)}</span><span>${FIELD[p.field]} ${fmtUnit(p.curated, p.unit)} → <b>${fmtUnit(p.proposed, p.unit)}</b></span><span>${link(p.url, "원문")}</span></div>`).join("")}</div>` : ""}
-    ${q ? `<div><h3>주가 <span class="muted mono" style="font-weight:400;font-size:.78rem">${esc(q.symbol)} ${esc(q.note || "")}</span></h3><div style="display:flex;align-items:center;gap:12px;font-size:.85rem">${spark(q.spark)}<span><b class="num">${q.last.toLocaleString("ko-KR")}</b> ${esc(q.currency || "")} · 1주 ${pct(q.chg_1w)} · 1개월 ${pct(q.chg_1m)} <span class="muted">(${esc(q.date)})</span></span></div></div>` : ""}
-    ${nws.length ? `<div><h3>최근 소식</h3><div class="list news">${nws.map((x) => newsRow(x, false)).join("")}</div></div>` : ""}
-    ${c.listing.note ? `<div><h3>상장</h3><p style="margin:0;font-size:.85rem">${esc(c.listing.note)} ${link(c.listing.src)}</p></div>` : ""}
-    ${c.sourcing?.mode ? `<div><h3>부품 조달 구조</h3><p style="margin:0 0 6px;font-size:.85rem"><b>${esc(c.sourcing.mode)}</b></p>${c.sourcing.suppliers.length ? `<ul class="plain">${c.sourcing.suppliers.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}${c.sourcing.note ? `<p class="sub" style="margin:6px 0 0">${esc(c.sourcing.note)} ${link(c.sourcing.src)}</p>` : ""}</div>` : ""}
-    ${c.customers.length || c.partners.length ? `<div><h3>고객 · 파트너</h3><ul class="plain">${c.customers.map((x) => `<li>${esc(x)}</li>`).join("")}${c.partners.map((x) => `<li class="muted">${esc(x)}</li>`).join("")}</ul></div>` : ""}
-    ${c.products.length ? `<div><h3>제품</h3><ul class="plain">${c.products.map((p) => `<li><b>${esc(p.name)}</b> <span class="muted">${esc(p.year)} ${esc(p.note)}</span></li>`).join("")}</ul></div>` : ""}
-    ${c.roadmap.length ? `<div><h3>로드맵</h3>${c.roadmap.map((r) => `<div class="rm"><span class="w">${esc(r.when)}</span><span>${esc(r.title)}</span><span class="st-${r.status}" style="font-size:.74rem">${{ done: "완료", planned: "계획", delayed: "지연·변경" }[r.status]}</span></div>`).join("")}</div>` : ""}
-    ${(c.funding || []).length ? `<div><h3>자금 조달</h3>${c.funding.map((r) => `<div class="rm"><span class="w">${esc(r.date)}</span><span>${esc(r.round)} ${r.val ? `<span class="muted">밸류 ${usdM(r.val)}</span>` : ""}</span><span class="num">${usdM(r.amount)}</span></div>`).join("")}</div>` : ""}
-    ${c.risks.length ? `<div><h3>리스크</h3><ul class="plain">${c.risks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
-    ${evs.length ? `<div><h3>관련 이벤트</h3>${evs.map((e) => `<div class="rm"><span class="w">${esc(e.date)}</span><span>${esc(e.title)}</span><span>${link(e.src)}</span></div>`).join("")}</div>` : ""}
-    ${srcs.length ? `<div><h3>출처</h3><ul class="plain">${srcs.map((u) => `<li>${link(u, new URL(u).hostname.replace(/^www\./, ""))}</li>`).join("")}</ul></div>` : ""}`;
+    <div class="sumcard">
+      <p style="margin:0">${esc(c.one_liner)}</p>
+      <div class="kpis">
+        <div class="kpi"><span class="l">경쟁력</span><span class="v">${c.calc.total}<span class="muted" style="font-size:.8rem"> · T${c.calc.tier}</span></span></div>
+        <div class="kpi"><span class="l">고객 매력도</span><span class="v">${c.calc.attract ?? "–"}</span></div>
+        <div class="kpi"><span class="l">${kf ? kf[1] : "핵심 수치"}</span><span class="v" style="font-size:1.05rem">${kf ? kf[2](c[keyFact].v) : "–"}</span></div>
+      </div>
+      ${lastChg ? `<span style="font-size:.82rem"><span class="b t3">최근 변화</span> ${esc(lastChg.date.slice(5))} ${esc(lastChg.title)}</span>` : ""}
+      ${lastNews ? `<span style="font-size:.82rem"><span class="b reported">최근 소식</span> ${esc(lastNews.date.slice(5))} ${newsTitle(lastNews)} ${link(lastNews.url, "원문")}</span>` : ""}
+      <div class="navbtns"><button data-co="${esc(prev.id)}">← ${esc(prev.name_ko)}</button><button data-co="${esc(next.id)}">${esc(next.name_ko)} →</button></div>
+    </div>
+    ${fold(`점수 근거 <span class="muted" style="font-weight:400;font-size:.78rem">경쟁력 ${c.calc.total} · 매력도 ${c.calc.attract ?? "–"}</span>`, scoreRows(["tech", "scale", "capital", "execution"]) + (c.calc.attract != null ? `<p class="sub" style="margin:8px 0 4px">고객 매력도 = 양산 + 자본 + 아래 두 축</p>${scoreRows(["open", "geo"])}` : ""))}
+    ${fold("핵심 수치", facts ? `<div class="facts">${facts}</div>` : "", true)}
+    ${fold("검증 대기 (AI 추출)", props.map((p) => `<div class="rm"><span class="w">${esc(p.date)}</span><span>${FIELD[p.field]} ${fmtUnit(p.curated, p.unit)} → <b>${fmtUnit(p.proposed, p.unit)}</b></span><span>${link(p.url, "원문")}</span></div>`).join(""), true)}
+    ${fold(`최근 소식 ${nws.length}건`, nws.length ? `<div class="list news">${nws.map((x) => newsRow(x, false)).join("")}</div>` : "", true)}
+    ${q ? fold(`주가 <span class="muted mono" style="font-weight:400;font-size:.78rem">${esc(q.symbol)}</span>`, `<div style="display:flex;align-items:center;gap:12px;font-size:.85rem">${spark(q.spark)}<span><b class="num">${q.last.toLocaleString("ko-KR")}</b> ${esc(q.currency || "")} · 1주 ${pct(q.chg_1w)} · 1개월 ${pct(q.chg_1m)} <span class="muted">(${esc(q.date)} ${esc(q.note || "")})</span></span></div>`, true) : ""}
+    ${fold("로봇 스펙", specs.map((m) => `<div class="rm"><span class="w">${esc(m.model)}</span><span>${D.specs.fields.filter((f) => m[f.id] != null).map((f) => `${esc(f.label)} ${f.id === "price_usd" ? usd(m[f.id]) : m[f.id] + (f.unit || "")}`).join(" · ")} · ${esc(D.specs.actuators[m.actuator])}</span><span>${kindB(m.kind)}</span></div>`).join(""))}
+    ${fold("로드맵", c.roadmap.map((r) => `<div class="rm"><span class="w">${esc(r.when)}</span><span>${esc(r.title)}</span><span class="st-${r.status}" style="font-size:.74rem">${{ done: "완료", planned: "계획", delayed: "지연·변경" }[r.status]}</span></div>`).join(""))}
+    ${fold("부품 조달 구조", c.sourcing?.mode ? `<p style="margin:0 0 6px;font-size:.85rem"><b>${esc(c.sourcing.mode)}</b></p>${c.sourcing.suppliers.length ? `<ul class="plain">${c.sourcing.suppliers.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}${c.sourcing.note ? `<p class="sub" style="margin:6px 0 0">${esc(c.sourcing.note)} ${link(c.sourcing.src)}</p>` : ""}` : "")}
+    ${fold("고객 · 파트너", c.customers.length || c.partners.length ? `<ul class="plain">${c.customers.map((x) => `<li>${esc(x)}</li>`).join("")}${c.partners.map((x) => `<li class="muted">${esc(x)}</li>`).join("")}</ul>` : "")}
+    ${fold("제품", c.products.map((p) => `<li><b>${esc(p.name)}</b> <span class="muted">${esc(p.year)} ${esc(p.note)}</span></li>`).join("") ? `<ul class="plain">${c.products.map((p) => `<li><b>${esc(p.name)}</b> <span class="muted">${esc(p.year)} ${esc(p.note)}</span></li>`).join("")}</ul>` : "")}
+    ${fold("상장 · 자금 조달", (c.listing.note ? `<p style="margin:0 0 6px;font-size:.85rem">${esc(c.listing.note)} ${link(c.listing.src)}</p>` : "") + (c.funding || []).map((r) => `<div class="rm"><span class="w">${esc(r.date)}</span><span>${esc(r.round)} ${r.val ? `<span class="muted">밸류 ${usdM(r.val)}</span>` : ""}</span><span class="num">${usdM(r.amount)}</span></div>`).join(""))}
+    ${fold("리스크", c.risks.length ? `<ul class="plain">${c.risks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "")}
+    ${fold("관련 이벤트", evs.map((e) => `<div class="rm"><span class="w">${esc(e.date)}</span><span>${esc(e.title)}</span><span>${link(e.src)}</span></div>`).join(""))}
+    ${fold("출처", srcs.length ? `<ul class="plain">${srcs.map((u) => `<li>${link(u, new URL(u).hostname.replace(/^www\./, ""))}</li>`).join("")}</ul>` : "")}`;
   $("#scrim").hidden = false; $("#sheet").hidden = false; document.body.classList.add("locked");
   $("#sheet").scrollTop = 0; $("#sh-x").focus();
 }
@@ -1128,10 +1254,14 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
+  const t = e.target.closest("[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
   if (!t) return;
   if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
   if (t.dataset.co) return openSheet(t.dataset.co);
+  if (t.dataset.tile) { store.set("tile", store.get("tile", null) === t.dataset.tile ? null : t.dataset.tile); renderHome(); return; }
+  if (t.dataset.qs) { store.set("qsort", t.dataset.qs); renderCapital(); return; }
+  if (t.dataset.cf) { store.set("compFilter", t.dataset.cf); renderParts(); return; }
+  if (t.dataset.jump) { const el = document.getElementById(t.dataset.jump); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - 110, behavior: "smooth" }); return; }
   if (t.dataset.sort) { const s = store.get("specSort", { k: "hand_dof", d: -1 }); store.set("specSort", { k: t.dataset.sort, d: s.k === t.dataset.sort ? -s.d : -1 }); renderSpecs(); return; }
   if (t.dataset.role) { store.set("role", t.dataset.role); renderHome(); }
   if (t.dataset.period) { store.set("period", t.dataset.period); renderHome(); }
@@ -1150,8 +1280,33 @@ $("#c-exc").addEventListener("change", (e) => saveCalc({ exc: e.target.checked }
 for (const [id, k] of [["#n-capex", "capex"], ["#n-margin", "margin"], ["#n-rate", "rate"]]) $(id).addEventListener("input", (e) => saveStrat({ [k]: Number(e.target.value) }));
 $("#scrim").addEventListener("click", closeSheet);
 $("#sh-x").addEventListener("click", closeSheet);
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#sheet").hidden) closeSheet(); });
+document.addEventListener("keydown", (e) => {
+  if ($("#sheet").hidden) return;
+  if (e.key === "Escape") closeSheet();
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") document.querySelectorAll(".navbtns button")[e.key === "ArrowLeft" ? 0 : 1]?.click();
+});
 window.addEventListener("hashchange", route);
+function bubbleTip(id, show) {
+  const tip = $("#bub-tip"), box = $("#bubble-box"), c = byId[id];
+  document.querySelectorAll("#bubble circle.bub").forEach((el) => {
+    el.classList.toggle("dim", show && el.dataset.co !== id);
+    el.classList.toggle("hl", show && el.dataset.co === id);
+  });
+  const el = document.querySelector(`#bubble circle.bub[data-co="${CSS.escape(id || "")}"]`);
+  if (!show || !c || !el) { tip.hidden = true; return; }
+  const attract = store.get("preset", "power") === "attract", s = c.scores;
+  tip.innerHTML = `<b>${esc(c.name_ko)}</b> · Tier ${c.calc.tier}<br>${attract
+    ? `매력도 ${c.calc.attract} · 양산 ${s.scale[0]} · 개방성 ${s.open[0]} · 지정학 ${s.geo[0]}`
+    : `경쟁력 ${c.calc.total} · 기술 ${s.tech[0]} · 양산 ${s.scale[0]} · 자본 ${s.capital[0]}`}`;
+  const b = box.getBoundingClientRect(), r = el.getBoundingClientRect();
+  tip.hidden = false;
+  tip.style.left = `${Math.min(r.left - b.left + r.width / 2 + 8, b.width - tip.offsetWidth - 6)}px`;
+  tip.style.top = `${Math.max(r.top - b.top - tip.offsetHeight - 6, 4)}px`;
+}
+$("#bubble").addEventListener("mouseover", (e) => { const t = e.target.closest("circle.bub"); if (t) bubbleTip(t.dataset.co, true); });
+$("#bubble").addEventListener("mouseout", () => bubbleTip(null, false));
+$("#rank").addEventListener("mouseover", (e) => { const t = e.target.closest("[data-co]"); if (t) bubbleTip(t.dataset.co, true); });
+$("#rank").addEventListener("mouseleave", () => bubbleTip(null, false));
 
 fetch("data/dashboard.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((d) => {
   D = d; byId = Object.fromEntries(d.companies.map((c) => [c.id, c]));
@@ -1162,6 +1317,18 @@ fetch("data/dashboard.json", { cache: "no-cache" }).then((r) => { if (!r.ok) thr
     ${d.warnings.length ? `<span class="warnbox">데이터 경고: ${d.warnings.map(esc).join(" / ")}</span>` : ""}`;
   route();
 }).catch((err) => { const box = $("#err"); box.hidden = false; box.textContent = `데이터를 불러오지 못했습니다 (${err.message}). 잠시 후 다시 열어 주세요.`; });
+
+const THEMES = [["auto", "자동"], ["light", "밝게"], ["dark", "어둡게"]];
+function applyTheme(t) {
+  if (t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  $("#theme").title = `테마: ${THEMES.find(([k]) => k === t)[1]}`;
+}
+applyTheme(store.get("theme", "auto"));
+$("#theme").addEventListener("click", () => {
+  const i = THEMES.findIndex(([k]) => k === store.get("theme", "auto"));
+  const next = THEMES[(i + 1) % THEMES.length][0];
+  store.set("theme", next); applyTheme(next);
+});
 
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
