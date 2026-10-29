@@ -64,7 +64,7 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 
 /* 하단 탭바 */
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 7; background: color-mix(in oklab, var(--surface) 94%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.tabbar .in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); height: var(--nav-h); }
+.tabbar .in { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); height: var(--nav-h); }
 .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--muted); font-size: 0.7rem; font-weight: 600; position: relative; }
 .tabbar a[aria-current="page"] { color: var(--ink); }
 .tabbar a[aria-current="page"] svg.i { stroke-width: 2.3; }
@@ -203,6 +203,45 @@ ul.plain { margin: 0; padding-left: 18px; font-size: 0.85rem; display: grid; gap
 .rm:first-child { border-top: 0; }
 .rm .w { font-family: var(--font-data); font-size: 0.74rem; color: var(--muted); }
 .st-done { color: var(--good); } .st-planned { color: var(--muted); } .st-delayed { color: var(--bad); }
+/* 경보 · 소식 · 주가 */
+.alerts { display: grid; gap: 8px; }
+.alert { display: grid; grid-template-columns: 4px minmax(0, 1fr); gap: 2px 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); text-align: left; width: 100%; cursor: pointer; }
+.alert::before { content: ""; grid-row: span 2; border-radius: 2px; background: var(--warn); }
+.alert.high::before { background: var(--bad); }
+.alert b { font-size: 0.88rem; }
+.alert span { font-size: 0.78rem; color: var(--muted); }
+.news .ev .t small { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+.imp3 { color: var(--bad); font-weight: 700; }
+svg.spark { width: 84px; height: 26px; display: block; }
+svg.spark polyline { fill: none; stroke-width: 1.6; }
+.prop { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 0.84rem; }
+.prop:first-child { border-top: 0; }
+.prop .s { grid-column: 1 / -1; font-size: 0.76rem; color: var(--muted); }
+.up { color: var(--good); } .down { color: var(--bad); }
+
+/* 전략 */
+.radar text { fill: var(--muted); font-size: 10px; }
+.radar polygon.c { fill-opacity: 0.12; stroke-width: 1.8; }
+.radar polygon.c.on { fill-opacity: 0.28; stroke-width: 2.6; }
+table.heat { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 0.74rem; }
+table.heat th { font-weight: 600; color: var(--muted); padding: 4px 1px; text-align: center; }
+table.heat th:first-child, table.heat td:first-child { width: 88px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table.heat td { padding: 2px; }
+table.heat td i { display: block; height: 18px; border-radius: 4px; background: var(--accent); }
+table.heat tr[data-co] { cursor: pointer; }
+.opt { display: grid; gap: 6px; }
+.opt .kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; font-size: 0.78rem; }
+.opt .kv span { color: var(--muted); }
+.opt .kv b { color: var(--ink); font-weight: 600; }
+.opt[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.tr { display: grid; gap: 6px; }
+.tr .cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.tr .cells div { font-size: 0.76rem; padding: 6px 8px; border-radius: 8px; background: var(--raised); }
+.tr .cells div small { display: block; color: var(--muted); font-size: 0.68rem; margin-bottom: 2px; }
+.sp { display: grid; gap: 4px; }
+.sp .st { font-size: 0.7rem; font-weight: 600; }
+.yr { font-family: var(--font-data); font-size: 0.8rem; font-weight: 600; padding: 8px 14px; background: var(--raised); border-top: 1px solid var(--line); }
+.yr:first-child { border-top: 0; }
 footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; }
 .warnbox { font-size: 0.8rem; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--bad); }
 </style>
@@ -224,6 +263,11 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
       <button data-lens="parts">부품사 관점</button>
       <button data-lens="invest">투자 관점</button>
     </div>
+    <section id="alerts-sec" hidden>
+      <h2>경보</h2>
+      <p class="sub">중요 소식 · 검증 대기 · 주가 급변 · 점수 변화</p>
+      <div class="alerts" id="alerts"></div>
+    </section>
     <section>
       <div class="kpis" id="kpis"></div>
     </section>
@@ -233,8 +277,19 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
       <div class="ins" id="insights"></div>
     </section>
     <section>
-      <h2>최근 변화</h2>
-      <p class="sub">기업 발표·보도·공시 중 의사결정에 영향을 주는 사건</p>
+      <h2>오늘의 소식</h2>
+      <p class="sub" id="news-sub"></p>
+      <div class="chips" id="news-filter" style="margin-bottom:10px"></div>
+      <div class="list news" id="news"></div>
+    </section>
+    <section id="props-sec" hidden>
+      <h2>검증 대기 수치</h2>
+      <p class="sub">AI 가 기사에서 뽑은 값이 큐레이션 기준값과 10% 넘게 다르거나 기준값이 없는 경우. 확인 후 data/companies.json 에 반영합니다</p>
+      <div class="list" id="props"></div>
+    </section>
+    <section>
+      <h2>핵심 이벤트</h2>
+      <p class="sub">큐레이션한 사건 중 의사결정에 영향을 주는 것</p>
       <div class="list" id="events"></div>
     </section>
     <section>
@@ -321,6 +376,11 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
 
   <!-- 자본·IPO -->
   <div class="panel" id="p-capital" data-panel hidden>
+    <section id="quotes-sec" hidden>
+      <h2>관련 상장사 주가</h2>
+      <p class="sub" id="quotes-sub"></p>
+      <div class="list" id="quotes"></div>
+    </section>
     <section>
       <h2>IPO 파이프라인</h2>
       <p class="sub">상장 단계별 기업. 탭하면 상세</p>
@@ -342,6 +402,56 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
       <div class="list" id="rounds"></div>
     </section>
   </div>
+
+  <!-- 전략 -->
+  <div class="panel" id="p-strat" data-panel hidden>
+    <section>
+      <h2>진입 방식 비교</h2>
+      <p class="sub">한국 부품사가 휴머노이드 시장에 들어가는 다섯 가지 방법. 고르면 아래 계산기 기본값이 바뀝니다</p>
+      <div class="ins" id="opts"></div>
+    </section>
+    <section>
+      <h2>투자 회수 계산기</h2>
+      <p class="sub">2026~2030 영업이익으로 초기 투자를 회수하는지. 매출은 부품 탭 계산기 결과를 그대로 씁니다</p>
+      <div class="card calc">
+        <label class="ctl">초기 투자<input type="range" id="n-capex" min="5" max="1000" step="5"><output id="o-capex"></output></label>
+        <label class="ctl">영업이익률<input type="range" id="n-margin" min="0" max="40" step="1"><output id="o-margin"></output></label>
+        <label class="ctl">할인율<input type="range" id="n-rate" min="4" max="20" step="1"><output id="o-rate"></output></label>
+        <div class="outs" id="n-out"></div>
+        <svg id="n-chart" viewBox="0 0 360 150" role="img" aria-label="누적 현금흐름"></svg>
+        <p class="sub" style="margin:0" id="n-note"></p>
+      </div>
+    </section>
+    <section>
+      <h2>주시할 신호</h2>
+      <p class="sub">일어나면 전략을 바꿔야 하는 사건과 대응</p>
+      <div class="ins" id="signs"></div>
+    </section>
+    <section>
+      <h2>국가 경쟁력</h2>
+      <p class="sub">6개 축 0~10점(공개 정보 기반 분석). 칩을 눌러 강조</p>
+      <div class="chips" id="cty-chips" style="margin-bottom:10px"></div>
+      <div class="chart"><svg id="radar" class="radar" viewBox="0 0 360 300" role="img" aria-label="국가 경쟁력 레이더"></svg></div>
+      <div class="ins" id="cty" style="margin-top:10px"></div>
+    </section>
+    <section>
+      <h2>용도별 집중도</h2>
+      <p class="sub">기업이 어느 현장을 노리는지(진할수록 집중). 아래는 용도별 상용화 시점</p>
+      <div class="card" style="padding:10px 8px"><table class="heat" id="heat"></table></div>
+      <div class="list" id="apps" style="margin-top:10px"></div>
+    </section>
+    <section>
+      <h2>기술 로드맵</h2>
+      <p class="sub">산업 공통 기술 스택의 진화와 부품사에 주는 의미</p>
+      <div class="ins" id="tech"></div>
+    </section>
+    <section>
+      <h2>제품·사업 로드맵</h2>
+      <p class="sub">27개사 로드맵을 연도별로. 빨간색은 지연·변경</p>
+      <div class="chips" id="rm-filter" style="margin-bottom:10px"></div>
+      <div class="list" id="rm"></div>
+    </section>
+  </div>
 </main>
 
 <nav class="tabbar" aria-label="화면">
@@ -351,6 +461,7 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
     <a href="#parts"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>부품</a>
     <a href="#prod"><svg class="i" viewBox="0 0 24 24"><path d="M3 21V10l5 3V10l5 3V10l5 3V5h3v16z"/></svg>양산</a>
     <a href="#capital"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/></svg>자본</a>
+    <a href="#strat"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l5-5M15 4l5 5-9 9-5-5zM14 9l1 1"/><circle cx="17" cy="7" r="0.5"/></svg>전략</a>
   </div>
 </nav>
 
@@ -387,9 +498,53 @@ let byId = {};
 const coChip = (id) => (byId[id] ? `<button class="chip co" data-co="${esc(id)}">${esc(byId[id].name_ko)}</button>` : "");
 const tierB = (c) => `<span class="b t${c.calc.tier}">T${c.calc.tier}</span>`;
 
+const FIELD = { valuation: "밸류", funding_total: "누적 조달", revenue: "매출", orders: "수주", cum_units: "누적 출하", capacity: "생산능력", target_2026: "2026 목표", price: "판매가" };
+const fmtUnit = (v, u) => (v == null ? "없음" : u === "USD_M" ? usdM(v) : u === "units" ? units(v) : usd(v));
+const TYPE = { funding: "투자", ipo: "상장", production: "양산", product: "제품", deploy: "배치", partner: "제휴", supply: "공급망", policy: "정책", org: "조직", other: "기타" };
+function spark(vals) {
+  if (!vals || vals.length < 2) return "";
+  const W = 84, H = 26, lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const pts = vals.map((v, i) => `${((i / (vals.length - 1)) * W).toFixed(1)},${(H - 2 - ((v - lo) / span) * (H - 4)).toFixed(1)}`).join(" ");
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts}" style="stroke:${vals.at(-1) >= vals[0] ? "var(--good)" : "var(--bad)"}"/></svg>`;
+}
+const pct = (v) => (v == null ? "-" : `<span class="${v >= 0 ? "up" : "down"}">${v >= 0 ? "+" : ""}${v.toFixed(1)}%</span>`);
+const newsTitle = (x) => esc(x.title_ko || x.title);
+function newsRow(x, chips = true) {
+  const imp = x.importance >= 3 ? '<span class="imp3">핵심</span>' : x.importance === 2 ? '<span class="b reported">주목</span>' : "";
+  return `<div class="ev"><span class="d">${esc(x.date.slice(2).replace(/-/g, "."))}</span><span class="t">${newsTitle(x)}${x.summary_ko ? `<small>${esc(x.summary_ko)}</small>` : ""}</span>
+    <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${link(x.url, "원문")}</span></div>`;
+}
+const NEWS_FILTERS = [
+  { id: "all", label: "전체", f: () => true },
+  { id: "imp", label: "중요", f: (x) => x.importance >= 2 },
+  { id: "kr", label: "한국", f: (x) => (x.companies || []).some((c) => byId[c]?.kr_watch || byId[c]?.country === "KR") || byId[x.query]?.kr_watch },
+  { id: "money", label: "투자·상장", f: (x) => ["funding", "ipo"].includes(x.type) },
+  { id: "ops", label: "양산·배치", f: (x) => ["production", "deploy", "supply"].includes(x.type) },
+];
+
 // ---------- 개요 ----------
 function renderHome() {
   const lens = store.get("lens", "parts");
+  const al = D.alerts || [];
+  $("#alerts-sec").hidden = !al.length;
+  $("#alerts").innerHTML = al.map((a) => {
+    const target = a.url ? `data-url="${esc(a.url)}"` : a.ids?.[0] ? `data-co="${esc(a.ids[0])}"` : "";
+    return `<button class="alert ${a.level}" ${target}><b>${esc(a.title)}</b><span>${esc(a.sub || "")}</span></button>`;
+  }).join("");
+  const nf = store.get("nf", "all");
+  const m = D.news_meta || {};
+  $("#news-sub").textContent = (D.news || []).length
+    ? `${m.ai === "gemini" ? "Gemini 가 분류·요약" : "AI 분류 없이 제목만"} · 매일 자동 수집 ${m.generated_at ? new Date(m.generated_at).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" }) : ""}${(m.warnings || []).length ? " · " + m.warnings.join(" ") : ""}`
+    : "아직 수집된 소식이 없습니다. 매일 아침 자동으로 모입니다";
+  $("#news-filter").innerHTML = NEWS_FILTERS.map((f) => `<button class="chip" data-nf="${f.id}" aria-pressed="${f.id === nf}">${f.label}</button>`).join("");
+  const nflt = NEWS_FILTERS.find((f) => f.id === nf) || NEWS_FILTERS[0];
+  const items = (D.news || []).filter(nflt.f).slice(0, 20);
+  $("#news").innerHTML = items.map((x) => newsRow(x)).join("") || '<div class="empty">조건에 맞는 소식이 없습니다</div>';
+  const props = D.proposals || [];
+  $("#props-sec").hidden = !props.length;
+  $("#props").innerHTML = props.slice(0, 12).map((p) => `<div class="prop"><span><b>${esc(byId[p.company]?.name_ko || p.company)}</b> ${FIELD[p.field] || p.field}</span>
+    <span class="num">${fmtUnit(p.curated, p.unit)} → <b>${fmtUnit(p.proposed, p.unit)}</b></span>
+    <span class="s">${esc(p.date)} ${p.as_of ? `· 기준 ${esc(p.as_of)} ` : ""}· ${esc(p.title)} ${link(p.url, "원문")}</span></div>`).join("");
   document.querySelectorAll("[data-lens]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lens === lens)));
   $("#kpis").innerHTML = D.kpis[lens].map((k) => {
     const tag = k.id ? "button" : "div";
@@ -486,7 +641,7 @@ function renderMap() {
     <button class="row rank" data-co="${esc(c.id)}">
       <span class="no">${i + 1}</span>
       <span class="nm"><i class="dot" style="background:${cColor(c.country)}"></i><b>${esc(c.name_ko)}</b>${tierB(c)}</span>
-      <span class="r num"><b>${key(c)}</b></span>
+      <span class="r num"><b>${key(c)}</b>${(() => { const mv = c.calc.move, d = mv && (attract ? mv.d_attract : mv.d_total); return d ? ` <small class="${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}</small>` : ""; })()}</span>
       <span class="s" style="grid-column:2/-1">${esc(c.one_liner)}</span>
       <span class="bar"><i style="width:${key(c)}%"></i></span>
     </button>`).join("");
@@ -506,6 +661,15 @@ function calcState() {
     share: saved.share || 5, exc: saved.exc ?? true,
   };
 }
+function calcRows(st) {
+  const sc = D.scenarios[st.scn];
+  return D.scenarios.years.map((y, i) => {
+    const price = st.asp * (1 - st.dec / 100) ** i;
+    const tam = sc.units[i] * st.qty * price;
+    const reach = st.exc ? tam * sc.ex_china[i] : tam;
+    return { y, tam, reach, ours: reach * st.share / 100 };
+  });
+}
 function renderCalc() {
   const st = calcState();
   $("#c-item").innerHTML = st.items.map((i) => `<option value="${i.id}"${i.id === st.item.id ? " selected" : ""}>${esc(i.name)}</option>`).join("");
@@ -514,12 +678,7 @@ function renderCalc() {
   set("#c-qty", st.qty, st.qty); set("#c-asp", st.asp, `$${st.asp}`); set("#c-dec", st.dec, `${st.dec}%`); set("#c-share", st.share, `${st.share}%`);
   $("#c-exc").checked = st.exc;
   const sc = D.scenarios[st.scn], years = D.scenarios.years;
-  const rows = years.map((y, i) => {
-    const price = st.asp * (1 - st.dec / 100) ** i;
-    const tam = sc.units[i] * st.qty * price;
-    const reach = st.exc ? tam * sc.ex_china[i] : tam;
-    return { y, tam, reach, ours: reach * st.share / 100 };
-  });
+  const rows = calcRows(st);
   const last = rows[rows.length - 1], sum = rows.reduce((a, r) => a + r.ours, 0);
   const out = [
     ["2030 부품 시장(전 세계)", usd(last.tam)],
@@ -595,6 +754,15 @@ function renderProd() {
 
 // ---------- 자본·IPO ----------
 function renderCapital() {
+  const qs = Object.entries(D.quotes || {}).filter(([id]) => byId[id]);
+  $("#quotes-sec").hidden = !qs.length;
+  $("#quotes-sub").textContent = "최근 3개월 종가 추이 · 1주·1개월 변화 (Yahoo Finance, 매일 갱신)";
+  $("#quotes").innerHTML = qs.sort((a, b) => Math.abs(b[1].chg_1w ?? 0) - Math.abs(a[1].chg_1w ?? 0)).map(([id, q]) => `
+    <button class="row" data-co="${esc(id)}" style="grid-template-columns:minmax(0,1fr) auto auto">
+      <span class="t">${esc(byId[id].name_ko)} <span class="mono muted" style="font-size:.74rem">${esc(q.symbol)}</span></span>
+      ${spark(q.spark)}
+      <span class="r"><b class="num">${q.last.toLocaleString("ko-KR")}</b> <span class="muted" style="font-size:.72rem">${esc(q.currency || "")}</span><br><span style="font-size:.76rem">1주 ${pct(q.chg_1w)} · 1개월 ${pct(q.chg_1m)}</span></span>
+      ${q.note ? `<span class="s">${esc(q.note)}</span>` : ""}</button>`).join("");
   const stages = [1, 2, 3, 4];
   $("#kanban").innerHTML = stages.map((s) => {
     const cs = D.companies.filter((c) => c.listing.stage === s);
@@ -617,6 +785,109 @@ function renderCapital() {
   $("#rounds").innerHTML = rounds.map((r) => `<button class="row" data-co="${esc(r.c.id)}"><span class="t">${esc(r.c.name_ko)} · ${esc(r.round)}</span><span class="r num"><b>${usdM(r.amount)}</b></span><span class="s">${esc(r.date)} ${r.val ? `· 밸류 ${usdM(r.val)}` : ""} ${kindB(r.kind)}</span></button>`).join("") || '<div class="empty">없음</div>';
 }
 
+// ---------- 전략 ----------
+const KRW_PER_USD = 1400;
+const CTY_COLOR = { US: "var(--cat-1)", CN: "var(--cat-2)", KR: "var(--cat-3)", JP: "var(--cat-4)", EU: "#8e6bd6" };
+const SIGN = { watch: ["주시", "t3"], progress: ["진행 중", "estimate"], happened: ["발생", "H"] };
+const RM_TYPES = [["all", "전체"], ["product", "제품"], ["production", "양산"], ["deploy", "배치"], ["ipo", "상장"], ["funding", "자금"]];
+const eok = (v) => (Math.abs(v) >= 1 ? `${Math.round(v).toLocaleString("ko-KR")}억` : `${v.toFixed(1)}억`);
+function stratState() {
+  const S = D.strategy, saved = store.get("strat", {});
+  const opt = S.options.find((o) => o.id === saved.opt) || S.options[0];
+  const same = saved.opt === opt.id;
+  return { opt, capex: same && saved.capex ? saved.capex : opt.default.capex, margin: same && saved.margin != null ? saved.margin : opt.default.margin, rate: saved.rate || 10 };
+}
+function saveStrat(patch) { const s = stratState(); store.set("strat", { opt: s.opt.id, capex: s.capex, margin: s.margin, rate: s.rate, ...patch }); renderStrat(); }
+function renderNpv() {
+  const s = stratState(), cs = calcState(), rows = calcRows(cs);
+  const set = (id, v, txt) => { $(id).value = v; $(id.replace("n-", "o-")).textContent = txt; };
+  set("#n-capex", s.capex, `${s.capex}억`); set("#n-margin", s.margin, `${s.margin}%`); set("#n-rate", s.rate, `${s.rate}%`);
+  const rev = rows.map((r) => (r.ours * KRW_PER_USD) / 1e8);
+  const op = rev.map((v) => (v * s.margin) / 100);
+  let cum = -s.capex, payback = null, npv = -s.capex;
+  const cums = op.map((v, i) => {
+    const prev = cum;
+    cum += v; npv += v / (1 + s.rate / 100) ** (i + 1);
+    if (payback == null && cum >= 0 && v > 0) payback = i + (-prev / v);
+    return cum;
+  });
+  const sumRev = rev.reduce((a, b) => a + b, 0), sumOp = op.reduce((a, b) => a + b, 0);
+  $("#n-out").innerHTML = [
+    ["5년 누적 매출", eok(sumRev)], ["5년 누적 영업이익", eok(sumOp)],
+    [`NPV (할인율 ${s.rate}%)`, `<span class="${npv >= 0 ? "up" : "down"}">${eok(npv)}</span>`],
+    ["회수 시점", payback == null ? '<span class="down">2030년까지 미회수</span>' : `${2026 + Math.floor(payback)}년 중 <span class="muted" style="font-size:.8rem">(약 ${payback.toFixed(1)}년)</span>`],
+  ].map(([l, v]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span></div>`).join("");
+  const W = 360, H = 150, T = 14, B = 18, max = Math.max(...cums.map(Math.abs), s.capex) || 1, zero = T + (H - T - B) / 2, bw = 44;
+  $("#n-chart").innerHTML = `<line x1="16" x2="${W - 16}" y1="${zero}" y2="${zero}" style="stroke:var(--line)"/>` + cums.map((v, i) => {
+    const x = 20 + i * ((W - 40) / 5) + ((W - 40) / 5 - bw) / 2, h = (Math.abs(v) / max) * ((H - T - B) / 2);
+    const y = v >= 0 ? zero - h : zero;
+    return `<rect x="${x}" y="${y}" width="${bw}" height="${Math.max(h, 1)}" rx="4" style="fill:${v >= 0 ? "var(--good)" : "var(--bad)"};opacity:.85"/>
+      <text x="${x + bw / 2}" y="${v >= 0 ? y - 3 : y + h + 10}" text-anchor="middle" style="fill:var(--ink);font-size:10px;font-weight:600">${eok(v)}</text>
+      <text x="${x + bw / 2}" y="${H - 3}" text-anchor="middle" style="fill:var(--muted);font-size:10px">${D.scenarios.years[i]}</text>`;
+  }).join("");
+  $("#n-note").textContent = `누적 현금흐름(초기 투자 차감). 매출은 부품 계산기 값 — ${cs.item.name}, ${D.scenarios[cs.scn].label}, 점유율 ${cs.share}%${cs.exc ? ", 중국 외 고객만" : ""}. 환율 ${KRW_PER_USD.toLocaleString()}원/USD.`
+    + (s.opt.id === "equity" ? " 지분 투자는 영업이익이 아니라 지분 가치(엑시트)로 회수되므로 이 계산은 참고용입니다." : "");
+}
+function renderStrat() {
+  const S = D.strategy, s = stratState();
+  $("#opts").innerHTML = S.options.map((o) => `
+    <button class="card opt" data-opt="${o.id}" aria-pressed="${o.id === s.opt.id}" style="text-align:left;cursor:pointer">
+      <b style="font-size:.95rem">${esc(o.name)}</b>
+      <div class="kv"><span>투자 <b>${esc(o.capex)}</b></span><span>회수 <b>${esc(o.payback)}</b></span><span>리스크 <b>${esc(o.risk)}</b></span><span>통제력 <b>${esc(o.control)}</b></span></div>
+      <span style="font-size:.82rem">${esc(o.fit)}</span>
+      <span class="muted" style="font-size:.76rem">사례: ${esc(o.example)}</span>
+    </button>`).join("");
+  renderNpv();
+  $("#signs").innerHTML = S.signposts.map((p) => `
+    <article class="card sp"><div style="display:flex;gap:8px;align-items:center"><b style="font-size:.92rem;flex:1">${esc(p.trigger)}</b><span class="b ${SIGN[p.status][1]}">${SIGN[p.status][0]}</span></div>
+      <p style="margin:0;font-size:.84rem;color:var(--muted)">${esc(p.means)}</p>
+      <div class="act" style="font-size:.84rem;padding:8px 10px;border-radius:10px;background:color-mix(in oklab, var(--accent) 9%, var(--surface))"><b style="color:var(--accent);margin-right:6px">대응</b>${esc(p.action)}</div>
+      ${p.ids.length ? `<div class="chips">${p.ids.map(coChip).join("")}</div>` : ""}</article>`).join("");
+
+  // 국가 레이더
+  const sel = store.get("cty", ["KR", "CN", "US"]);
+  const C = S.countries, n = C.axes.length, cx = 180, cy = 150, R = 105;
+  const pt = (i, v) => { const a = -Math.PI / 2 + (i / n) * 2 * Math.PI; return [cx + Math.cos(a) * R * v / 10, cy + Math.sin(a) * R * v / 10]; };
+  let g = "";
+  for (const lv of [2, 4, 6, 8, 10]) g += `<polygon points="${C.axes.map((_, i) => pt(i, lv).join(",")).join(" ")}" style="fill:none;stroke:var(--line)"/>`;
+  C.axes.forEach((a, i) => {
+    const [x, y] = pt(i, 10), [lx, ly] = pt(i, 12.2);
+    g += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" style="stroke:var(--line)"/><text x="${lx}" y="${ly + 3}" text-anchor="middle">${esc(a.label)}</text>`;
+  });
+  g += C.items.filter((c) => sel.includes(c.id)).map((c) => `<polygon class="c on" points="${C.axes.map((a, i) => pt(i, c.scores[a.id]).join(",")).join(" ")}" style="fill:${CTY_COLOR[c.id]};stroke:${CTY_COLOR[c.id]}"/>`).join("");
+  $("#radar").innerHTML = g;
+  $("#cty-chips").innerHTML = C.items.map((c) => `<button class="chip" data-cty="${c.id}" aria-pressed="${sel.includes(c.id)}"><i class="dot" style="background:${CTY_COLOR[c.id]}"></i> ${esc(c.name)} ${Object.values(c.scores).reduce((a, b) => a + b, 0)}</button>`).join("");
+  $("#cty").innerHTML = C.items.filter((c) => sel.includes(c.id)).map((c) => `
+    <article class="card" style="display:grid;gap:6px"><b><i class="dot" style="background:${CTY_COLOR[c.id]}"></i> ${esc(c.name)} <span class="muted num" style="font-weight:400">${Object.values(c.scores).reduce((a, b) => a + b, 0)}/60</span></b>
+      <p style="margin:0;font-size:.84rem;color:var(--muted)">${esc(c.why)}</p>
+      <div style="font-size:.84rem;padding:8px 10px;border-radius:10px;background:color-mix(in oklab, var(--accent) 9%, var(--surface))"><b style="color:var(--accent);margin-right:6px">한국 부품사에</b>${esc(c.for_kr)}</div></article>`).join("");
+
+  // 용도
+  const A = S.applications, short = { manufacturing: "제조", logistics: "물류", retail: "리테일", research: "연구", hazard: "점검", health: "헬스", home: "가정" };
+  const hrows = D.companies.filter((c) => A.matrix[c.id]);
+  $("#heat").innerHTML = `<tr><th></th>${A.items.map((a) => `<th>${short[a.id] || esc(a.name)}</th>`).join("")}</tr>` + hrows.map((c) => `
+    <tr data-co="${esc(c.id)}"><td>${esc(c.name_ko.replace(/\(.*\)/, ""))}</td>${A.items.map((a) => { const v = A.matrix[c.id][a.id] || 0; return `<td>${v ? `<i style="opacity:${0.25 + v * 0.25}" title="${v}"></i>` : ""}</td>`; }).join("")}</tr>`).join("");
+  $("#apps").innerHTML = A.items.map((a) => `<div class="row"><span class="t">${esc(a.name)} <span class="b t3">${esc(a.now)}</span></span><span class="r">확산 <b>${esc(a.scale)}</b></span><span class="s">${esc(a.note)}</span></div>`).join("");
+
+  // 기술 로드맵
+  const T = S.tech_roadmap;
+  $("#tech").innerHTML = T.rows.map((r) => `
+    <article class="card tr"><b style="font-size:.92rem">${esc(r.layer)}</b>
+      <div class="cells">${r.cells.map((c, i) => `<div><small>${esc(T.cols[i])}</small>${esc(c)}</div>`).join("")}</div>
+      <div style="font-size:.82rem;padding:8px 10px;border-radius:10px;background:color-mix(in oklab, var(--accent) 9%, var(--surface))"><b style="color:var(--accent);margin-right:6px">부품사</b>${esc(r.for_parts)}</div></article>`).join("");
+
+  // 제품·사업 로드맵 (연도별)
+  const rf = store.get("rmf", "all");
+  $("#rm-filter").innerHTML = RM_TYPES.map(([id, l]) => `<button class="chip" data-rmf="${id}" aria-pressed="${id === rf}">${l}</button>`).join("");
+  const items = D.companies.flatMap((c) => c.roadmap.map((r) => ({ ...r, c }))).filter((r) => rf === "all" || r.type === rf)
+    .sort((a, b) => a.when.localeCompare(b.when));
+  const byYear = {};
+  for (const r of items) (byYear[r.when.slice(0, 4)] ||= []).push(r);
+  $("#rm").innerHTML = Object.entries(byYear).map(([y, rs]) => `<div class="yr">${y} <span class="muted" style="font-weight:400">${rs.length}건</span></div>` + rs.map((r) => `
+    <button class="row" data-co="${esc(r.c.id)}"><span class="t st-${r.status === "delayed" ? "delayed" : "x"}">${esc(r.title)}</span><span class="r mono muted" style="font-size:.74rem">${esc(r.when)}</span>
+      <span class="s">${esc(r.c.name_ko)} · ${{ done: "완료", planned: "계획", delayed: "지연·변경" }[r.status]}</span></button>`).join("")).join("") || '<div class="empty">없음</div>';
+}
+
 // ---------- 기업 상세 시트 ----------
 const AX = { tech: "기술", scale: "양산", capital: "자본", execution: "실행 신뢰도", open: "조달 개방성", geo: "지정학 접근성" };
 const FACTS = [["valuation", "밸류", usdM], ["funding_total", "누적 조달", usdM], ["revenue", "매출", usdM], ["orders", "수주", usdM], ["cum_units", "누적 출하", units], ["target_2026", "2026 목표", units], ["capacity", "생산능력(연)", units], ["price", "판매가", (v) => usd(v)]];
@@ -628,6 +899,9 @@ function openSheet(id) {
   const facts = FACTS.filter(([k]) => c[k] && (c[k].v != null || c[k].note)).map(([k, l, f]) => `
     <div class="fact"><span class="k">${l}</span><span class="v"><b>${c[k].v != null ? f(c[k].v) : "미공개"}</b> ${kindB(c[k].kind)} ${c[k].as_of ? `<span class="muted mono" style="font-size:.74rem">${esc(c[k].as_of)}</span>` : ""} ${link(c[k].src)}</span>${c[k].note ? `<span class="n">${esc(c[k].note)}</span>` : ""}</div>`).join("");
   const evs = D.events.filter((e) => e.ids.includes(id));
+  const q = (D.quotes || {})[id];
+  const nws = (D.news || []).filter((x) => (x.companies || []).includes(id) || (!x.companies?.length && x.query === id)).slice(0, 6);
+  const props = (D.proposals || []).filter((p) => p.company === id);
   const srcs = [...new Set([c.src, c.listing.src, c.sourcing?.src, ...FACTS.map(([k]) => c[k]?.src), ...(c.funding || []).map((r) => r.src)].filter(safeUrl))];
   $("#sh-title").innerHTML = `${esc(c.name_ko)} ${tierB(c)}<small>${esc(c.name)} · ${esc(COUNTRY[c.country] || c.country)} · ${esc(c.listing.label)}${c.listing.ticker ? ` (${esc(c.listing.ticker)})` : ""}</small>`;
   $("#sh-body").innerHTML = `
@@ -635,6 +909,9 @@ function openSheet(id) {
     <div><h3>경쟁력 ${c.calc.total}점 · Tier ${c.calc.tier}</h3>${scoreRows(["tech", "scale", "capital", "execution"])}</div>
     ${c.calc.attract != null ? `<div><h3>고객 매력도 ${c.calc.attract}점 <span class="muted" style="font-weight:400;font-size:.78rem">양산·자본은 위 점수 그대로</span></h3>${scoreRows(["open", "geo"])}</div>` : ""}
     ${facts ? `<div><h3>핵심 수치</h3><div class="facts">${facts}</div></div>` : ""}
+    ${props.length ? `<div><h3>검증 대기 (AI 추출)</h3>${props.map((p) => `<div class="rm"><span class="w">${esc(p.date)}</span><span>${FIELD[p.field]} ${fmtUnit(p.curated, p.unit)} → <b>${fmtUnit(p.proposed, p.unit)}</b></span><span>${link(p.url, "원문")}</span></div>`).join("")}</div>` : ""}
+    ${q ? `<div><h3>주가 <span class="muted mono" style="font-weight:400;font-size:.78rem">${esc(q.symbol)} ${esc(q.note || "")}</span></h3><div style="display:flex;align-items:center;gap:12px;font-size:.85rem">${spark(q.spark)}<span><b class="num">${q.last.toLocaleString("ko-KR")}</b> ${esc(q.currency || "")} · 1주 ${pct(q.chg_1w)} · 1개월 ${pct(q.chg_1m)} <span class="muted">(${esc(q.date)})</span></span></div></div>` : ""}
+    ${nws.length ? `<div><h3>최근 소식</h3><div class="list news">${nws.map((x) => newsRow(x, false)).join("")}</div></div>` : ""}
     ${c.listing.note ? `<div><h3>상장</h3><p style="margin:0;font-size:.85rem">${esc(c.listing.note)} ${link(c.listing.src)}</p></div>` : ""}
     ${c.sourcing?.mode ? `<div><h3>부품 조달 구조</h3><p style="margin:0 0 6px;font-size:.85rem"><b>${esc(c.sourcing.mode)}</b></p>${c.sourcing.suppliers.length ? `<ul class="plain">${c.sourcing.suppliers.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}${c.sourcing.note ? `<p class="sub" style="margin:6px 0 0">${esc(c.sourcing.note)} ${link(c.sourcing.src)}</p>` : ""}</div>` : ""}
     ${c.customers.length || c.partners.length ? `<div><h3>고객 · 파트너</h3><ul class="plain">${c.customers.map((x) => `<li>${esc(x)}</li>`).join("")}${c.partners.map((x) => `<li class="muted">${esc(x)}</li>`).join("")}</ul></div>` : ""}
@@ -650,7 +927,7 @@ function openSheet(id) {
 function closeSheet() { $("#scrim").hidden = true; $("#sheet").hidden = true; document.body.classList.remove("locked"); }
 
 // ---------- 라우팅 · 이벤트 ----------
-const PANELS = { home: renderHome, map: renderMap, parts: renderParts, prod: renderProd, capital: renderCapital };
+const PANELS = { home: renderHome, map: renderMap, parts: renderParts, prod: renderProd, capital: renderCapital, strat: renderStrat };
 function route() {
   const id = (location.hash || "#home").slice(1);
   const key = PANELS[id] ? id : "home";
@@ -660,9 +937,14 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-co],[data-lens],[data-preset],[data-group],[data-scn]");
+  const t = e.target.closest("[data-co],[data-url],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
   if (!t) return;
+  if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
   if (t.dataset.co) return openSheet(t.dataset.co);
+  if (t.dataset.nf) { store.set("nf", t.dataset.nf); renderHome(); }
+  if (t.dataset.opt) saveStrat({ opt: t.dataset.opt, capex: null, margin: null });
+  if (t.dataset.cty) { const s = new Set(store.get("cty", ["KR", "CN", "US"])); s.has(t.dataset.cty) ? s.delete(t.dataset.cty) : s.add(t.dataset.cty); store.set("cty", [...s]); renderStrat(); }
+  if (t.dataset.rmf) { store.set("rmf", t.dataset.rmf); renderStrat(); }
   if (t.dataset.lens) { store.set("lens", t.dataset.lens); renderHome(); }
   if (t.dataset.preset) { store.set("preset", t.dataset.preset); renderMap(); }
   if (t.dataset.group) { store.set("group", t.dataset.group); renderMap(); }
@@ -671,6 +953,7 @@ document.addEventListener("click", (e) => {
 $("#c-item").addEventListener("change", (e) => saveCalc({ item: e.target.value, qty: null, asp: null, dec: null }));
 for (const [id, k] of [["#c-qty", "qty"], ["#c-asp", "asp"], ["#c-dec", "dec"], ["#c-share", "share"]]) $(id).addEventListener("input", (e) => saveCalc({ [k]: Number(e.target.value) }));
 $("#c-exc").addEventListener("change", (e) => saveCalc({ exc: e.target.checked }));
+for (const [id, k] of [["#n-capex", "capex"], ["#n-margin", "margin"], ["#n-rate", "rate"]]) $(id).addEventListener("input", (e) => saveStrat({ [k]: Number(e.target.value) }));
 $("#scrim").addEventListener("click", closeSheet);
 $("#sh-x").addEventListener("click", closeSheet);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#sheet").hidden) closeSheet(); });

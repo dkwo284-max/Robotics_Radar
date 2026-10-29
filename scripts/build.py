@@ -1,9 +1,9 @@
-"""Robotics Radar 빌드: 큐레이션 데이터(data/*.json) → web/data/dashboard.json
+"""Robotics Radar 빌드: 큐레이션 데이터(data/*.json) + 자동 수집(web/data/news.json, prices.json) → web/data/dashboard.json
 
     python scripts/build.py           # 빌드
     python scripts/build.py --check   # 검증만 (경고가 있으면 실패)
 
-Phase 1 은 표준 라이브러리만 쓴다. 점수·Tier·고객 매력도·자본효율·KPI 를 여기서 계산하고,
+표준 라이브러리만 쓴다. 점수·Tier·고객 매력도·자본효율·KPI·경보를 여기서 계산하고,
 화면(web/index.html)은 계산된 값만 그린다.
 """
 from __future__ import annotations
@@ -13,11 +13,8 @@ import json
 import math
 import sys
 from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "data"
-OUT = ROOT / "web" / "data"
+from common import OUT, SRC, read_json, write_json
 
 # 경쟁력 점수 축과 만점. 합계 100 → Tier
 AXES = {"tech": 30, "scale": 30, "capital": 20, "execution": 20}
@@ -116,7 +113,7 @@ def _median(xs: list[float]) -> float:
     return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
 
 
-def validate(companies: list[dict], market: dict, warnings: list[str]) -> None:
+def validate(companies: list[dict], market: dict, strategy: dict, warnings: list[str]) -> None:
     ids = [c["id"] for c in companies]
     if len(ids) != len(set(ids)):
         warnings.append("회사 id 중복")
@@ -129,6 +126,21 @@ def validate(companies: list[dict], market: dict, warnings: list[str]) -> None:
         for e in ev["ids"]:
             if e not in known:
                 warnings.append(f"이벤트 '{ev['title']}': id {e} 없음")
+    for sp in strategy["signposts"]:
+        for e in sp["ids"]:
+            if e not in known:
+                warnings.append(f"신호 '{sp['trigger']}': id {e} 없음")
+    apps = {a["id"] for a in strategy["applications"]["items"]}
+    for cid, row in strategy["applications"]["matrix"].items():
+        if cid not in known:
+            warnings.append(f"용도 매트릭스: id {cid} 없음")
+        for a, v in row.items():
+            if a not in apps or not 0 <= v <= 3:
+                warnings.append(f"용도 매트릭스 {cid}.{a}={v} 잘못됨")
+    axes = {a["id"] for a in strategy["countries"]["axes"]}
+    for c in strategy["countries"]["items"]:
+        if set(c["scores"]) != axes or not all(0 <= v <= 10 for v in c["scores"].values()):
+            warnings.append(f"국가 {c['id']} 점수 축·범위 잘못됨")
     share = sum(i["share"] for i in market["bom"]["items"])
     if not math.isclose(share, 1.0, abs_tol=0.005):
         warnings.append(f"BOM 비중 합계가 {share:.3f} (1.0 이어야 함)")
@@ -138,24 +150,91 @@ def validate(companies: list[dict], market: dict, warnings: list[str]) -> None:
             warnings.append(f"시나리오 {name} 길이 불일치")
 
 
-def build() -> tuple[dict, list[str]]:
+def snapshot(companies: list[dict]) -> dict:
+    return {c["id"]: [c["calc"]["total"], c["calc"]["attract"]] for c in companies}
+
+
+def score_moves(companies: list[dict], history: dict) -> dict:
+    """현재 점수와 직전에 달랐던 스냅숏을 비교 → {id: {d_total, d_attract, tier_from}}."""
+    cur = snapshot(companies)
+    prev = next((s for s in reversed(history.get("snapshots", [])) if s["scores"] != cur), None)
+    if not prev:
+        return {}
+    moves = {}
+    for cid, (total, attract) in cur.items():
+        old = prev["scores"].get(cid)
+        if not old:
+            continue
+        d_total, d_attract = total - old[0], (attract or 0) - (old[1] or 0)
+        if d_total or d_attract:
+            moves[cid] = {"d_total": d_total, "d_attract": d_attract, "since": prev["date"],
+                          "tier_from": tier_of(old[0]) if tier_of(old[0]) != tier_of(total) else None}
+    return moves
+
+
+def alerts(companies: list[dict], news: dict, prices: dict, moves: dict, as_of: str) -> list[dict]:
+    """개요 맨 위 경보: 중요 소식(7일), 검증 대기, 주가 급변(1주 ±10%), 점수·Tier 변화."""
+    names = {c["id"]: c["name_ko"] for c in companies}
+    week = (date.fromisoformat(as_of) - timedelta(days=7)).isoformat()
+    out = []
+    for x in news.get("items", []):
+        if x.get("importance", 1) >= 3 and x["date"] >= week:
+            out.append({"level": "high", "kind": "news", "title": x.get("title_ko") or x["title"], "sub": x.get("summary_ko", ""),
+                        "ids": x.get("companies", []), "url": x["url"], "date": x["date"]})
+    pending = news.get("proposals", [])
+    if pending:
+        cs = sorted({p["company"] for p in pending})
+        out.append({"level": "mid", "kind": "proposal", "title": f"검증 대기 수치 {len(pending)}건",
+                    "sub": "AI 가 기사에서 뽑은 값이 큐레이션 값과 다릅니다 — " + ", ".join(names.get(c, c) for c in cs[:5]),
+                    "ids": cs[:5], "date": pending[0]["date"]})
+    for cid, q in prices.get("quotes", {}).items():
+        if q.get("chg_1w") is not None and abs(q["chg_1w"]) >= 10:
+            out.append({"level": "mid", "kind": "price", "title": f"{names.get(cid, cid)} 주가 1주 {q['chg_1w']:+.1f}%",
+                        "sub": f"{q['symbol']} {q.get('note', '')}".strip(), "ids": [cid], "date": q["date"]})
+    for cid, m in moves.items():
+        tier = f" · Tier {m['tier_from']}→{tier_of(next(c for c in companies if c['id'] == cid)['calc']['total'])}" if m["tier_from"] else ""
+        out.append({"level": "high" if m["tier_from"] else "mid", "kind": "score",
+                    "title": f"{names.get(cid, cid)} 경쟁력 {m['d_total']:+d}점{tier}", "sub": f"{m['since']} 대비", "ids": [cid], "date": as_of})
+    order = {"high": 0, "mid": 1}
+    out.sort(key=lambda a: a["date"], reverse=True)  # 최신 먼저, 그 안에서 중요도 순 (stable sort)
+    return sorted(out, key=lambda a: order[a["level"]])[:12]
+
+
+def news_block(news: dict, days: int = 45) -> list[dict]:
+    if not news.get("items"):
+        return []
+    newest = max(x["date"] for x in news["items"])
+    cutoff = (date.fromisoformat(newest) - timedelta(days=days)).isoformat()
+    keep = ("id", "date", "title", "title_ko", "summary_ko", "source", "url", "companies", "type", "importance", "ai", "query")
+    return [{k: x.get(k) for k in keep} for x in news["items"] if x["date"] >= cutoff][:150]
+
+
+def build(history: dict | None = None) -> tuple[dict, list[str]]:
     raw = load("companies.json")
     market = load("market.json")
+    strategy = load("strategy.json")
+    news = read_json(OUT / "news.json", {})
+    prices = read_json(OUT / "prices.json", {})
+    history = history if history is not None else read_json(SRC / "history.json", {"snapshots": []})
     warnings: list[str] = []
     companies = raw["companies"]
     for c in companies:
         c["calc"] = {**score_company(c, warnings), **efficiency(c)}
-    validate(companies, market, warnings)
+    validate(companies, market, strategy, warnings)
+    moves = score_moves(companies, history)
+    for c in companies:
+        c["calc"]["move"] = moves.get(c["id"])
     # 경쟁력 내림차순, 같으면 고객 매력도
     companies.sort(key=lambda c: (-c["calc"]["total"], -(c["calc"]["attract"] or 0)))
     events = sorted(market["events"], key=lambda e: e["date"], reverse=True)
+    k = kpis(companies, market)
     out = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M+00:00"),
         "as_of": raw["as_of"],
         "axes": {**AXES, **ATTR_AXES},
         "ipo_stages": IPO_STAGES,
         "companies": companies,
-        "kpis": kpis(companies, market),
+        "kpis": k,
         "insights": market["insights"],
         "events": events,
         "policies": sorted(market["policies"], key=lambda p: p["date"], reverse=True),
@@ -163,9 +242,25 @@ def build() -> tuple[dict, list[str]]:
         "share_h1_2026": market["share_h1_2026"],
         "scenarios": market["scenarios"],
         "bom": {**{k: v for k, v in market["bom"].items() if k != "items"}, "items": bom_items(market["bom"])},
+        "news": news_block(news),
+        "news_meta": {"generated_at": news.get("generated_at"), "ai": news.get("ai"), "warnings": news.get("warnings", [])},
+        "proposals": news.get("proposals", []),
+        "quotes": prices.get("quotes", {}),
+        "alerts": alerts(companies, news, prices, moves, datetime.now(timezone.utc).date().isoformat()),
+        "strategy": strategy,
         "warnings": warnings,
     }
     return out, warnings
+
+
+def record_history(companies: list[dict], today: str) -> None:
+    """점수가 바뀐 날만 스냅숏을 남긴다(점수 변화·Tier 이동 경보의 기준)."""
+    path = SRC / "history.json"
+    hist = read_json(path, {"snapshots": []})
+    cur = snapshot(companies)
+    if not hist["snapshots"] or hist["snapshots"][-1]["scores"] != cur:
+        hist["snapshots"] = (hist["snapshots"] + [{"date": today, "scores": cur}])[-60:]
+        write_json(path, hist, indent=0)
 
 
 def write_usage(today: str) -> None:
@@ -191,9 +286,10 @@ def main(argv: list[str] | None = None) -> int:
         print("경고:", w, file=sys.stderr)
     if args.check:
         return 1 if warnings else 0
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "dashboard.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    write_usage(datetime.now(timezone.utc).date().isoformat())
+    today = datetime.now(timezone.utc).date().isoformat()
+    write_json(OUT / "dashboard.json", out)
+    write_usage(today)
+    record_history(out["companies"], today)
     tiers = {t: sum(1 for c in out["companies"] if c["calc"]["tier"] == t) for t in (1, 2, 3)}
     print(f"dashboard.json: {len(out['companies'])}개사, Tier {tiers}, 경고 {len(warnings)}")
     return 0
