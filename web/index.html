@@ -482,14 +482,18 @@ details.fold[open] > summary::after { content: "접기"; }
       </section>
       <section id="hub-sec" class="full">
         <h2>특허 조회 허브 <span class="b t3">링크 전용</span></h2>
-        <p class="sub">기업을 고르면 기술 층별 카드가 나오고, 카드의 링크를 누르면 그 기업·기술 층의 특허 검색 결과가 새 탭에 열립니다(데이터를 저장하지 않는 링크). 대기업은 로봇(B25J) 분류로 좁혀 검색합니다. 에스페이스넷은 처음 열 때 봇 확인 화면이 나올 수 있고, 링크가 열리지 않으면 아래 '검색식 만들기'에서 검색식을 복사해 붙여 넣으세요.</p>
+        <p class="sub">기업을 고르면 기술 층별 카드가 나오고, 카드의 링크를 누르면 그 기업·기술 층의 특허 검색 결과가 새 탭에 열립니다(데이터를 저장하지 않는 링크). 대기업은 로봇(B25J) 분류로 좁혀 검색합니다. 에스페이스넷은 처음 열 때 봇 확인 화면이 나올 수 있고, 링크가 열리지 않으면 위 '검색식 만들기'에서 검색식을 복사해 붙여 넣으세요.</p>
+        <div class="chips" id="hub-tools" style="margin-bottom:8px">
+          <button class="chip" data-hubtool="build" aria-pressed="false">검색식 만들기·복사</button>
+          <button class="chip" data-hubtool="gloss" aria-pressed="false">기술 층 설명(CPC)</button>
+        </div>
+        <div class="card" id="hub-tool-build" style="margin-bottom:10px" hidden>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><select id="hb-co" aria-label="출원인"></select><select id="hb-ly" aria-label="기술 층"></select></div>
+          <div id="hb-out"></div></div>
+        <div class="card" id="hub-tool-gloss" style="margin-bottom:10px" hidden><div id="hub-gloss" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 16px"></div></div>
         <div class="chips" id="hub-site" style="margin-bottom:10px"></div>
         <div id="hub-co" style="margin-bottom:10px"></div>
         <div id="hub-cards"></div>
-        <details class="card fold" style="margin-top:10px"><summary><h3 style="display:inline">검색식 만들기·복사</h3></summary>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0"><select id="hb-co" aria-label="출원인"></select><select id="hb-ly" aria-label="기술 층"></select></div>
-          <div id="hb-out"></div></details>
-        <details class="card fold" style="margin-top:10px"><summary><h3 style="display:inline">기술 층 설명(CPC 분류)</h3></summary><div id="hub-gloss" style="margin-top:8px"></div></details>
       </section>
       <section id="pip-sec">
         <h2>특허·지재권 소식 <span class="b reported">보도 기반</span></h2>
@@ -932,14 +936,16 @@ const hubLayersFor = (row) => [{ id: "total", label: "로봇 전체", note: "cpc
 function renderPatentHub() {
   const H = HUB(), sel = selLayer();
   const companies = H.rows.filter((r) => r.kind === "company"), others = H.rows.filter((r) => r.kind !== "company");
-  let cur = store.get("patCo", "tesla");
+  let cur = store.get("patCo", "bd");
   if (!H.rows.some((r) => r.id === cur)) cur = H.rows[0].id;
   const row = H.rows.find((r) => r.id === cur);
-  const { start, label: plabel } = periodNow(), items30 = pat30(), view = store.get("patView", "co");
+  const tool = store.get("hubTool", null);
+  for (const t of ["build", "gloss"]) { $(`#hub-tool-${t}`).hidden = tool !== t; document.querySelector(`[data-hubtool="${t}"]`).setAttribute("aria-pressed", String(tool === t)); }
+  const { start, label: plabel } = periodNow(), items30 = pat30(), view = store.get("patView", "all");
   const cellsOf = (r) => hubLayersFor(r).map((l) => ({ l, c: hubCell(r, l.id, start, items30) }));
   const hot = Object.fromEntries(H.rows.map((r) => [r.id, cellsOf(r).some(({ c }) => c.changed)]));
   const chip = (r) => `<button class="chip${hot[r.id] ? " hot" : ""}" data-pco="${esc(r.id)}" aria-pressed="${view === "co" && r.id === cur}">${esc(r.company ? coLabel(r.company) : r.name)}</button>`;
-  $("#hub-site").innerHTML = [["co", "기업별 보기"], ["all", "전체 한눈에"]].map(([id, l]) => `<button class="chip" data-pview="${id}" aria-pressed="${id === view}">${l}</button>`).join("");
+  $("#hub-site").innerHTML = [["all", "전체 한눈에"], ["co", "기업별 보기"]].map(([id, l]) => `<button class="chip" data-pview="${id}" aria-pressed="${id === view}">${l}</button>`).join("");
   const legend = `<div class="lgd"><span><i></i>변화 없음(기존 색)</span><span><i class="n"></i>${esc(plabel)} 안에 새 소식·근거가 있음</span><span>칸의 숫자 = 최근 30일 특허 소식 + 큐레이션 근거 건수</span><span>노란 칸의 새 소식 = 선택한 기간에 새로 올라온 건수</span><span>논문 수치는 기업이 아닌 <b>업계 전체</b> 값</span></div>`;
   if (view === "all") {
     $("#hub-co").innerHTML = "";
@@ -1067,7 +1073,7 @@ function renderPatentRef() {
 
 // ---- 2) 논문 신호: 산점도 + 덤벨·추이선 ----
 function paperScatter(P, sel) {
-  const W = 360, H = 262, L = 40, Rm = 16, T = 14, B = 34;
+  const W = 440, H = 280, L = 40, Rm = 16, T = 14, B = 34;
   const rows = P.rows.filter((r) => r.growth != null && r.a > 0);
   const amax = Math.max(...rows.map((r) => r.a)), gmax = Math.max(...rows.map((r) => r.growth), 1.5), gmin = Math.min(...rows.map((r) => r.growth), 1);
   const xlo = Math.log10(5), xhi = Math.log10(amax * 1.5), ylo = Math.log10(Math.min(gmin * 0.8, 0.8)), yhi = Math.log10(gmax * 1.25);
@@ -1083,6 +1089,7 @@ function paperScatter(P, sel) {
   g += `<text x="${(L + W - Rm) / 2}" y="${H - 3}" text-anchor="middle" style="fill:var(--muted);font-size:9.5px">최근 12개월 논문 수(로그) →</text><text x="10" y="${T + 6}" style="fill:var(--muted);font-size:9.5px">증가 배수 ↑</text>`;
   const boxes = [{ x0: L, x1: L + 150, y0: y(base) - 15, y1: y(base) - 1 }, { x0: L, x1: L + 112, y0: H - B - 15, y1: H - B }];  // 고정 라벨 자리는 점 라벨이 피한다
   const pts = rows.map((r) => ({ r, cx: x(r.a), cy: y(r.growth), lid: pl[r.id] }));
+  for (const q of pts) boxes.push({ x0: q.cx - 7, x1: q.cx + 7, y0: q.cy - 7, y1: q.cy + 7 });  // 점 자리도 라벨이 피한다
   g += pts.map((p) => {
     const cls = growthCls(p.r.growth, base), col = cls === "up" ? "var(--good)" : cls === "down" ? "var(--bad)" : "var(--accent)";
     const on = p.lid && p.lid === sel;
@@ -1090,15 +1097,15 @@ function paperScatter(P, sel) {
   }).join("");
   g += pts.map((p) => {
     const name = p.r.label.replace(/\(.*\)/, ""), tw = [...name].reduce((s, c) => s + (/[ㄱ-힝]/.test(c) ? 9.5 : 5.8), 0);
-    for (const [ox, oy, anchor] of [[9, 3, "start"], [-9, 3, "end"], [0, -11, "middle"], [0, 17, "middle"]]) {
+    for (const [ox, oy, anchor] of [[9, 3, "start"], [-9, 3, "end"], [0, -11, "middle"], [0, 17, "middle"], [9, -9, "start"], [-9, -9, "end"], [9, 15, "start"], [-9, 15, "end"], [0, -22, "middle"], [0, 28, "middle"]]) {
       const x0 = anchor === "start" ? p.cx + ox : anchor === "end" ? p.cx + ox - tw : p.cx - tw / 2, b = { x0, x1: x0 + tw, y0: p.cy + oy - 9, y1: p.cy + oy + 2 };
       if (b.x0 < L - 30 || b.x1 > W || boxes.some((q) => b.x0 < q.x1 && b.x1 > q.x0 && b.y0 < q.y1 && b.y1 > q.y0)) continue;
       boxes.push(b);
       return `<text x="${p.cx + ox}" y="${p.cy + oy}" text-anchor="${anchor}" style="fill:var(--ink);font-size:9.5px;font-weight:600;pointer-events:none">${esc(name)}</text>`;
     }
-    return "";
+    return `<text x="${p.cx + 9}" y="${p.cy + 3}" text-anchor="start" style="fill:var(--ink);font-size:9.5px;font-weight:600;pointer-events:none">${esc(name)}</text>`;  // 빈 자리가 없어도 이름은 빼지 않는다
   }).join("");
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="논문 신호 산점도: 가로 논문 수, 세로 증가 배수">${g}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W + 60}px;height:auto;display:block;margin:0 auto" role="img" aria-label="논문 신호 산점도: 가로 논문 수, 세로 증가 배수">${g}</svg>`;
 }
 function renderPaperSignals(chartSel, subSel) {
   const P = D.papers, sel = selLayer();
@@ -1859,7 +1866,7 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-pview],[data-hm],[data-lmsort],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
+  const t = e.target.closest("[data-hubtool],[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-pview],[data-hm],[data-lmsort],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
   if (!t) return;
   if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
   if (t.dataset.co) return openSheet(t.dataset.co);
@@ -1867,6 +1874,7 @@ document.addEventListener("click", (e) => {
   if (t.dataset.pl) { setPatLayer(t.dataset.pl); return; }
   if (t.dataset.plclear !== undefined) { store.set("patLayer", null); rerenderCurrent(); return; }
   if (t.dataset.pco) { store.set("patCo", t.dataset.pco); store.set("patCoF", t.dataset.pco); rerenderCurrent(); return; }
+  if (t.dataset.hubtool) { store.set("hubTool", store.get("hubTool", null) === t.dataset.hubtool ? null : t.dataset.hubtool); renderPatentHub(); return; }
   if (t.dataset.pview) { store.set("patView", t.dataset.pview); rerenderCurrent(); return; }
   if (t.dataset.hm) {
     const [rid, lid] = t.dataset.hm.split("|");
