@@ -240,6 +240,14 @@ table.heat tr[data-co] { cursor: pointer; }
 .tr .cells div small { display: block; color: var(--muted); font-size: 0.68rem; margin-bottom: 2px; }
 .sp { display: grid; gap: 4px; }
 .sp .st { font-size: 0.7rem; font-weight: 600; }
+table.spec { border-collapse: collapse; font-size: 0.78rem; min-width: 640px; width: 100%; }
+table.spec th, table.spec td { padding: 7px 8px; border-top: 1px solid var(--line); text-align: right; white-space: nowrap; }
+table.spec th { border-top: 0; color: var(--muted); font-weight: 600; cursor: pointer; user-select: none; }
+table.spec th[aria-sort] { color: var(--ink); }
+table.spec td:first-child, table.spec th:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); }
+table.spec tr[data-co] { cursor: pointer; }
+table.spec tr[data-co]:hover td { background: var(--raised); }
+table.spec td.na { color: var(--muted); }
 .yr { font-family: var(--font-data); font-size: 0.8rem; font-weight: 600; padding: 8px 14px; background: var(--raised); border-top: 1px solid var(--line); }
 .yr:first-child { border-top: 0; }
 footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; }
@@ -259,44 +267,105 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
 
   <!-- 개요 -->
   <div class="panel" id="p-home" data-panel>
-    <div class="seg" role="group" aria-label="관점">
-      <button data-lens="parts">부품사 관점</button>
-      <button data-lens="invest">투자 관점</button>
+    <div class="seg" role="group" aria-label="역할">
+      <button data-role="exec">경영진</button>
+      <button data-role="strategy">기술전략</button>
+      <button data-role="engineer">엔지니어</button>
     </div>
-    <section id="alerts-sec" hidden>
-      <h2>경보</h2>
-      <p class="sub">중요 소식 · 검증 대기 · 주가 급변 · 점수 변화</p>
-      <div class="alerts" id="alerts"></div>
+    <section>
+      <h2>무엇이 바뀌었나</h2>
+      <p class="sub" id="chg-sub"></p>
+      <div class="chips" id="period" style="margin-bottom:10px"></div>
+      <div class="kpis" id="chg-kpis"></div>
+    </section>
+    <section id="digest-sec" hidden>
+      <h2>이번 주 요약</h2>
+      <p class="sub" id="digest-sub"></p>
+      <article class="card ins" id="digest"></article>
     </section>
     <section>
-      <div class="kpis" id="kpis"></div>
+      <h2>데이터 변화</h2>
+      <p class="sub">점수·Tier·상장 단계·핵심 수치·로드맵·신호·스펙이 바뀐 기록 (큐레이션 기준값 비교)</p>
+      <div class="list" id="chg-list"></div>
     </section>
     <section>
-      <h2>경영진 인사이트</h2>
-      <p class="sub" id="ins-sub"></p>
-      <div class="ins" id="insights"></div>
-    </section>
-    <section>
-      <h2>오늘의 소식</h2>
+      <h2 id="rnews-title">소식</h2>
       <p class="sub" id="news-sub"></p>
       <div class="chips" id="news-filter" style="margin-bottom:10px"></div>
       <div class="list news" id="news"></div>
     </section>
-    <section id="props-sec" hidden>
-      <h2>검증 대기 수치</h2>
-      <p class="sub">AI 가 기사에서 뽑은 값이 큐레이션 기준값과 10% 넘게 다르거나 기준값이 없는 경우. 확인 후 data/companies.json 에 반영합니다</p>
-      <div class="list" id="props"></div>
-    </section>
-    <section>
-      <h2>핵심 이벤트</h2>
-      <p class="sub">큐레이션한 사건 중 의사결정에 영향을 주는 것</p>
-      <div class="list" id="events"></div>
-    </section>
-    <section>
-      <h2>정책 동향</h2>
-      <p class="sub">미국의 중국산 로봇 제한은 비중국 부품 수요로, 한국 예산은 국산 실증 수요로 이어집니다</p>
-      <div class="list" id="policies"></div>
-    </section>
+
+    <div class="panel" id="role-exec">
+      <section id="alerts-sec" hidden>
+        <h2>경보</h2>
+        <p class="sub">중요 소식 · 검증 대기 · 주가 급변 · 점수 변화</p>
+        <div class="alerts" id="alerts"></div>
+      </section>
+      <section>
+        <h2>현황</h2>
+        <div class="seg" role="group" aria-label="관점" style="margin-bottom:10px">
+          <button data-lens="parts">부품사 관점</button>
+          <button data-lens="invest">투자 관점</button>
+        </div>
+        <div class="kpis" id="kpis"></div>
+      </section>
+      <section>
+        <h2>경영진 인사이트</h2>
+        <p class="sub" id="ins-sub"></p>
+        <div class="ins" id="insights"></div>
+      </section>
+      <section id="props-sec" hidden>
+        <h2>검증 대기 수치</h2>
+        <p class="sub">AI 가 기사에서 뽑은 값이 큐레이션 기준값과 10% 넘게 다르거나 기준값이 없는 경우. 확인 후 data/companies.json 에 반영합니다</p>
+        <div class="list" id="props"></div>
+      </section>
+      <section>
+        <h2>핵심 이벤트</h2>
+        <p class="sub">큐레이션한 사건 중 의사결정에 영향을 주는 것</p>
+        <div class="list" id="events"></div>
+      </section>
+      <section>
+        <h2>정책 동향</h2>
+        <p class="sub">미국의 중국산 로봇 제한은 비중국 부품 수요로, 한국 예산은 국산 실증 수요로 이어집니다</p>
+        <div class="list" id="policies"></div>
+      </section>
+    </div>
+
+    <div class="panel" id="role-strategy" hidden>
+      <section>
+        <h2>상태 확인이 필요한 로드맵</h2>
+        <p class="sub">계획·지연 항목 중 최근 30일 관련 소식이 있는 것. 완료·지연 여부를 확인해 data/companies.json 의 status 를 고치면 변화 로그에 남습니다</p>
+        <div class="list" id="rm-watch"></div>
+      </section>
+      <section>
+        <h2>신호 움직임</h2>
+        <p class="sub">전략을 바꿔야 할 신호와 최근 30일 관련 소식 (AI 가 짝지음)</p>
+        <div class="list" id="sp-moves"></div>
+      </section>
+      <section>
+        <h2>앞으로 12개월 마일스톤</h2>
+        <p class="sub">양산·배치·제품·상장 계획</p>
+        <div class="list" id="next12"></div>
+      </section>
+    </div>
+
+    <div class="panel" id="role-engineer" hidden>
+      <section>
+        <h2>기술 층별 소식</h2>
+        <p class="sub" id="layer-sub"></p>
+        <div class="chart" id="layers"></div>
+      </section>
+      <section>
+        <h2>구동 방식 분포</h2>
+        <p class="sub">스펙을 추적하는 로봇의 액추에이터 구조. 자세한 스펙 표는 부품 탭</p>
+        <div class="chart" id="act-mix"></div>
+      </section>
+      <section>
+        <h2>국내 공급 공백 품목</h2>
+        <p class="sub">국내 후보·레퍼런스가 확인되지 않은 부품</p>
+        <div class="chips" id="gaps"></div>
+      </section>
+    </div>
     <footer class="note" id="foot"></footer>
   </div>
 
@@ -342,6 +411,16 @@ footer.note { font-size: 0.76rem; color: var(--muted); display: grid; gap: 4px; 
       <h2>휴머노이드 1대 부품 원가 구성</h2>
       <p class="sub" id="bom-sub"></p>
       <div class="chart" id="bom"></div>
+    </section>
+    <section>
+      <h2>로봇 스펙 비교</h2>
+      <p class="sub" id="spec-sub"></p>
+      <div class="card" style="padding:0;overflow-x:auto"><table class="spec" id="spec"></table></div>
+    </section>
+    <section>
+      <h2>구동 방식 분포</h2>
+      <p class="sub">하모닉 감속기 수요는 '하모닉+롤러스크류' 구조에서, 행성기어·모터 수요는 QDD 구조에서 나옵니다</p>
+      <div class="chart" id="act-mix2"></div>
     </section>
     <section>
       <h2>부품별 진입 지도</h2>
@@ -514,16 +593,75 @@ function newsRow(x, chips = true) {
   return `<div class="ev"><span class="d">${esc(x.date.slice(2).replace(/-/g, "."))}</span><span class="t">${newsTitle(x)}${x.summary_ko ? `<small>${esc(x.summary_ko)}</small>` : ""}</span>
     <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${link(x.url, "원문")}</span></div>`;
 }
-const NEWS_FILTERS = [
-  { id: "all", label: "전체", f: () => true },
-  { id: "imp", label: "중요", f: (x) => x.importance >= 2 },
-  { id: "kr", label: "한국", f: (x) => (x.companies || []).some((c) => byId[c]?.kr_watch || byId[c]?.country === "KR") || byId[x.query]?.kr_watch },
-  { id: "money", label: "투자·상장", f: (x) => ["funding", "ipo"].includes(x.type) },
-  { id: "ops", label: "양산·배치", f: (x) => ["production", "deploy", "supply"].includes(x.type) },
-];
+const ROLE_BY_TYPE = { funding: ["exec"], ipo: ["exec"], policy: ["exec"], org: ["exec"], production: ["exec", "strategy"],
+  product: ["strategy", "engineer"], deploy: ["strategy"], partner: ["exec", "strategy"], supply: ["exec", "engineer"], other: [] };
+const roleOf = (x) => (x.ai ? (x.audience?.length ? x.audience : ROLE_BY_TYPE[x.type] || []) : ["exec"]);
+const ROLE_NAME = { exec: "경영진", strategy: "기술전략", engineer: "엔지니어" };
+const LAYER = { actuator: "액추에이터", hand: "손", battery: "배터리", sensor: "센서", ai: "AI·칩", safety: "안전·표준", cost: "원가" };
+const CHG_KIND = { tier: "Tier", score: "점수", attract: "매력도", listing: "상장", fact: "수치", roadmap: "로드맵", signpost: "신호", spec: "스펙" };
+const TYPE_RM = { product: "제품", production: "양산", deploy: "배치", ipo: "상장", funding: "자금", partner: "제휴", org: "조직" };
+// 방문 기록: 오늘 처음 열면 지난 방문일을 prev 로 옮긴다 → '지난 방문 이후' 기준
+const TODAY = new Date().toISOString().slice(0, 10);
+const VISIT = (() => { const v = store.get("visit", {}); if (v.last !== TODAY) { v.prev = v.last || null; v.last = TODAY; store.set("visit", v); } return v; })();
+function periodStart(p) {
+  if (p === "since" && VISIT.prev) return VISIT.prev;
+  const d = new Date(); d.setDate(d.getDate() - (p === "30" ? 30 : 7)); return d.toISOString().slice(0, 10);
+}
+const newB = (date) => (VISIT.prev && date > VISIT.prev ? '<span class="b H">새</span>' : "");
 
-// ---------- 개요 ----------
 function renderHome() {
+  const role = store.get("role", "exec");
+  document.querySelectorAll("[data-role]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.role === role)));
+  for (const r of ["exec", "strategy", "engineer"]) $(`#role-${r}`).hidden = r !== role;
+  let period = store.get("period", VISIT.prev ? "since" : "7");
+  if (period === "since" && !VISIT.prev) period = "7";
+  const start = periodStart(period);
+  $("#period").innerHTML = [["since", VISIT.prev ? `지난 방문(${VISIT.prev.slice(5).replace("-", "/")}) 이후` : null], ["7", "7일"], ["30", "30일"]]
+    .filter(([, l]) => l).map(([id, l]) => `<button class="chip" data-period="${id}" aria-pressed="${id === period}">${l}</button>`).join("");
+
+  const chg = (D.changes || []).filter((c) => c.date >= start && c.roles.includes(role));
+  const news = (D.news || []).filter((x) => x.date >= start && roleOf(x).includes(role));
+  const key = news.filter((x) => x.importance >= 3);
+  const spMoves = (D.news || []).filter((x) => x.date >= start && x.signpost);
+  $("#chg-sub").textContent = `${ROLE_NAME[role]} 관점 · ${start.slice(5).replace("-", "/")} 이후`;
+  const tiles = [["데이터 변화", `${chg.length}건`], ["소식", `${news.length}건`], ["핵심 소식", `${key.length}건`],
+    role === "engineer" ? ["스펙 변화", `${chg.filter((c) => c.kind === "spec").length}건`] : ["신호 관련 소식", `${spMoves.length}건`]];
+  $("#chg-kpis").innerHTML = tiles.map(([l, v]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span></div>`).join("");
+
+  // 주간 다이제스트
+  const dg = D.digest, dr = dg?.roles?.[role];
+  $("#digest-sec").hidden = !dr;
+  if (dr) {
+    const byNews = Object.fromEntries((D.news || []).map((x) => [x.id, x]));
+    $("#digest-sub").textContent = `${dg.from.slice(5).replace("-", "/")} ~ ${dg.to.slice(5).replace("-", "/")} · ${dg.ai ? "Gemini 요약" : "AI 없이 상위 항목 나열"} · 변화 ${dg.n_changes} · 소식 ${dg.n_news}`;
+    $("#digest").innerHTML = `<h3>${esc(dr.headline)}</h3>
+      <ul class="plain">${dr.bullets.map((b) => `<li>${esc(b.text)} ${b.refs.map((r) => (byNews[r] ? link(byNews[r].url, "근거") : "")).join(" ")}</li>`).join("")}</ul>
+      ${dr.action ? `<div class="act"><b>다음 주</b>${esc(dr.action)}</div>` : ""}`;
+  }
+
+  $("#chg-list").innerHTML = chg.slice(0, 15).map((c) => {
+    const open = c.company ? `button class="row" data-co="${esc(c.company)}"` : 'div class="row"';
+    return `<${open}><span class="t">${newB(c.date)} ${esc(c.title)}</span><span class="r"><span class="b t3">${CHG_KIND[c.kind] || c.kind}</span></span>
+      <span class="s">${esc(c.date)}</span></${c.company ? "button" : "div"}>`;
+  }).join("") || `<div class="empty">이 기간에 ${ROLE_NAME[role]} 관점의 데이터 변화가 없습니다. 큐레이션 값(점수·수치·로드맵·스펙)이 바뀌면 여기에 기록됩니다</div>`;
+
+  // 역할별 소식
+  const m = D.news_meta || {};
+  $("#rnews-title").textContent = `${ROLE_NAME[role]}이 볼 소식`;
+  $("#news-sub").textContent = `${m.ai === "gemini" ? "Gemini 가 대상·중요도를 분류" : "AI 분류 없이 제목만"} · 매일 아침 자동 수집${(m.warnings || []).length ? " · " + m.warnings.join(" ") : ""}`;
+  const nf = store.get(`nf-${role}`, "all");
+  const filters = role === "engineer" ? [["all", "전체"], ...Object.entries(LAYER)] : [["all", "전체"], ["imp", "주목 이상"]];
+  $("#news-filter").innerHTML = filters.map(([id, l]) => `<button class="chip" data-nf="${id}" aria-pressed="${id === nf}">${l}</button>`).join("");
+  const shown = news.filter((x) => nf === "all" || (nf === "imp" ? x.importance >= 2 : x.layer === nf))
+    .sort((a, b) => b.importance - a.importance || b.date.localeCompare(a.date)).slice(0, 15);
+  $("#news").innerHTML = shown.map((x) => newsRow(x)).join("") || '<div class="empty">이 기간·조건에 맞는 소식이 없습니다</div>';
+
+  if (role === "exec") renderExec();
+  if (role === "strategy") renderStrategyBrief();
+  if (role === "engineer") renderEngineerBrief(start);
+}
+
+function renderExec() {
   const lens = store.get("lens", "parts");
   const al = D.alerts || [];
   $("#alerts-sec").hidden = !al.length;
@@ -531,15 +669,6 @@ function renderHome() {
     const target = a.url ? `data-url="${esc(a.url)}"` : a.ids?.[0] ? `data-co="${esc(a.ids[0])}"` : "";
     return `<button class="alert ${a.level}" ${target}><b>${esc(a.title)}</b><span>${esc(a.sub || "")}</span></button>`;
   }).join("");
-  const nf = store.get("nf", "all");
-  const m = D.news_meta || {};
-  $("#news-sub").textContent = (D.news || []).length
-    ? `${m.ai === "gemini" ? "Gemini 가 분류·요약" : "AI 분류 없이 제목만"} · 매일 자동 수집 ${m.generated_at ? new Date(m.generated_at).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" }) : ""}${(m.warnings || []).length ? " · " + m.warnings.join(" ") : ""}`
-    : "아직 수집된 소식이 없습니다. 매일 아침 자동으로 모입니다";
-  $("#news-filter").innerHTML = NEWS_FILTERS.map((f) => `<button class="chip" data-nf="${f.id}" aria-pressed="${f.id === nf}">${f.label}</button>`).join("");
-  const nflt = NEWS_FILTERS.find((f) => f.id === nf) || NEWS_FILTERS[0];
-  const items = (D.news || []).filter(nflt.f).slice(0, 20);
-  $("#news").innerHTML = items.map((x) => newsRow(x)).join("") || '<div class="empty">조건에 맞는 소식이 없습니다</div>';
   const props = D.proposals || [];
   $("#props-sec").hidden = !props.length;
   $("#props").innerHTML = props.slice(0, 12).map((p) => `<div class="prop"><span><b>${esc(byId[p.company]?.name_ko || p.company)}</b> ${FIELD[p.field] || p.field}</span>
@@ -566,6 +695,43 @@ function renderHome() {
   $("#policies").innerHTML = D.policies.map((p) => `
     <div class="ev"><span class="d">${esc(p.date.slice(2).replace("-", "."))} ${esc(p.country)}</span><span class="t">${esc(p.title)}</span>
       <span class="m"><span class="muted">${esc(p.note)}</span>${link(p.src)}</span></div>`).join("");
+}
+
+function renderStrategyBrief() {
+  const st = { done: "완료", planned: "계획", delayed: "지연·변경" };
+  $("#rm-watch").innerHTML = (D.roadmap_watch || []).map((w) => `
+    <div class="ev"><span class="d">${esc(w.when)}</span><span class="t"><b>${esc(byId[w.company]?.name_ko || w.company)}</b> ${esc(w.title)} <span class="st-${w.status}" style="font-size:.74rem">${st[w.status]}</span>
+      <small>${w.news.map((n) => `${esc(n.date.slice(5))} ${esc(n.title)} ${link(n.url, "원문")}`).join("<br>")}</small></span></div>`).join("")
+    || '<div class="empty">최근 30일 동안 계획 항목과 짝지어진 소식이 없습니다</div>';
+  const moves = D.signpost_moves || {};
+  $("#sp-moves").innerHTML = D.strategy.signposts.map((s) => {
+    const mv = moves[s.id];
+    return `<a class="row" href="#strat" style="text-decoration:none;color:inherit"><span class="t">${esc(s.trigger)}</span>
+      <span class="r"><span class="b ${SIGN[s.status][1]}">${SIGN[s.status][0]}</span> ${mv ? `<span class="b H">소식 ${mv.count}</span>` : ""}</span>
+      <span class="s">${mv ? mv.news.map((n) => `${esc(n.date.slice(5))} ${esc(n.title)}`).join(" · ") : esc(s.means)}</span></a>`;
+  }).join("");
+  const until = String(new Date().getFullYear() + 1);
+  const next = D.companies.flatMap((c) => c.roadmap.filter((r) => r.status !== "done" && r.when.slice(0, 4) <= until).map((r) => ({ ...r, c })))
+    .sort((a, b) => a.when.localeCompare(b.when));
+  $("#next12").innerHTML = next.map((r) => `<button class="row" data-co="${esc(r.c.id)}"><span class="t ${r.status === "delayed" ? "st-delayed" : ""}">${esc(r.title)}</span><span class="r mono muted" style="font-size:.74rem">${esc(r.when)}</span><span class="s">${esc(r.c.name_ko)} · ${TYPE_RM[r.type] || r.type}</span></button>`).join("");
+}
+
+function renderEngineerBrief(start) {
+  const news = (D.news || []).filter((x) => x.date >= start && x.layer && x.layer !== "none");
+  const counts = Object.keys(LAYER).map((k) => [k, news.filter((x) => x.layer === k).length]);
+  const max = Math.max(1, ...counts.map(([, n]) => n));
+  $("#layer-sub").textContent = `${start.slice(5).replace("-", "/")} 이후 AI 가 기술 층으로 분류한 소식 ${news.length}건 — 누르면 위 소식 목록을 그 층으로 거릅니다`;
+  $("#layers").innerHTML = counts.map(([k, n]) => `<div class="hbar" data-nf="${k}" style="cursor:pointer"><span class="n">${LAYER[k]}</span><span class="track"><i style="width:${(n / max) * 100}%"></i></span><span class="v">${n}건</span></div>`).join("");
+  renderActMix("#act-mix");
+  $("#gaps").innerHTML = D.bom.items.filter((i) => !i.kr.length).map((i) => `<a class="chip" href="#parts" style="text-decoration:none;color:inherit">${esc(i.name)} · ${BARRIER[i.barrier]}</a>`).join("");
+}
+function renderActMix(sel) {
+  const S = D.specs, cnt = {};
+  for (const m of S.models) (cnt[m.actuator] ||= []).push(m);
+  const max = Math.max(...Object.values(cnt).map((a) => a.length));
+  $(sel).innerHTML = Object.entries(cnt).sort((a, b) => b[1].length - a[1].length).map(([k, ms]) => `
+    <div class="hbar"><span class="n">${esc(S.actuators[k])}</span><span class="track"><i style="width:${(ms.length / max) * 100}%"></i></span><span class="v">${ms.length}종</span></div>
+    <p class="sub" style="margin:0 4px 6px;font-size:.74rem">${ms.map((m) => esc(m.model)).join(" · ")}</p>`).join("");
 }
 
 // ---------- 경쟁 지형 ----------
@@ -698,8 +864,32 @@ function renderCalc() {
 }
 function saveCalc(patch) { store.set("calc", { ...calcState(), item: calcState().item.id, items: undefined, ...patch }); renderCalc(); }
 
+function renderSpecs() {
+  const S = D.specs, sort = store.get("specSort", { k: "hand_dof", d: -1 });
+  const cols = [{ id: "model", label: "모델" }, ...S.fields, { id: "actuator", label: "구동 방식" }];
+  const val = (m, k) => (k === "model" ? m.model : m[k]);
+  const rows = [...S.models].sort((a, b) => {
+    const x = val(a, sort.k), y = val(b, sort.k);
+    if (x == null && y == null) return 0;
+    if (x == null) return 1;
+    if (y == null) return -1;
+    return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * sort.d;
+  });
+  const cell = (m, f) => {
+    const v = m[f.id];
+    if (v == null) return '<td class="na">–</td>';
+    return `<td class="num">${f.id === "price_usd" ? usd(v) : v.toLocaleString("ko-KR")}${f.unit && f.id !== "price_usd" ? `<span class="muted"> ${f.unit}</span>` : ""}</td>`;
+  };
+  $("#spec-sub").textContent = `${S.models.length}개 모델 · 머리글을 누르면 정렬 · '–' 는 공식·일관된 수치가 없는 항목 · 기준 ${S.as_of}`;
+  $("#spec").innerHTML = `<tr>${cols.map((c) => `<th data-sort="${c.id}"${sort.k === c.id ? ` aria-sort="${sort.d > 0 ? "ascending" : "descending"}"` : ""}>${esc(c.label)}${sort.k === c.id ? (sort.d > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr>`
+    + rows.map((m) => `<tr data-co="${esc(m.company)}" title="${esc(m.note)}"><td><b>${esc(m.model)}</b> ${kindB(m.kind)}<br><span class="muted" style="font-size:.72rem">${esc(byId[m.company]?.name_ko || "")} · ${esc(m.form)}</span></td>
+      ${S.fields.map((f) => cell(m, f)).join("")}<td style="text-align:left">${esc(S.actuators[m.actuator])}</td></tr>`).join("");
+  renderActMix("#act-mix2");
+}
+
 function renderParts() {
   renderCalc();
+  renderSpecs();
   const items = D.bom.items.filter((i) => !i.module).sort((a, b) => b.share - a.share);
   const max = items[0].share;
   $("#bom-sub").textContent = `대당 BOM 약 $${D.bom.unit_bom_2026.toLocaleString()}(2026 추정) 중 비중. 액추에이터 계열(감속기·모터·스크류·드라이버·엔코더)이 절반 이상`;
@@ -842,6 +1032,7 @@ function renderStrat() {
     <article class="card sp"><div style="display:flex;gap:8px;align-items:center"><b style="font-size:.92rem;flex:1">${esc(p.trigger)}</b><span class="b ${SIGN[p.status][1]}">${SIGN[p.status][0]}</span></div>
       <p style="margin:0;font-size:.84rem;color:var(--muted)">${esc(p.means)}</p>
       <div class="act" style="font-size:.84rem;padding:8px 10px;border-radius:10px;background:color-mix(in oklab, var(--accent) 9%, var(--surface))"><b style="color:var(--accent);margin-right:6px">대응</b>${esc(p.action)}</div>
+      ${(() => { const mv = (D.signpost_moves || {})[p.id]; return mv ? `<div style="font-size:.8rem"><span class="b H">최근 30일 관련 소식 ${mv.count}건</span><br>${mv.news.map((n) => `${esc(n.date.slice(5))} ${esc(n.title)} ${link(n.url, "원문")}`).join("<br>")}</div>` : ""; })()}
       ${p.ids.length ? `<div class="chips">${p.ids.map(coChip).join("")}</div>` : ""}</article>`).join("");
 
   // 국가 레이더
@@ -937,11 +1128,14 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-co],[data-url],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
+  const t = e.target.closest("[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
   if (!t) return;
   if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
   if (t.dataset.co) return openSheet(t.dataset.co);
-  if (t.dataset.nf) { store.set("nf", t.dataset.nf); renderHome(); }
+  if (t.dataset.sort) { const s = store.get("specSort", { k: "hand_dof", d: -1 }); store.set("specSort", { k: t.dataset.sort, d: s.k === t.dataset.sort ? -s.d : -1 }); renderSpecs(); return; }
+  if (t.dataset.role) { store.set("role", t.dataset.role); renderHome(); }
+  if (t.dataset.period) { store.set("period", t.dataset.period); renderHome(); }
+  if (t.dataset.nf) { store.set(`nf-${store.get("role", "exec")}`, t.dataset.nf); renderHome(); }
   if (t.dataset.opt) saveStrat({ opt: t.dataset.opt, capex: null, margin: null });
   if (t.dataset.cty) { const s = new Set(store.get("cty", ["KR", "CN", "US"])); s.has(t.dataset.cty) ? s.delete(t.dataset.cty) : s.add(t.dataset.cty); store.set("cty", [...s]); renderStrat(); }
   if (t.dataset.rmf) { store.set("rmf", t.dataset.rmf); renderStrat(); }

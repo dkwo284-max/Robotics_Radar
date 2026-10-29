@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import html
+import json
 import re
 from datetime import date, datetime, timedelta, timezone
 from urllib.parse import quote_plus
@@ -24,10 +25,23 @@ RSS = {
     "ko": "https://news.google.com/rss/search?q={q}+when:{d}d&hl=ko&gl=KR&ceid=KR:ko",
 }
 TYPES = ["funding", "ipo", "production", "product", "deploy", "partner", "supply", "policy", "org", "other"]
+ROLES = ["exec", "strategy", "engineer"]
+LAYERS = ["actuator", "hand", "battery", "sensor", "ai", "safety", "cost", "none"]
+# AI 를 못 쓴 기사의 역할 추정(유형 기준)
+ROLE_BY_TYPE = {"funding": ["exec"], "ipo": ["exec"], "policy": ["exec"], "org": ["exec"], "production": ["exec", "strategy"],
+                "product": ["strategy", "engineer"], "deploy": ["strategy"], "partner": ["exec", "strategy"], "supply": ["exec", "engineer"], "other": []}
 FIELDS = {  # 추출 대상 필드 → 단위
     "valuation": "USD_M", "funding_total": "USD_M", "revenue": "USD_M", "orders": "USD_M",
     "cum_units": "units", "capacity": "units", "target_2026": "units", "price": "USD",
 }
+
+def schema(signpost_ids: list[str]) -> dict:
+    s = json.loads(json.dumps(SCHEMA))
+    item = s["properties"]["items"]["items"]
+    item["properties"]["signpost"] = {"type": "STRING", "enum": signpost_ids + ["none"]}
+    item["required"].append("signpost")
+    return s
+
 
 SCHEMA = {
     "type": "OBJECT",
@@ -44,6 +58,8 @@ SCHEMA = {
                     "title_ko": {"type": "STRING"},
                     "summary_ko": {"type": "STRING"},
                     "importance": {"type": "INTEGER"},
+                    "audience": {"type": "ARRAY", "items": {"type": "STRING", "enum": ROLES}},
+                    "layer": {"type": "STRING", "enum": LAYERS},
                     "facts": {
                         "type": "ARRAY",
                         "items": {
@@ -58,7 +74,7 @@ SCHEMA = {
                         },
                     },
                 },
-                "required": ["id", "relevant", "companies", "type", "title_ko", "summary_ko", "importance", "facts"],
+                "required": ["id", "relevant", "companies", "type", "title_ko", "summary_ko", "importance", "audience", "layer", "facts"],
             },
         }
     },
@@ -78,6 +94,10 @@ SYSTEM = """당신은 휴머노이드·피지컬 AI 산업을 한국 제조·부
   대수로 된 주문은 넣지 마세요), cum_units(회사의 누적 출하·생산 총계 — 행사·시연에 동원된 대수나 한 고객 납품 대수는 아님),
   capacity(연간 생산능력 대수), target_2026(2026 출하·생산 목표 대수), price(대당 판매가 USD).
   as_of 는 수치 기준 시점(YYYY-MM 또는 YYYY). 확실하지 않으면 넣지 말고, 명시된 수치가 없으면 빈 배열.
+- audience: 이 소식을 꼭 봐야 하는 사람(복수 가능). exec(경영진 — 자금·상장·고객·경쟁 구도·정책),
+  strategy(기술전략 — 제품 출시·양산 일정·로드맵·기술 방향), engineer(엔지니어 — 부품·구동 방식·센서·배터리·스펙·공급사).
+- layer: 기술 층 actuator(모터·감속기·스크류) / hand(손) / battery / sensor(카메라·촉각·힘) / ai(모델·칩) / safety(안전·표준) / cost(원가·가격) / none.
+- signpost: 아래 [주시할 신호] 중 이 기사가 직접 관련된 신호 id. 없으면 "none".
 모든 id 를 한 번씩 반환하세요."""
 
 
@@ -141,10 +161,12 @@ def collect(cfg: dict, client: httpx.Client, known: set[str]) -> list[dict]:
     return fresh
 
 
-def classify(items: list[dict], companies: list[dict], llm: Gemini, limit: int) -> tuple[list[dict], str | None, list[str]]:
+def classify(items: list[dict], companies: list[dict], llm: Gemini, limit: int,
+             signposts: list[dict] | None = None) -> tuple[list[dict], str | None, list[str]]:
     """AI 분류 → (저장할 기사, 경고, 관련 없다고 본 id). 실패하거나 키가 없으면 제목만."""
+    signposts = signposts or []
     plain = lambda x: {**x, "ai": False, "companies": [] if x["query"] == "_market" else [x["query"]], "type": "other",  # noqa: E731
-                       "title_ko": "", "summary_ko": "", "importance": 1, "facts": []}
+                       "title_ko": "", "summary_ko": "", "importance": 1, "audience": [], "layer": "none", "signpost": None, "facts": []}
     if not items:
         return [], None, []
     if not llm.enabled:
@@ -152,13 +174,14 @@ def classify(items: list[dict], companies: list[dict], llm: Gemini, limit: int) 
     ids = {c["id"] for c in companies}
     roster = ", ".join(f"{c['id']}={c['name']}({c['name_ko']})" for c in companies)
     todo = items[:limit]
-    user = f"[추적 기업 id] {roster}\n\n" + "\n\n".join(
+    signs = "; ".join(f"{s['id']}={s['trigger']}" for s in signposts) or "(없음)"
+    user = f"[추적 기업 id] {roster}\n[주시할 신호] {signs}\n\n" + "\n\n".join(
         f"[id] {x['id']}\n[검색 기업] {x['query']}\n[제목] {x['title']}\n[출처] {x['source']} · {x['date']}"
         + (f"\n[설명] {x['desc'][:300]}" if x["desc"] else "") for x in todo)
     warn = None
     rows: dict[str, dict] = {}
     try:
-        rows = {r.get("id"): r for r in llm.json_call(SYSTEM, user, SCHEMA).get("items", [])}
+        rows = {r.get("id"): r for r in llm.json_call(SYSTEM, user, schema([s["id"] for s in signposts])).get("items", [])}
     except LLMError as e:
         log.warning("news AI failed: %s", e)
         warn = "AI 분류에 실패해 제목만 표시합니다."
@@ -176,7 +199,10 @@ def classify(items: list[dict], companies: list[dict], llm: Gemini, limit: int) 
         out.append({**x, "ai": True, "companies": [c for c in r.get("companies", []) if c in ids],
                     "type": r.get("type") if r.get("type") in TYPES else "other",
                     "title_ko": r.get("title_ko", "")[:80], "summary_ko": r.get("summary_ko", "")[:140],
-                    "importance": min(3, max(1, int(r.get("importance", 1)))), "facts": facts})
+                    "importance": min(3, max(1, int(r.get("importance", 1)))),
+                    "audience": [a for a in r.get("audience", []) if a in ROLES] or ROLE_BY_TYPE.get(r.get("type"), []),
+                    "layer": r.get("layer") if r.get("layer") in LAYERS else "none",
+                    "signpost": r.get("signpost") if r.get("signpost") in {s["id"] for s in signposts} else None, "facts": facts})
     # 한도를 넘어 미룬 기사는 저장하지 않는다(다음 실행에서 새 기사로 다시 잡힘)
     if len(items) > limit:
         log.info("news: %d item(s) deferred to next run", len(items) - limit)
@@ -203,7 +229,8 @@ def proposals(items: list[dict], companies: list[dict], old: list[dict], keep_da
     return sorted((p for p in out.values() if p["date"] >= cutoff), key=lambda p: p["date"], reverse=True)
 
 
-def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client: httpx.Client | None = None) -> dict:
+def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client: httpx.Client | None = None,
+                signposts: list[dict] | None = None) -> dict:
     own = client is None
     client = client or httpx.Client(timeout=30, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (compatible; RoboticsRadar/1.0)"})
     try:
@@ -212,7 +239,7 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
         # 키가 없거나 상한에 걸려 제목만 저장된 최근 기사는 AI 를 쓸 수 있을 때 다시 분류한다(새 기사 먼저)
         since = (date.today() - timedelta(days=int(cfg["news"].get("lookback_days", 7)))).isoformat()
         retry = [{**x, "desc": ""} for x in items.values() if not x.get("ai") and x["date"] >= since] if llm.enabled else []
-        done, warn, dropped = classify(fresh + retry, companies, llm, int(cfg["news"].get("max_ai_items", 40)))
+        done, warn, dropped = classify(fresh + retry, companies, llm, int(cfg["news"].get("max_ai_items", 40)), signposts)
         for i in dropped:
             items.pop(i, None)
     finally:

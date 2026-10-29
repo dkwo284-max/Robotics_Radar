@@ -14,6 +14,7 @@ import math
 import sys
 from datetime import date, datetime, timedelta, timezone
 
+from changes import diff, state_of
 from common import OUT, SRC, plausible, read_json, write_json
 
 # 경쟁력 점수 축과 만점. 합계 100 → Tier
@@ -205,14 +206,61 @@ def news_block(news: dict, days: int = 45) -> list[dict]:
         return []
     newest = max(x["date"] for x in news["items"])
     cutoff = (date.fromisoformat(newest) - timedelta(days=days)).isoformat()
-    keep = ("id", "date", "title", "title_ko", "summary_ko", "source", "url", "companies", "type", "importance", "ai", "query")
+    keep = ("id", "date", "title", "title_ko", "summary_ko", "source", "url", "companies", "type", "importance", "ai", "query",
+            "audience", "layer", "signpost")
     return [{k: x.get(k) for k in keep} for x in news["items"] if x["date"] >= cutoff][:150]
+
+
+RM_NEWS = {"production": {"production", "supply"}, "product": {"product"}, "deploy": {"deploy", "partner"},
+           "ipo": {"ipo", "funding"}, "funding": {"funding", "ipo"}}
+
+
+def roadmap_watch(companies: list[dict], news: list[dict], today: str) -> list[dict]:
+    """계획·지연 로드맵 항목 중 최근 30일 관련 소식이 있는 것 → 상태를 확인해 볼 후보."""
+    since = (date.fromisoformat(today) - timedelta(days=30)).isoformat()
+    out = []
+    for c in companies:
+        for r in c.get("roadmap", []):
+            if r["status"] == "done" or r["type"] not in RM_NEWS:
+                continue
+            hits = [x for x in news if x["date"] >= since and c["id"] in (x.get("companies") or []) and x.get("type") in RM_NEWS[r["type"]]]
+            if hits:
+                out.append({"company": c["id"], "title": r["title"], "when": r["when"], "status": r["status"], "type": r["type"],
+                            "news": [{"id": x["id"], "title": x.get("title_ko") or x["title"], "url": x["url"], "date": x["date"]} for x in hits[:3]]})
+    return out
+
+
+def signpost_moves(strategy: dict, news: list[dict], today: str) -> dict:
+    """신호별 최근 30일 관련 소식(AI 가 신호 id 로 짝지은 것)."""
+    since = (date.fromisoformat(today) - timedelta(days=30)).isoformat()
+    out = {}
+    for sp in strategy["signposts"]:
+        hits = [x for x in news if x.get("signpost") == sp["id"] and x["date"] >= since]
+        if hits:
+            out[sp["id"]] = {"count": len(hits), "news": [{"id": x["id"], "title": x.get("title_ko") or x["title"], "url": x["url"],
+                                                          "date": x["date"], "importance": x.get("importance", 1)} for x in hits[:3]]}
+    return out
+
+
+def change_log(companies: list[dict], strategy: dict, specs: dict, today: str) -> tuple[dict, list[dict], list[dict]]:
+    """(현재 상태, 오늘 새로 생긴 변화, 화면용 변화 목록 최근 120일)."""
+    cur = state_of(companies, strategy, specs)
+    prev = read_json(SRC / "state.json", None)
+    ctx = {"names": {c["id"]: c["name_ko"] for c in companies}, "stages": IPO_STAGES,
+           "signposts": {s["id"]: s["trigger"] for s in strategy["signposts"]},
+           "models": {m["id"]: (m["model"], m["company"]) for m in specs["models"]},
+           "spec_labels": {**{f["id"]: f["label"] for f in specs["fields"]}, "actuator": "구동 방식"}}
+    new = diff(prev, cur, ctx, today)
+    log_items = read_json(SRC / "changes.json", {"items": []})["items"]
+    cutoff = (date.fromisoformat(today) - timedelta(days=120)).isoformat()
+    return cur, new, [x for x in new + log_items if x["date"] >= cutoff]
 
 
 def build(history: dict | None = None) -> tuple[dict, list[str]]:
     raw = load("companies.json")
     market = load("market.json")
     strategy = load("strategy.json")
+    specs = load("specs.json")
     news = read_json(OUT / "news.json", {})
     prices = read_json(OUT / "prices.json", {})
     # 검증 대기: 큐레이션 값이 이미 반영됐거나 단위 착오로 보이는 제안은 뺀다
@@ -225,6 +273,12 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     for c in companies:
         c["calc"] = {**score_company(c, warnings), **efficiency(c)}
     validate(companies, market, strategy, warnings)
+    known = {c["id"] for c in companies}
+    for m in specs["models"]:
+        if m["company"] not in known or m["actuator"] not in specs["actuators"]:
+            warnings.append(f"스펙 {m['id']}: 기업 id 또는 구동 방식 잘못됨")
+    if len({s.get("id") for s in strategy["signposts"]}) != len(strategy["signposts"]) or not all(s.get("id") for s in strategy["signposts"]):
+        warnings.append("신호 id 가 비었거나 중복")
     moves = score_moves(companies, history)
     for c in companies:
         c["calc"]["move"] = moves.get(c["id"])
@@ -232,6 +286,10 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
     companies.sort(key=lambda c: (-c["calc"]["total"], -(c["calc"]["attract"] or 0)))
     events = sorted(market["events"], key=lambda e: e["date"], reverse=True)
     k = kpis(companies, market)
+    today = datetime.now(timezone.utc).date().isoformat()
+    state, new_changes, changes = change_log(companies, strategy, specs, today)
+    nb = news_block(news)
+    digest = read_json(OUT / "digest.json", {}).get("items", [])
     out = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M+00:00"),
         "as_of": raw["as_of"],
@@ -246,13 +304,20 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "share_h1_2026": market["share_h1_2026"],
         "scenarios": market["scenarios"],
         "bom": {**{k: v for k, v in market["bom"].items() if k != "items"}, "items": bom_items(market["bom"])},
-        "news": news_block(news),
+        "news": nb,
+        "changes": changes,
+        "roadmap_watch": roadmap_watch(companies, nb, today),
+        "signpost_moves": signpost_moves(strategy, nb, today),
+        "digest": digest[0] if digest else None,
+        "specs": specs,
         "news_meta": {"generated_at": news.get("generated_at"), "ai": news.get("ai"), "warnings": news.get("warnings", [])},
         "proposals": news.get("proposals", []),
         "quotes": prices.get("quotes", {}),
-        "alerts": alerts(companies, news, prices, moves, datetime.now(timezone.utc).date().isoformat()),
+        "alerts": alerts(companies, news, prices, moves, today),
         "strategy": strategy,
         "warnings": warnings,
+        "_state": state,
+        "_new_changes": new_changes,
     }
     return out, warnings
 
@@ -291,11 +356,19 @@ def main(argv: list[str] | None = None) -> int:
     if args.check:
         return 1 if warnings else 0
     today = datetime.now(timezone.utc).date().isoformat()
+    state, new = out.pop("_state"), out.pop("_new_changes")
     write_json(OUT / "dashboard.json", out)
+    # 변화 로그: 오늘 생긴 변화만 덧붙이고 상태를 갱신 (1년 보관)
+    log_items = read_json(SRC / "changes.json", {"items": []})["items"]
+    if new or not (SRC / "changes.json").exists():
+        cutoff = (date.fromisoformat(today) - timedelta(days=365)).isoformat()
+        write_json(SRC / "changes.json", {"items": [x for x in new + log_items if x["date"] >= cutoff]}, indent=0)
+    if new or not (SRC / "state.json").exists():
+        write_json(SRC / "state.json", state)
     write_usage(today)
     record_history(out["companies"], today)
     tiers = {t: sum(1 for c in out["companies"] if c["calc"]["tier"] == t) for t in (1, 2, 3)}
-    print(f"dashboard.json: {len(out['companies'])}개사, Tier {tiers}, 경고 {len(warnings)}")
+    print(f"dashboard.json: {len(out['companies'])}개사, Tier {tiers}, 새 변화 {len(new)}, 경고 {len(warnings)}")
     return 0
 
 

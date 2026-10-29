@@ -1,0 +1,50 @@
+{
+  "_about": "엔지니어용 로봇 스펙. 값이 없거나 출처가 엇갈려 확인이 안 되면 null. kind: official(제조사) / reported(제3자 DB·보도). actuator: 구동 방식 분류(harmonic_screw 하모닉+롤러스크류 / qdd 준직접구동 행성 / linear 리니어 중심 / tendon 텐던 / custom 자체·미공개). 이 값이 바뀌면 변화 로그에 '스펙 변화'로 남는다.",
+  "as_of": "2026-10-29",
+  "fields": [
+    {"id": "height_cm", "label": "키", "unit": "cm"},
+    {"id": "weight_kg", "label": "무게", "unit": "kg"},
+    {"id": "dof", "label": "전신 자유도", "unit": ""},
+    {"id": "hand_dof", "label": "손 자유도", "unit": ""},
+    {"id": "payload_kg", "label": "가반하중", "unit": "kg"},
+    {"id": "runtime_h", "label": "작동시간", "unit": "h"},
+    {"id": "price_usd", "label": "가격", "unit": "$"}
+  ],
+  "actuators": {
+    "harmonic_screw": "하모닉 감속기 + 롤러스크류",
+    "qdd": "준직접구동(QDD)·행성기어",
+    "linear": "리니어 액추에이터 중심",
+    "tendon": "텐던 구동",
+    "custom": "자체 설계·미공개"
+  },
+  "models": [
+    {"id": "optimus3", "company": "tesla", "model": "Optimus Gen 3", "form": "이족", "height_cm": 173, "weight_kg": 57, "dof": 28, "hand_dof": 22, "payload_kg": null, "runtime_h": null, "price_usd": 20000, "actuator": "harmonic_screw",
+     "kind": "reported", "note": "공식 스펙 미공개. 손 22자유도(손 액추에이터 50개)가 가장 일관된 보도. 전신 자유도는 몸체 기준 28, 가격은 목표가", "src": "https://humanoid.guide/product/optimus-gen-3/"},
+    {"id": "figure03", "company": "figure", "model": "Figure 03", "form": "이족", "height_cm": 173, "weight_kg": 61, "dof": null, "hand_dof": null, "payload_kg": 20, "runtime_h": 5, "price_usd": null, "actuator": "custom",
+     "kind": "official", "note": "제조사 페이지 기준. 손바닥 카메라·촉각 센서. 자유도는 제3자 DB(전신 30·손 20)에만 있어 미기재", "src": "https://figure.ai/figure"},
+    {"id": "atlas", "company": "bd", "model": "Atlas (양산형)", "form": "이족", "height_cm": null, "weight_kg": null, "dof": 56, "hand_dof": null, "payload_kg": 50, "runtime_h": 4, "price_usd": null, "actuator": "custom",
+     "kind": "reported", "note": "CES 2026. 대부분 360° 회전 관절, 손가락·손바닥 촉각. 작동시간(듀얼 팩 자동 교체)은 단일 출처", "src": "https://engadget.com/big-tech/boston-dynamics-unveils-production-ready-version-of-atlas-robot-at-ces-2026-234047882.html"},
+    {"id": "g1", "company": "unitree", "model": "Unitree G1", "form": "이족(소형)", "height_cm": 132, "weight_kg": 35, "dof": 23, "hand_dof": null, "payload_kg": null, "runtime_h": 2, "price_usd": 16000, "actuator": "qdd",
+     "kind": "official", "note": "EDU 구성은 23~43자유도. 가격 $13.5k~16k(페이지마다 다름), 작동시간은 판매처 기준", "src": "https://www.unitree.com/g1/"},
+    {"id": "r1", "company": "unitree", "model": "Unitree R1", "form": "이족(소형)", "height_cm": 121, "weight_kg": 25, "dof": 26, "hand_dof": null, "payload_kg": null, "runtime_h": null, "price_usd": 5900, "actuator": "qdd",
+     "kind": "reported", "note": "출시가 $5,900 — 업계 최저가 기준점", "src": "https://heise.de/-10501209"},
+    {"id": "walkers2", "company": "ubtech", "model": "Walker S2", "form": "이족", "height_cm": 176, "weight_kg": 70, "dof": 52, "hand_dof": 11, "payload_kg": 15, "runtime_h": null, "price_usd": null, "actuator": "custom",
+     "kind": "official", "note": "자율 배터리 교체 약 3분(24시간 운용), 보행 2.0 m/s", "src": "https://www.robotshop.com/products/ubtech-walker-s2-industrial-humanoid-robot"},
+    {"id": "digit", "company": "agility", "model": "Digit", "form": "이족", "height_cm": 175, "weight_kg": 65, "dof": null, "hand_dof": null, "payload_kg": 16, "runtime_h": null, "price_usd": null, "actuator": "custom",
+     "kind": "reported", "note": "BLDC + 자체 변속기. Digit 5 는 가반하중 23 kg(예비치), 충전 대비 가동 10:1", "src": "https://robotsguide.com/robots/digit"},
+    {"id": "apollo", "company": "apptronik", "model": "Apollo", "form": "이족", "height_cm": 173, "weight_kg": 73, "dof": null, "hand_dof": 22, "payload_kg": 25, "runtime_h": 4, "price_usd": null, "actuator": "linear",
+     "kind": "reported", "note": "교체형 배터리 팩당 약 4시간. 손 22자유도는 Apollo 2(Gemini Robotics 2 시연)", "src": "https://qviro.com/product/apptronik/apollo/specifications"},
+    {"id": "neo", "company": "1x", "model": "NEO", "form": "이족(가정용)", "height_cm": 167, "weight_kg": 30, "dof": null, "hand_dof": null, "payload_kg": 25, "runtime_h": null, "price_usd": 20000, "actuator": "tendon",
+     "kind": "reported", "note": "가정용 경량·저소음 설계. 운반 25 kg(들어올리기 68 kg 보도는 미확인)", "src": "https://manufacturingdigital.com/top10/top-10-humanoid-robots"},
+    {"id": "gr3", "company": "fourier", "model": "GR-3", "form": "이족(케어)", "height_cm": 165, "weight_kg": 71, "dof": 55, "hand_dof": null, "payload_kg": 3, "runtime_h": null, "price_usd": null, "actuator": "qdd",
+     "kind": "official", "note": "가반하중은 한 손 기준. 자체 FSA 액추에이터", "src": "https://support.fftai.com/en/docs/GR-X-Humanoid-Robot/GR3/GR-3_Introduction/"},
+    {"id": "4ne1", "company": "neura", "model": "4NE-1", "form": "이족", "height_cm": 180, "weight_kg": 80, "dof": null, "hand_dof": null, "payload_kg": 15, "runtime_h": null, "price_usd": 105000, "actuator": "custom",
+     "kind": "official", "note": "€98,000(20대 이상 €60,000). Gen 3.5 는 팔 가반하중 20 kg", "src": "https://neura-robotics.com/?p=27729"},
+    {"id": "iron", "company": "xpeng", "model": "IRON", "form": "이족", "height_cm": 173, "weight_kg": 70, "dof": 60, "hand_dof": null, "payload_kg": null, "runtime_h": null, "price_usd": null, "actuator": "custom",
+     "kind": "reported", "note": "관절 60개 이상, 자체 튜링 AI 칩, 전고체 배터리 소량 생산 보도", "src": "https://eweek.com/news/xpeng-humanoid-robots-mass-production-2026-apac"},
+    {"id": "a2", "company": "agibot", "model": "A2", "form": "이족", "height_cm": 169, "weight_kg": 69, "dof": null, "hand_dof": null, "payload_kg": 15, "runtime_h": null, "price_usd": null, "actuator": "custom",
+     "kind": "reported", "note": "A2 Max 는 175 cm·85 kg·40 kg — 모델 구분 주의", "src": "https://moonlakeai.com/robots/a2-max"},
+    {"id": "hmnd01", "company": "humanoid", "model": "HMND 01", "form": "바퀴형", "height_cm": 220, "weight_kg": null, "dof": null, "hand_dof": null, "payload_kg": null, "runtime_h": null, "price_usd": null, "actuator": "custom",
+     "kind": "reported", "note": "전방위 바퀴 베이스 양팔, 최고 7.2 km/h", "src": "https://humanoid.guide/?p=14675"}
+  ]
+}

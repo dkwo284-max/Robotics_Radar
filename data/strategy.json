@@ -88,13 +88,13 @@
   },
 
   "signposts": [
-    {"trigger": "테슬라 옵티머스 외부 판매 개시", "means": "대당 $20k 가격 기준점 + 공급망 물량 급증", "action": "테슬라 인증 공급사(산화·투오푸 등)의 2차 협력·해외 공장 현지 조달 공략", "status": "watch", "ids": ["tesla"]},
-    {"trigger": "미국 GUARD Act 통과 또는 FCC Covered List 등재", "means": "미국 시장에서 중국 로봇·부품 배제 본격화", "action": "미국 로봇사 대상 비중국 부품 영업을 즉시 확대, 원산지 증빙 체계 준비", "status": "progress", "ids": ["unitree", "agibot"]},
-    {"trigger": "현대차그룹 로봇 공장 착공·부품 RFQ", "means": "국내 공급망 조달 시작", "action": "BD·현대차 로봇 부품 RFQ 대응, 품질·원가 로드맵 제출", "status": "watch", "ids": ["hyundai", "bd"]},
-    {"trigger": "중국 휴머노이드 업체의 해외 생산(멕시코·동남아)", "means": "관세 우회로 원가 경쟁이 미국 시장까지 확대", "action": "가격 경쟁보다 신뢰성·인증·납기로 차별화", "status": "watch", "ids": ["ubtech", "agibot"]},
-    {"trigger": "준직접구동(QDD) 액추에이터 채택 확산", "means": "하모닉 감속기 수요 감소, 행성기어·모터 수요 증가", "action": "감속기 투자 시 QDD용 행성기어 라인 병행 검토", "status": "progress", "ids": ["unitree"]},
-    {"trigger": "대형 IPO 이후 주가 급락(유니트리·어질리티)", "means": "업계 자금 경색 → 고객사 신용·물량 리스크", "action": "선급금·물량 보장 조항, 고객 신용 모니터링 강화", "status": "watch", "ids": ["unitree", "agility"]},
-    {"trigger": "휴머노이드 안전 표준 확정", "means": "인증 부품 수요 발생, 진입 장벽 상승", "action": "안전 등급 브레이크·토크 센서 인증 선제 취득", "status": "watch", "ids": []}
+    {"id": "tesla_sales", "trigger": "테슬라 옵티머스 외부 판매 개시", "means": "대당 $20k 가격 기준점 + 공급망 물량 급증", "action": "테슬라 인증 공급사(산화·투오푸 등)의 2차 협력·해외 공장 현지 조달 공략", "status": "watch", "ids": ["tesla"]},
+    {"id": "us_ban", "trigger": "미국 GUARD Act 통과 또는 FCC Covered List 등재", "means": "미국 시장에서 중국 로봇·부품 배제 본격화", "action": "미국 로봇사 대상 비중국 부품 영업을 즉시 확대, 원산지 증빙 체계 준비", "status": "progress", "ids": ["unitree", "agibot"]},
+    {"id": "hyundai_rfq", "trigger": "현대차그룹 로봇 공장 착공·부품 RFQ", "means": "국내 공급망 조달 시작", "action": "BD·현대차 로봇 부품 RFQ 대응, 품질·원가 로드맵 제출", "status": "watch", "ids": ["hyundai", "bd"]},
+    {"id": "cn_offshore", "trigger": "중국 휴머노이드 업체의 해외 생산(멕시코·동남아)", "means": "관세 우회로 원가 경쟁이 미국 시장까지 확대", "action": "가격 경쟁보다 신뢰성·인증·납기로 차별화", "status": "watch", "ids": ["ubtech", "agibot"]},
+    {"id": "qdd_shift", "trigger": "준직접구동(QDD) 액추에이터 채택 확산", "means": "하모닉 감속기 수요 감소, 행성기어·모터 수요 증가", "action": "감속기 투자 시 QDD용 행성기어 라인 병행 검토", "status": "progress", "ids": ["unitree"]},
+    {"id": "ipo_slump", "trigger": "대형 IPO 이후 주가 급락(유니트리·어질리티)", "means": "업계 자금 경색 → 고객사 신용·물량 리스크", "action": "선급금·물량 보장 조항, 고객 신용 모니터링 강화", "status": "watch", "ids": ["unitree", "agility"]},
+    {"id": "safety_std", "trigger": "휴머노이드 안전 표준 확정", "means": "인증 부품 수요 발생, 진입 장벽 상승", "action": "안전 등급 브레이크·토크 센서 인증 선제 취득", "status": "watch", "ids": []}
   ],
 
   "options": [
