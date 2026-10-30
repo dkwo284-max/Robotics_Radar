@@ -313,7 +313,7 @@
       "gemini-flash-latest"
     ],
     "max_requests_per_run": 2,
-    "daily_cap": 2,
+    "guaranteed": 3,
     "expected_per_run": 1,
     "timeout_seconds": 240,
     "max_http_attempts": 3,

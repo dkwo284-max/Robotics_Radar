@@ -12,6 +12,7 @@ import logging
 import sys
 from datetime import datetime, timezone
 
+import budget
 import build
 import papers
 import patents
@@ -34,21 +35,25 @@ def main(argv: list[str] | None = None) -> int:
     cfg = load_config()
     companies = read_json(SRC / "companies.json", {})["companies"]
     signposts = read_json(SRC / "strategy.json", {}).get("signposts", [])
-    today = datetime.now(timezone.utc).date().isoformat()
-    cap = int(cfg["llm"].get("daily_cap", 2))
+    today = datetime.now(timezone.utc).date().isoformat()  # 데이터 날짜(다이제스트 주기 등)는 그대로 UTC
+    ai_day = budget.nz_today()  # AI 하루 = 오클랜드 00시 리셋 (세 앱 공통)
+    lc = cfg["llm"]
+    # 공용 예산(My Hub budget.json): 내 보장량 + 공유 예비분 중 오늘 남은 몫. 못 읽으면 내 보장량만 (scripts/budget.py)
+    left, binfo = budget.allowance("robotics-radar", usage.used_today(OUT, ai_day), int(lc.get("guaranteed", 3)), ai_day)
+    log.info("%s", budget.describe("robotics-radar", left, binfo))
     requests = 0
 
     if not args.no_news:
         llm = Gemini(cfg)
-        over, used, _ = usage.over_cap(OUT, today, cfg)
+        over = left < int(lc.get("expected_per_run", 1))
         if over:
-            log.warning("AI 하루 상한 도달(%d/%d) — 오늘은 분류 없이 제목만", used, cap)
+            log.warning("AI 예산 부족(오늘 남은 %d회) — 오늘은 분류 없이 제목만", left)
             llm.key = ""
-        else:  # 하루 상한(허브와 합산 관리)을 넘지 않도록 오늘 남은 요청 수로 제한
-            llm.max_requests = max(0, min(llm.max_requests, cap - used))
+        else:  # 오늘 남은 몫을 넘지 않도록 요청 수를 제한
+            llm.max_requests = max(0, min(llm.max_requests, left))
         news = update_news(cfg, read_json(OUT / "news.json", {}), companies, llm, signposts=signposts)
         if over:
-            news["warnings"].append(f"오늘 AI 상한({cap}회)에 도달해 새 기사는 분류 없이 제목만 표시합니다.")
+            news["warnings"].append("오늘 AI 몫을 모두 써서 새 기사는 분류 없이 제목만 표시합니다. 다음 실행에서 이어서 분류합니다.")
         write_json(OUT / "news.json", news)
         requests += llm.requests
 
@@ -66,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # 주간 다이제스트: 오늘 남은 AI 한도가 있을 때만 Gemini, 아니면 규칙 기반
     dg_llm = Gemini(cfg)
-    if usage.used_today(OUT, today) + requests + 1 > cap:
+    if requests + 1 > left:
         dg_llm.key = ""
     old = read_json(OUT / "digest.json", {})
     if due(old, today, dg_llm.enabled):
@@ -76,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
         rc = build.main([]) or rc
 
     if not args.no_news or requests:
-        usage.record(OUT, today, requests, cfg)  # 0회라도 실행 기록 → 허브 카드에 표시
+        usage.record(OUT, ai_day, requests, cfg)  # 0회라도 실행 기록 → 허브 카드에 표시
         build.write_usage(today)
     return rc
 

@@ -18,7 +18,7 @@ from changes import diff, keep_baseline, state_of
 import news_cluster
 import paper_calc
 import patent_calc
-from common import OUT, SRC, plausible, read_json, write_json
+from common import OUT, SRC, load_config, plausible, read_json, write_json
 
 # 경쟁력 점수 축과 만점. 합계 100 → Tier
 AXES = {"tech": 30, "scale": 30, "capital": 20, "execution": 20}
@@ -26,7 +26,7 @@ AXES = {"tech": 30, "scale": 30, "capital": 20, "execution": 20}
 ATTR_AXES = {"open": 25, "geo": 25}
 TIERS = [(70, 1), (50, 2), (0, 3)]
 IPO_STAGES = ["비상장", "IPO 준비", "신청·심사", "공모·상장 진행", "상장", "상장사 사업부·자회사"]
-USAGE_CAP = 2  # 허브와 공유하는 Gemini 하루 상한 (Phase 2 부터 사용)
+USAGE_CAP = 3  # 허브 예산표(budget.json)를 못 읽을 때의 안전값. 실제는 config.json 의 llm.guaranteed
 
 
 def load(name: str) -> dict:
@@ -575,7 +575,11 @@ def write_usage(today: str) -> None:
         data = json.loads(path.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
         data = {"days": {}}
-    data.update(app="robotics-radar", provider="gemini", cap=USAGE_CAP, updated=today)
+    try:
+        cap = int(load_config().get("llm", {}).get("guaranteed", USAGE_CAP))
+    except Exception:  # noqa: BLE001
+        cap = USAGE_CAP
+    data.update(app="robotics-radar", provider="gemini", cap=cap, updated=today)
     data.setdefault("days", {})
     cutoff = (date.fromisoformat(today) - timedelta(days=30)).isoformat()
     data["days"] = {k: v for k, v in sorted(data["days"].items()) if k >= cutoff}
