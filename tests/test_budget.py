@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 import httpx
 
-from budget import allowance, nz_today  # noqa: E402
+from budget import allowance, nz_today
 
 BUDGET = {"reserve": 3, "apps": {
     "daily-brief": {"guaranteed": 7, "usage": "/News_Summary/data/ai-usage.json"},

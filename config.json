@@ -312,7 +312,7 @@
       "gemini-3.8-flash",
       "gemini-flash-latest"
     ],
-    "max_requests_per_run": 2,
+    "max_requests_per_run": 6,
     "guaranteed": 3,
     "expected_per_run": 1,
     "timeout_seconds": 240,
