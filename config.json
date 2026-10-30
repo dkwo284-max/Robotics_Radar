@@ -312,6 +312,11 @@
       "gemini-3.8-flash",
       "gemini-flash-latest"
     ],
+    "models_production": [
+      "gemini-3.8-flash",
+      "gemini-flash-latest",
+      "gemini-flash-lite-latest"
+    ],
     "max_requests_per_run": 6,
     "guaranteed": 3,
     "expected_per_run": 1,

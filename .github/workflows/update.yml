@@ -70,6 +70,8 @@ jobs:
         if: github.event_name != 'push' || contains(github.event.head_commit.message, '[collect]')
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # 매일 정해진 시각의 실제 배포(schedule)는 Flash, 수동·푸시 실행 같은 테스트는 Flash-Lite
+          AI_PROFILE: ${{ github.event_name == 'schedule' && 'production' || 'test' }}
         run: python scripts/update.py ${{ github.event.inputs.news == 'false' && '--no-news' || '' }}
       - name: Build only (push)
         if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[collect]')
