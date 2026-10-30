@@ -90,7 +90,7 @@ jobs:
 
   deploy:
     needs: update
-    if: ${{ needs.update.result == 'success' }}
+    if: ${{ !cancelled() && needs.update.result == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
