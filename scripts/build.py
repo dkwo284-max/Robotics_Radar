@@ -536,7 +536,7 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "sales_board": sales_board(companies, market["bom"]["items"]),
         "coverage": {"news_from": min((x["date"] for x in nb), default=None), "news_to": max((x["date"] for x in nb), default=None),
                      "news_covered_from": news.get("covered_from"),
-                     "tracking_since": ((history.get("snapshots") or [{}])[0] or {}).get("date")},
+                     "tracking_since": history.get("since") or ((history.get("snapshots") or [{}])[0] or {}).get("date")},
         "changes": changes,
         "roadmap_watch": roadmap_watch(companies, nb, today),
         "signpost_moves": signpost_moves(strategy, nb, today),
@@ -563,6 +563,9 @@ def record_history(companies: list[dict], today: str) -> None:
     path = SRC / "history.json"
     hist = read_json(path, {"snapshots": []})
     cur = snapshot(companies)
+    if "since" not in hist:  # 이력을 쌓기 시작한 날 — 스냅숏을 60개로 잘라도 바뀌지 않는다(화면 '누적 시작')
+        hist["since"] = hist["snapshots"][0]["date"] if hist["snapshots"] else today
+        write_json(path, hist, indent=0)
     if not hist["snapshots"] or hist["snapshots"][-1]["scores"] != cur:
         hist["snapshots"] = (hist["snapshots"] + [{"date": today, "scores": cur}])[-60:]
         write_json(path, hist, indent=0)
