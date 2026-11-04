@@ -6,6 +6,7 @@
     "keep_days": 120,
     "per_company": 3,
     "max_ai_items": 60,
+    "min_new_extra_run": 6,
     "queries": {
       "_market": [
         [

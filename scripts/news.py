@@ -267,8 +267,14 @@ def plan_window(ncfg: dict, old: dict, today: date) -> dict:
     return {"days": days, "per": int(ncfg.get("per_company", 3)), "per_patent": int(ncfg.get("per_company_patent", 2)), "backfill": False}
 
 
+def skip_ai_this_run(n_new: int, first_of_day: bool, min_new: int) -> bool:
+    """하루 AI 는 첫 실행에서 한 번 쓰고, 같은 날 다른 실행은 새 기사가 min_new 건 이상일 때만 다시 쓴다.
+    건너뛴 기사는 저장하지 않으므로 다음 실행(또는 내일)에 새 기사로 다시 잡힌다."""
+    return not first_of_day and n_new < min_new
+
+
 def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client: httpx.Client | None = None,
-                signposts: list[dict] | None = None) -> dict:
+                signposts: list[dict] | None = None, first_of_day: bool = True) -> dict:
     own = client is None
     client = client or httpx.Client(timeout=30, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (compatible; RoboticsRadar/1.0)"})
     try:
@@ -283,6 +289,11 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
         retry = [{**x, "desc": ""} for x in items.values() if needs_retry(x) and x["date"] >= since] if llm.enabled else []
         limit = int(cfg["news"].get("max_ai_items", 40))
         todo = fresh + retry  # 새 기사 먼저, 그다음 태그가 없는 지난 기사
+        min_new = int(cfg["news"].get("min_new_extra_run", 6))
+        if llm.enabled and todo and skip_ai_this_run(len(fresh), first_of_day, min_new):
+            # 재분류 대상(retry)만으로는 AI 를 다시 쓰지 않는다 — 새 기사가 충분히 쌓였을 때만
+            log.info("news: %d new item(s) < %d and AI already used today — skipping AI (queued for the next run)", len(fresh), min_new)
+            todo = []
         done, dropped, warn = [], [], None
         for start in range(0, len(todo), limit):
             if llm.enabled and llm.requests >= llm.max_requests:

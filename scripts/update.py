@@ -39,7 +39,8 @@ def main(argv: list[str] | None = None) -> int:
     ai_day = budget.nz_today()  # AI 하루 = 오클랜드 00시 리셋 (세 앱 공통)
     lc = cfg["llm"]
     # 공용 예산(My Hub budget.json): 내 보장량 + 공유 예비분 중 오늘 남은 몫. 못 읽으면 내 보장량만 (scripts/budget.py)
-    left, binfo = budget.allowance("robotics-radar", usage.used_today(OUT, ai_day), int(lc.get("guaranteed", 3)), ai_day)
+    used = usage.used_today(OUT, ai_day)
+    left, binfo = budget.allowance("robotics-radar", used, int(lc.get("guaranteed", 3)), ai_day)
     log.info("%s", budget.describe("robotics-radar", left, binfo))
     requests = 0
 
@@ -51,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
             llm.key = ""
         else:  # 오늘 남은 몫을 넘지 않도록 요청 수를 제한
             llm.max_requests = max(0, min(llm.max_requests, left))
-        news = update_news(cfg, read_json(OUT / "news.json", {}), companies, llm, signposts=signposts)
+        news = update_news(cfg, read_json(OUT / "news.json", {}), companies, llm, signposts=signposts, first_of_day=used == 0)
         if over:
             news["warnings"].append("오늘 AI 몫을 모두 써서 새 기사는 분류 없이 제목만 표시합니다. 다음 실행에서 이어서 분류합니다.")
         write_json(OUT / "news.json", news)

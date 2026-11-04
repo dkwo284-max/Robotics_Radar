@@ -305,3 +305,19 @@ def test_gemini_http_attempts_are_capped_and_ai_can_be_switched_off(monkeypatch)
         pass
     assert len(calls) == 3                                                          # 모델 4개 × 2회가 아니라 요청 1건당 HTTP 3회까지
     assert llm_mod.Gemini({"llm": {"enabled": False}}).enabled is False             # 키가 있어도 AI 완전 끄기
+
+
+def test_skip_ai_only_for_small_extra_runs():
+    assert news.skip_ai_this_run(3, True, 6) is False     # 그날 첫 실행은 적어도 쓴다
+    assert news.skip_ai_this_run(3, False, 6) is True     # 같은 날 추가 실행 + 새 기사 적음 → 건너뜀
+    assert news.skip_ai_this_run(6, False, 6) is False    # 충분히 쌓였으면 다시 씀
+
+
+def test_update_news_extra_run_with_few_new_items_skips_ai_and_keeps_them_queued():
+    llm = _BatchLLM(max_requests=3)
+    cfg = _news_cfg()
+    cfg["news"]["min_new_extra_run"] = 6
+    out = news.update_news(cfg, {}, COMPANIES, llm, client=_FakeClient(), first_of_day=False)
+    assert llm.requests == 0 and out["items"] == []          # AI 도 안 쓰고, 제목만 저장하지도 않는다(다음 실행에서 새 기사로 다시 잡힘)
+    out2 = news.update_news(cfg, {}, COMPANIES, _BatchLLM(max_requests=3), client=_FakeClient(), first_of_day=True)
+    assert len(out2["items"]) == 3                           # 하루 첫 실행에는 분류한다
