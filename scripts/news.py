@@ -200,7 +200,7 @@ def classify(items: list[dict], companies: list[dict], llm: Gemini, limit: int,
     warn = None
     rows: dict[str, dict] = {}
     try:
-        rows = {r.get("id"): r for r in llm.json_call(SYSTEM, user, schema([s["id"] for s in signposts])).get("items", [])}
+        rows = {r.get("id"): r for r in llm.json_call(SYSTEM, user, schema([s["id"] for s in signposts]), max_tokens=32000).get("items", [])}
     except LLMError as e:
         log.warning("news AI failed: %s", e)
         warn = "AI 분류에 실패해 제목만 표시합니다."
@@ -274,7 +274,7 @@ def skip_ai_this_run(n_new: int, first_of_day: bool, min_new: int) -> bool:
 
 
 def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client: httpx.Client | None = None,
-                signposts: list[dict] | None = None, first_of_day: bool = True) -> dict:
+                signposts: list[dict] | None = None, first_of_day: bool = True, ai_day: str | None = None) -> dict:
     own = client is None
     client = client or httpx.Client(timeout=30, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (compatible; RoboticsRadar/1.0)"})
     try:
@@ -295,6 +295,7 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
             log.info("news: %d new item(s) < %d and AI already used today — skipping AI (queued for the next run)", len(fresh), min_new)
             todo = []
         done, dropped, warn = [], [], None
+        succeeded = False
         for start in range(0, len(todo), limit):
             if llm.enabled and llm.requests >= llm.max_requests:
                 break  # 오늘 쓸 수 있는 AI 요청을 다 썼다 — 나머지는 다음 실행에서 이어서 분류
@@ -302,6 +303,7 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
             done += out
             dropped += drp
             warn = warn or w
+            succeeded = succeeded or (w is None and llm.enabled and bool(out or drp))
         for i in dropped:
             items.pop(i, None)
     finally:
@@ -320,5 +322,6 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
     return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="minutes"), "covered_days": covered,
             "covered_from": (date.today() - timedelta(days=covered)).isoformat() if covered else None,
             "ai": "gemini" if llm.enabled else "none", "items": live,
+            "ai_ok_day": ai_day if succeeded and ai_day else old.get("ai_ok_day"),   # AI 분류가 실제로 성공한 마지막 날(AI 하루 기준)
             "proposals": proposals(done, companies, old.get("proposals", [])),
             "dropped": (old.get("dropped", []) + dropped)[-2000:], "warnings": [warn] if warn else []}

@@ -22,7 +22,7 @@ class FakeLLM:
     def __init__(self, reply=None, enabled=True):
         self.reply, self.enabled, self.requests = reply, enabled, 0
 
-    def json_call(self, system, user, schema):
+    def json_call(self, system, user, schema, max_tokens=16000):
         self.requests += 1
         return self.reply
 
@@ -321,3 +321,18 @@ def test_update_news_extra_run_with_few_new_items_skips_ai_and_keeps_them_queued
     assert llm.requests == 0 and out["items"] == []          # AI 도 안 쓰고, 제목만 저장하지도 않는다(다음 실행에서 새 기사로 다시 잡힘)
     out2 = news.update_news(cfg, {}, COMPANIES, _BatchLLM(max_requests=3), client=_FakeClient(), first_of_day=True)
     assert len(out2["items"]) == 3                           # 하루 첫 실행에는 분류한다
+
+
+def test_ai_ok_day_is_set_only_when_classification_succeeds():
+    llm = _BatchLLM(max_requests=3)
+    out = news.update_news(_news_cfg(), {}, COMPANIES, llm, client=_FakeClient(), first_of_day=True, ai_day="2026-11-05")
+    assert out["ai_ok_day"] == "2026-11-05"
+
+    class Failing(_BatchLLM):
+        def json_call(self, *a, **k):
+            self.requests += 1
+            raise news.LLMError("503")
+
+    out2 = news.update_news(_news_cfg(), {"ai_ok_day": "2026-11-04"}, COMPANIES, Failing(max_requests=3), client=_FakeClient(), first_of_day=True, ai_day="2026-11-05")
+    assert out2["ai_ok_day"] == "2026-11-04"          # 실패한 날은 성공으로 치지 않아, 같은 날 다음 실행에서 다시 시도한다
+    assert all(not x["ai"] for x in out2["items"])

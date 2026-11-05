@@ -322,7 +322,7 @@
     "guaranteed": 3,
     "expected_per_run": 1,
     "timeout_seconds": 240,
-    "max_http_attempts": 3,
+    "max_http_attempts": 6,
     "enabled": true
   }
 }

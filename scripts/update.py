@@ -52,7 +52,9 @@ def main(argv: list[str] | None = None) -> int:
             llm.key = ""
         else:  # 오늘 남은 몫을 넘지 않도록 요청 수를 제한
             llm.max_requests = max(0, min(llm.max_requests, left))
-        news = update_news(cfg, read_json(OUT / "news.json", {}), companies, llm, signposts=signposts, first_of_day=used == 0)
+        old_news = read_json(OUT / "news.json", {})
+        # '하루 첫 AI 실행'은 그날 분류가 한 번도 성공하지 못한 상태 — 호출이 서버 오류로 실패했으면 다음 실행에서 다시 시도한다
+        news = update_news(cfg, old_news, companies, llm, signposts=signposts, first_of_day=old_news.get("ai_ok_day") != ai_day, ai_day=ai_day)
         if over:
             news["warnings"].append("오늘 AI 몫을 모두 써서 새 기사는 분류 없이 제목만 표시합니다. 다음 실행에서 이어서 분류합니다.")
         write_json(OUT / "news.json", news)

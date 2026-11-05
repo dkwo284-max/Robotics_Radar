@@ -823,7 +823,7 @@ const newsTitle = (x) => esc(x.title_ko || x.title);
 function newsRow(x, chips = true) {
   const imp = x.importance >= 3 ? '<span class="imp3">핵심</span>' : x.importance === 2 ? '<span class="b reported">주목</span>' : "";
   return `<div class="ev"><span class="d">${esc(x.date.slice(2).replace(/-/g, "."))}</span><span class="t">${newB(x.date)} ${newsTitle(x)}${x.summary_ko ? `<small>${esc(x.summary_ko)}</small>` : ""}</span>
-    <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${x.n_src > 1 ? `<span class="b t3" title="같은 내용을 보도한 매체: ${esc((x.also || []).join(", "))}${x.n_src - 1 > (x.also || []).length ? " 외" : ""}">외 ${x.n_src - 1}곳 보도</span>` : ""}${x.ai ? "" : '<span class="b t3" title="AI 가 아직 분류하지 않은 기사 — 하루 AI 한도 안에서 며칠에 걸쳐 분류됩니다">분류 전</span>'}${link(x.url, "원문")}</span></div>`;
+    <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${x.n_src > 1 ? `<span class="b t3" title="같은 내용을 보도한 매체: ${esc((x.also || []).join(", "))}${x.n_src - 1 > (x.also || []).length ? " 외" : ""}">외 ${x.n_src - 1}곳 보도</span>` : ""}${x.ai ? "" : '<span class="b t3" title="AI 가 아직 분류·한국어 요약하지 않은 기사 — 다음 실행(하루 AI 한도 안)에서 이어서 처리됩니다. 영어 제목은 원문 그대로예요">번역 대기</span>'}${link(x.url, "원문")}</span></div>`;
 }
 const ROLE_BY_TYPE = { funding: ["exec"], ipo: ["exec"], policy: ["exec"], org: ["exec"], production: ["exec", "strategy"],
   product: ["strategy", "engineer"], deploy: ["strategy"], partner: ["exec", "strategy"], supply: ["exec", "engineer"], other: [] };
