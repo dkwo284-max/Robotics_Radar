@@ -38,7 +38,11 @@ class Gemini:
             raise LLMError("GEMINI_API_KEY not set")
         if self.requests >= self.max_requests:
             raise LLMError("max_requests_per_run reached")
-        self.requests += 1
+        # 예산(요청 수)에는 '응답을 받은' 호출만 센다 — 서버 과부하(503)·한도(429)로 실패한 호출이 하루 몫을 먹지 않게.
+        # 대신 실패가 무한히 반복되지 않도록 시도 횟수 자체에도 상한(요청 상한의 3배)을 둔다.
+        self.attempts = getattr(self, "attempts", 0) + 1
+        if self.attempts > self.max_requests * 3:
+            raise LLMError("max attempts per run reached")
         body = {
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": [{"role": "user", "parts": [{"text": user}]}],
@@ -69,7 +73,9 @@ class Gemini:
                 try:
                     text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
                     log.info("gemini %s ok", model)
-                    return json.loads(text)
+                    out = json.loads(text)
+                    self.requests += 1
+                    return out
                 except Exception as e:  # noqa: BLE001
                     last = f"{model}: bad response {e}"
                     break
