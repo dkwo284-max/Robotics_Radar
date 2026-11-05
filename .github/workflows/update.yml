@@ -77,7 +77,10 @@ jobs:
           git add web/data data/history.json data/state.json data/changes.json
           if git diff --cached --quiet; then echo "no changes"; exit 0; fi
           git commit -m "data: $(date -u +%F)"
-          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
+          # 동시에 돌던 다른 실행(푸시 빌드 등)이 같은 데이터 파일을 먼저 커밋했어도 이번 실행의 데이터가 이기도록(-X theirs = 되감기 중인 내 커밋),
+          # 그리고 세 번 다 실패하면 조용히 넘어가지 말고 실패로 표시(데이터가 저장소에 안 남는 일을 막음)
+          for i in 1 2 3; do git pull --rebase -X theirs -q origin main && git push -q origin HEAD:main && exit 0; git rebase --abort 2>/dev/null; sleep 5; done
+          echo "::error::data commit could not be pushed"; exit 1
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: { path: web }
