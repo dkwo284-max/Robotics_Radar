@@ -336,3 +336,15 @@ def test_ai_ok_day_is_set_only_when_classification_succeeds():
     out2 = news.update_news(_news_cfg(), {"ai_ok_day": "2026-11-04"}, COMPANIES, Failing(max_requests=3), client=_FakeClient(), first_of_day=True, ai_day="2026-11-05")
     assert out2["ai_ok_day"] == "2026-11-04"          # 실패한 날은 성공으로 치지 않아, 같은 날 다음 실행에서 다시 시도한다
     assert all(not x["ai"] for x in out2["items"])
+
+
+def test_pending_and_ai_tries_are_reported():
+    class Failing(_BatchLLM):
+        def json_call(self, *a, **k):
+            self.requests += 1
+            raise news.LLMError("503")
+
+    out = news.update_news(_news_cfg(), {"ai_tries": {"day": "2026-11-06", "n": 1}}, COMPANIES, Failing(max_requests=3), client=_FakeClient(), first_of_day=True, ai_day="2026-11-06")
+    assert out["pending"] == len(out["items"]) > 0 and out["ai_tries"] == {"day": "2026-11-06", "n": 2}
+    ok = news.update_news(_news_cfg(), {}, COMPANIES, _BatchLLM(max_requests=3), client=_FakeClient(), first_of_day=True, ai_day="2026-11-06")
+    assert ok["pending"] == 0

@@ -295,7 +295,7 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
             log.info("news: %d new item(s) < %d and AI already used today — skipping AI (queued for the next run)", len(fresh), min_new)
             todo = []
         done, dropped, warn = [], [], None
-        succeeded = False
+        succeeded = attempted = False
         for start in range(0, len(todo), limit):
             if llm.enabled and llm.requests >= llm.max_requests:
                 break  # 오늘 쓸 수 있는 AI 요청을 다 썼다 — 나머지는 다음 실행에서 이어서 분류
@@ -303,6 +303,7 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
             done += out
             dropped += drp
             warn = warn or w
+            attempted = attempted or llm.enabled
             succeeded = succeeded or (w is None and llm.enabled and bool(out or drp))
         for i in dropped:
             items.pop(i, None)
@@ -323,5 +324,7 @@ def update_news(cfg: dict, old: dict, companies: list[dict], llm: Gemini, client
             "covered_from": (date.today() - timedelta(days=covered)).isoformat() if covered else None,
             "ai": "gemini" if llm.enabled else "none", "items": live,
             "ai_ok_day": ai_day if succeeded and ai_day else old.get("ai_ok_day"),   # AI 분류가 실제로 성공한 마지막 날(AI 하루 기준)
+            "pending": sum(1 for x in live if needs_retry(x)),                          # 아직 AI 분류(한국어 요약)가 안 된 기사 수
+            "ai_tries": {"day": ai_day, "n": (int((old.get("ai_tries") or {}).get("n", 0)) if (old.get("ai_tries") or {}).get("day") == ai_day else 0) + (1 if attempted else 0)} if ai_day else old.get("ai_tries"),
             "proposals": proposals(done, companies, old.get("proposals", [])),
             "dropped": (old.get("dropped", []) + dropped)[-2000:], "warnings": [warn] if warn else []}

@@ -32,14 +32,31 @@ def is_fresh(generated_at: str, now: datetime) -> bool:
     return gen >= latest_slot(now)
 
 
+MAX_AI_TRIES = 3
+
+
+def needs_ai_retry(news: dict, now: datetime) -> bool:
+    """수집은 끝났지만 AI 분류가 서버 오류 등으로 덜 끝났으면(pending > 0) 하루 3번까지 예비 실행에서 이어서 시도한다."""
+    from zoneinfo import ZoneInfo
+
+    if int(news.get("pending", 0)) <= 0:
+        return False
+    nz_day = now.astimezone(ZoneInfo("Pacific/Auckland")).date().isoformat()
+    tries = news.get("ai_tries") or {}
+    n = int(tries.get("n", 0)) if tries.get("day") == nz_day else 0
+    return n < MAX_AI_TRIES
+
+
 def main() -> int:
     path = Path(__file__).resolve().parent.parent / "web" / "data" / "news.json"
     try:
-        gen = json.loads(path.read_text(encoding="utf-8")).get("generated_at", "")
+        news = json.loads(path.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
-        gen = ""
-    fresh = is_fresh(gen, datetime.now(timezone.utc))
-    print(f"generated_at={gen!r} fresh={fresh}")
+        news = {}
+    gen = news.get("generated_at", "")
+    now = datetime.now(timezone.utc)
+    fresh = is_fresh(gen, now) and not needs_ai_retry(news, now)
+    print(f"generated_at={gen!r} pending={news.get('pending', 0)} ai_tries={news.get('ai_tries')} fresh={fresh}")
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
         with open(out, "a", encoding="utf-8") as f:

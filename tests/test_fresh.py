@@ -28,3 +28,14 @@ def test_runs_when_stale():
     assert not is_fresh("2026-10-29T23:14+00:00", utc(2026, 10, 30, 19, 30))     # 어제 갱신분 → 오늘 정기 실행은 진행
     assert not is_fresh("2026-10-30T18:00+00:00", utc(2026, 10, 30, 20, 40))     # 19:10 전 갱신 → 예비 실행이 진행
     assert not is_fresh("", utc(2026, 10, 30, 20, 40)) and not is_fresh("garbage", utc(2026, 10, 30, 20, 40))
+
+
+def test_needs_ai_retry_only_while_pending_and_under_three_tries():
+    from fresh import needs_ai_retry
+
+    now = utc(2026, 11, 5, 20, 40)   # NZ 11/06 09:40
+    assert not needs_ai_retry({"pending": 0}, now)
+    assert needs_ai_retry({"pending": 12}, now)
+    assert needs_ai_retry({"pending": 12, "ai_tries": {"day": "2026-11-05", "n": 3}}, now)       # 다른 날(어제) 시도는 세지 않음
+    assert needs_ai_retry({"pending": 12, "ai_tries": {"day": "2026-11-06", "n": 2}}, now)
+    assert not needs_ai_retry({"pending": 12, "ai_tries": {"day": "2026-11-06", "n": 3}}, now)  # 하루 3번까지만
