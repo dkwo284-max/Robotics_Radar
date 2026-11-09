@@ -106,9 +106,17 @@ INHOUSE_RE = ("수직계열화", "내재화", "자체 액추에이터", "자체 
 INHOUSE_PARTS = {"reducer", "screw", "motor", "driver", "actuator", "hand"}
 
 
-def sales_board(companies: list[dict], bom: list[dict], limit: int = 12) -> list[dict]:
+def sales_board(companies: list[dict], bom: list[dict], news: list[dict] | None = None, today: str | None = None, limit: int = 12) -> list[dict]:
     """한국 부품사 영업 우선순위: 고객 매력도 × 부품 비중 × (국내 후보 없음이면 선점 가산) × (고객이 자체 생산하는 부품은 감점)
     × (중국 공급사를 쓰는 고객의 해당 부품은 비중국 대체 수요 가산). 접근 방식은 고객의 조달 개방성·지정학 접근성으로 정한다."""
+    news_30d: dict[str, int] = {}
+    if news and today:
+        cutoff = (date.fromisoformat(today) - timedelta(days=30)).isoformat()
+        for n in news:
+            if n.get("date", "") < cutoff:
+                continue
+            for cid in (n.get("companies") or []):
+                news_30d[cid] = news_30d.get(cid, 0) + 1
     rows = []
     for c in companies:
         if c["group"] != "body":
@@ -141,7 +149,7 @@ def sales_board(companies: list[dict], bom: list[dict], limit: int = 12) -> list
             if swap:
                 why.append("현재 중국 공급사를 쓰는 품목 — 비중국 대체 수요")
             rows.append({"company": c["id"], "part": part["id"], "part_name": part["name"], "score": score, "how": how, "why": why,
-                         "gap": gap, "swap": swap, "in_house": in_house and part["id"] in INHOUSE_PARTS})
+                         "gap": gap, "swap": swap, "in_house": in_house and part["id"] in INHOUSE_PARTS, "news_30d": news_30d.get(c["id"], 0)})
     rows.sort(key=lambda r: -r["score"])
     top = rows[0]["score"] if rows else 1
     out = []
@@ -353,6 +361,17 @@ def score_moves(companies: list[dict], history: dict) -> dict:
     return moves
 
 
+def score_history(history: dict, companies: list[dict], limit: int = 24) -> dict[str, list]:
+    """회사별 점수 추이(최근 limit 개 스냅숏): {id: [[date, total, attract], ...]}. 타임라인 그래프용(화면이 가볍게 쓰도록 trim)."""
+    snaps = (history or {}).get("snapshots", [])[-limit:]
+    out: dict[str, list] = {c["id"]: [] for c in companies}
+    for s in snaps:
+        for cid, pair in (s.get("scores") or {}).items():
+            if cid in out:
+                out[cid].append([s["date"], pair[0], pair[1]])
+    return {k: v for k, v in out.items() if len(v) >= 2}  # 점 하나뿐이면 추이가 아니므로 뺀다
+
+
 def alerts(companies: list[dict], news: dict, prices: dict, moves: dict, as_of: str) -> list[dict]:
     """개요 맨 위 경보: 중요 소식(7일), 검증 대기, 주가 급변(1주 ±10%), 점수·Tier 변화."""
     names = {c["id"]: c["name_ko"] for c in companies}
@@ -533,7 +552,9 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "news": nb,
         "freshness": freshness(companies, market["as_of"]),
         "track": track_record(companies, market["as_of"]),
-        "sales_board": sales_board(companies, market["bom"]["items"]),
+        "sales_board": sales_board(companies, market["bom"]["items"], nb, today),
+        "korea_board": sales_board(companies, market["bom"]["items"], nb, today, limit=24),
+        "score_history": score_history(history, companies),
         "coverage": {"news_from": min((x["date"] for x in nb), default=None), "news_to": max((x["date"] for x in nb), default=None),
                      "news_covered_from": news.get("covered_from"),
                      "tracking_since": history.get("since") or ((history.get("snapshots") or [{}])[0] or {}).get("date")},

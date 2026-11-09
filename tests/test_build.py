@@ -83,3 +83,32 @@ def test_sales_board_prefers_gap_parts_and_penalises_in_house_parts():
     assert all(not r["in_house"] or r["score"] < 100 for r in board)
     track = out["track"]
     assert track["rows"] and all(x["days"] >= 0 for x in track["upcoming"])
+
+
+def test_score_history_trims_and_skips_single_point():
+    companies = [{"id": "a"}, {"id": "b"}]
+    history = {"snapshots": [
+        {"date": "2026-10-01", "scores": {"a": [50, 40], "b": [60, None]}},
+        {"date": "2026-10-08", "scores": {"a": [52, 41], "b": [60, None]}},
+    ]}
+    h = build.score_history(history, companies, limit=10)
+    assert h["a"] == [["2026-10-01", 50, 40], ["2026-10-08", 52, 41]]
+    assert h["b"] == [["2026-10-01", 60, None], ["2026-10-08", 60, None]]  # 점수가 그대로여도 스냅숏엔 매번 들어간다(평평한 선)
+
+
+def test_score_history_single_snapshot_dropped():
+    h = build.score_history({"snapshots": [{"date": "2026-10-01", "scores": {"a": [50, 40]}}]}, [{"id": "a"}])
+    assert h == {}
+
+
+def test_sales_board_news_30d_counts_recent_company_news():
+    out, _ = build.build()
+    news = [{"date": out["as_of"], "companies": [out["sales_board"][0]["company"]]}]
+    rows = build.sales_board([c for c in out["companies"] if c["id"] == out["sales_board"][0]["company"]][:1] + out["companies"][1:],
+                             out["bom"]["items"], news, out["as_of"], limit=5)
+    assert rows and rows[0]["news_30d"] >= 1
+
+
+def test_korea_board_is_larger_than_home_sales_board():
+    out, _ = build.build()
+    assert len(out["korea_board"]) >= len(out["sales_board"])

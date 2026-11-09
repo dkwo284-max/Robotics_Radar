@@ -16,6 +16,7 @@ import budget
 import build
 import papers
 import patents
+import status
 import usage
 from common import OUT, SRC, load_config, log, read_json, write_json
 from digest import due, update_digest
@@ -86,6 +87,10 @@ def main(argv: list[str] | None = None) -> int:
     if not args.no_news or requests:
         usage.record(OUT, ai_day, requests, cfg)  # 0회라도 실행 기록 → 허브 카드에 표시
         build.write_usage(today)
+    try:
+        status.write_status()
+    except Exception as e:  # noqa: BLE001
+        log.warning("status 기록 실패(무시): %s", e)
     return rc
 
 

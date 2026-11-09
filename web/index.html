@@ -219,6 +219,24 @@ ul.plain { margin: 0; padding-left: 18px; font-size: 0.85rem; display: grid; gap
 .imp3 { color: var(--bad); font-weight: 700; }
 svg.spark { width: 84px; height: 26px; display: block; }
 svg.spark polyline { fill: none; stroke-width: 1.6; }
+.today-line { margin: 0 0 12px; padding: 8px 12px; border-radius: var(--r); background: color-mix(in oklab, var(--accent) 10%, var(--surface)); border: 1px solid color-mix(in oklab, var(--accent) 30%, var(--line)); font-size: 0.82rem; }
+svg.trend { width: 300px; max-width: 100%; height: 44px; display: block; flex: 1; min-width: 0; }
+svg.trend polyline { fill: none; stroke-width: 1.8; }
+.trend-row { display: grid; grid-template-columns: 5em minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 0.82rem; margin: 6px 0; }
+.star { border: 0; background: none; cursor: pointer; font-size: 1.15rem; line-height: 1; color: var(--warn); vertical-align: -2px; padding: 0 4px 0 0; }
+.star[aria-pressed="true"] { color: var(--warn); }
+.link-btn { border: 0; background: none; color: var(--accent); cursor: pointer; font: inherit; font-size: 0.76rem; padding: 0; text-decoration: underline; }
+.data-status { margin: 12px 0 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+.data-status > summary { cursor: pointer; font-weight: 600; font-size: 0.86rem; }
+.data-status > summary::after { content: none; }
+.st-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.st-list li { display: grid; grid-template-columns: 10px 9em minmax(0, 1fr); gap: 8px; align-items: baseline; font-size: 0.8rem; }
+.st-list small { color: var(--muted); }
+.st-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.st-dot.ok { background: var(--good); } .st-dot.warn { background: var(--warn); } .st-dot.bad { background: var(--bad); }
+#cmp-out table.cmp { width: max-content; min-width: 100%; }
+#cmp-out table.cmp th, #cmp-out table.cmp td { white-space: nowrap; }
+#cmp-out table.cmp th:first-child, #cmp-out table.cmp td:first-child { white-space: normal; min-width: 6.5em; }
 .prop { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 0.84rem; }
 .prop:first-child { border-top: 0; }
 .prop .s { grid-column: 1 / -1; font-size: 0.76rem; color: var(--muted); }
@@ -371,6 +389,11 @@ details.fold[open] > summary::after { content: "접기"; }
 
   <!-- 개요 -->
   <div class="panel" id="p-home" data-panel>
+    <section id="watch-sec" hidden>
+      <h2>⭐ 관심 기업</h2>
+      <p class="sub">기업 상세의 별표로 추가합니다. 이 기기에만 저장되고, 관련 소식·경보가 여기 먼저 모입니다.</p>
+      <div class="list" id="watch-list"></div>
+    </section>
     <div class="seg" role="group" aria-label="역할">
       <button data-role="exec">경영진</button>
       <button data-role="strategy">기술전략</button>
@@ -403,6 +426,7 @@ details.fold[open] > summary::after { content: "접기"; }
     </section>
 
     <div class="panel" id="role-exec">
+      <p class="today-line" id="today-line"></p>
       <section id="alerts-sec" hidden>
         <h2>경보</h2>
         <p class="sub">중요 소식 · 검증 대기 · 주가 급변 · 점수 변화</p>
@@ -427,19 +451,19 @@ details.fold[open] > summary::after { content: "접기"; }
         <div class="list" id="sales"></div>
       </section>
       <section id="props-sec" hidden>
-        <h2>검증 대기 수치</h2>
-        <p class="sub">AI 가 기사에서 뽑은 값이 큐레이션 기준값과 10% 넘게 다르거나 기준값이 없는 경우. 확인 후 data/companies.json 에 반영합니다</p>
+        <h2>검증 대기 수치 <span class="b M" id="props-n"></span></h2>
+        <p class="sub">AI 가 기사에서 뽑은 값이 큐레이션 기준값과 10% 넘게 다르거나 기준값이 없는 경우. "검토함"을 누르면 이 기기에서 숨겨집니다(값 자체는 바뀌지 않음 — 맞다고 확인됐으면 data/companies.json 을 고쳐야 반영됩니다)</p>
         <div class="list" id="props"></div>
       </section>
       <section>
-        <h2>핵심 이벤트</h2>
-        <p class="sub">큐레이션한 사건 중 의사결정에 영향을 주는 것</p>
-        <div class="list" id="events"></div>
+        <details class="fold" id="events-fold"><summary><h2 style="display:inline">핵심 이벤트</h2></summary>
+          <p class="sub">큐레이션한 사건 중 의사결정에 영향을 주는 것</p>
+          <div class="list" id="events"></div></details>
       </section>
       <section>
-        <h2>정책 동향</h2>
-        <p class="sub">미국의 중국산 로봇 제한은 비중국 부품 수요로, 한국 예산은 국산 실증 수요로 이어집니다</p>
-        <div class="list" id="policies"></div>
+        <details class="fold" id="policies-fold"><summary><h2 style="display:inline">정책 동향</h2></summary>
+          <p class="sub">미국의 중국산 로봇 제한은 비중국 부품 수요로, 한국 예산은 국산 실증 수요로 이어집니다</p>
+          <div class="list" id="policies"></div></details>
       </section>
       <section id="fresh-sec" hidden>
         <h2>큐레이션 값 신선도 <span class="b M" id="fresh-n"></span></h2>
@@ -587,6 +611,12 @@ details.fold[open] > summary::after { content: "접기"; }
       <p class="sub" id="rank-sub"></p>
       <div class="list" id="rank"></div>
     </section>
+    <section id="cmp-sec">
+      <h2>⚖ 기업 비교</h2>
+      <p class="sub">2~4곳을 고르면 점수·핵심 수치·스펙을 나란히 봅니다. 선택은 이 기기에 저장됩니다.</p>
+      <div class="chips" id="cmp-pick" style="margin-bottom:10px"></div>
+      <div id="cmp-out"></div>
+    </section>
     <section id="sens-sec">
       <h2>점수 민감도 <span class="b estimate">가중치 시험</span></h2>
       <p class="sub" id="sens-sub"></p>
@@ -614,6 +644,12 @@ details.fold[open] > summary::after { content: "접기"; }
         <svg id="c-chart" viewBox="0 0 360 150" role="img" aria-label="연도별 매출 기회"></svg>
         <p class="sub" style="margin:0" id="c-note"></p>
       </div>
+    </section>
+    <section id="kboard-sec">
+      <h2>🇰🇷 한국 부품사 기회 보드 <span class="b estimate">규칙 기반 추정</span></h2>
+      <p class="sub" id="kboard-sub"></p>
+      <div class="chips" id="kboard-filter" style="margin-bottom:10px"></div>
+      <div class="list" id="kboard"></div>
     </section>
     <section>
       <h2>휴머노이드 1대 부품 원가 구성</h2>
@@ -754,6 +790,7 @@ details.fold[open] > summary::after { content: "접기"; }
     </section>
   </div>
   <footer class="note" id="foot"></footer>
+  <details class="data-status" id="data-status"><summary>🩺 데이터 상태 (수집·AI 분류·갱신 시각)</summary><div id="data-status-body"><p class="sub">펼치면 불러옵니다…</p></div></details>
 </main>
 
 <nav class="tabbar" aria-label="화면">
@@ -802,6 +839,24 @@ const link = (u, t = "출처") => (safeUrl(u) ? `<a href="${esc(u)}" target="_bl
 
 let D = null;
 let byId = {};
+
+// ---------- 관심 기업(워치리스트) · 검증 대기 숨김 · 기업 비교 선택 (이 기기에만 저장) ----------
+const isWatched = (id) => store.get("watch", []).includes(id);
+function toggleWatch(id) {
+  const w = store.get("watch", []);
+  store.set("watch", w.includes(id) ? w.filter((x) => x !== id) : [...w, id]);
+}
+const propKey = (p) => `${p.company}|${p.field}|${p.date}`;
+function dismissProp(key) {
+  const d = store.get("dismissProp", []);
+  if (!d.includes(key)) store.set("dismissProp", [...d, key]);
+}
+function toggleCompare(id) {
+  let c = store.get("compare", []);
+  if (c.includes(id)) c = c.filter((x) => x !== id);
+  else if (c.length < 4) c = [...c, id];
+  store.set("compare", c);
+}
 
 // ---------- 공통 조각 ----------
 const coChip = (id) => (byId[id] ? `<button class="chip co" data-co="${esc(id)}">${esc(byId[id].name_ko)}</button>` : "");
@@ -1287,7 +1342,23 @@ function patentFold(id) {
   return out.join("");
 }
 
+function renderWatch() {
+  const ids = store.get("watch", []);
+  $("#watch-sec").hidden = !ids.length;
+  if (!ids.length) return;
+  const since = (D.coverage?.news_from) || D.as_of;
+  $("#watch-list").innerHTML = ids.map((id) => {
+    const c = byId[id];
+    if (!c) return "";
+    const news30 = (D.news || []).filter((x) => (x.companies || []).includes(id)).slice(0, 2);
+    const chg = (D.changes || []).find((x) => x.company === id);
+    return `<button class="row" data-co="${esc(id)}"><span class="t"><b>${esc(c.name_ko)}</b>${tierB(c)}</span>
+      <span class="r num">${c.calc.total}</span>
+      <span class="s">${chg ? `최근 변화 ${esc(chg.date.slice(5))} ${esc(chg.title)}` : news30.length ? `${esc(news30[0].date.slice(5))} ${newsTitle(news30[0])}` : "최근 변화·소식 없음"}</span></button>`;
+  }).join("");
+}
 function renderHome() {
+  renderWatch();
   const role = store.get("role", "exec");
   document.querySelectorAll("[data-role]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.role === role)));
   for (const r of ["exec", "strategy", "engineer"]) $(`#role-${r}`).hidden = r !== role;
@@ -1376,16 +1447,32 @@ function renderHome() {
 function renderExec() {
   const lens = store.get("lens", "parts");
   const al = D.alerts || [];
+  {  // 오늘 요약 한 줄 — 길어진 개요를 한눈에
+    const stale = (D.freshness || { stale: [] }).stale.length;
+    const dism = store.get("dismissProp", []);
+    const propsN = (D.proposals || []).filter((p) => !dism.includes(propKey(p))).length;
+    const top = (D.sales_board || [])[0];
+    const bits = [];
+    if (al.length) bits.push(`경보 ${al.length}건`);
+    if (propsN) bits.push(`검증 대기 ${propsN}건`);
+    if (stale) bits.push(`오래된 수치 ${stale}건`);
+    if (top) bits.push(`영업 1순위 ${esc(byId[top.company]?.name_ko || top.company)} · ${esc(top.part_name.replace(/\(.*\)/, ""))}`);
+    $("#today-line").innerHTML = bits.length ? `👀 오늘 한눈에 — ${bits.join(" · ")}` : "👀 오늘 한눈에 — 특별한 경보·검증 대기가 없습니다";
+  }
   $("#alerts-sec").hidden = !al.length;
   $("#alerts").innerHTML = al.map((a) => {
     const target = a.url ? `data-url="${esc(a.url)}"` : a.ids?.[0] ? `data-co="${esc(a.ids[0])}"` : "";
     return `<button class="alert ${a.level}" ${target}><b>${esc(a.title)}</b><span>${esc(a.sub || "")}</span></button>`;
   }).join("");
-  const props = D.proposals || [];
-  $("#props-sec").hidden = !props.length;
+  const dismissed = store.get("dismissProp", []);
+  const propsAll = D.proposals || [];
+  const props = propsAll.filter((p) => !dismissed.includes(propKey(p)));
+  $("#props-sec").hidden = !propsAll.length;
+  $("#props-n").textContent = props.length ? `검토 대기 ${props.length}건` : `모두 검토함 (${propsAll.length}건)`;
   $("#props").innerHTML = props.slice(0, 12).map((p) => `<div class="prop"><span><b>${esc(byId[p.company]?.name_ko || p.company)}</b> ${FIELD[p.field] || p.field}</span>
     <span class="num">${fmtUnit(p.curated, p.unit)} → <b>${fmtUnit(p.proposed, p.unit)}</b></span>
-    <span class="s">${esc(p.date)} ${p.as_of ? `· 기준 ${esc(p.as_of)} ` : ""}· ${esc(p.title)} ${link(p.url, "원문")}</span></div>`).join("");
+    <span class="s">${esc(p.date)} ${p.as_of ? `· 기준 ${esc(p.as_of)} ` : ""}· ${esc(p.title)} ${link(p.url, "원문")} · <button class="link-btn" data-dismiss="${esc(propKey(p))}">검토함(숨기기)</button></span></div>`).join("")
+    || (propsAll.length ? '<div class="empty">모두 검토했습니다. 값이 맞다고 확인됐으면 data/companies.json 을 고쳐야 실제로 반영됩니다</div>' : "");
   document.querySelectorAll("[data-lens]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lens === lens)));
   // 숫자 타일을 누르면 어떤 기업들인지(근거 목록)를 팝업으로 보여 준다
   $("#kpis").innerHTML = D.kpis[lens].map((k, i) => `<button class="kpi" data-kpi="${lens}|${i}" style="cursor:pointer"><span class="l">${esc(k.label)} <span aria-hidden="true">ⓘ</span></span><span class="v">${esc(k.value)}</span><span class="s">${esc(k.sub)}</span></button>`).join("");
@@ -1596,6 +1683,24 @@ function renderMap() {
       <span class="s" style="grid-column:2/-1">${esc(c.one_liner)}</span>
       <span class="bar"><i style="width:${key(c)}%"></i></span>
     </button>`).join("");
+  renderCompare();
+}
+function renderCompare() {
+  const sel = store.get("compare", []);
+  $("#cmp-pick").innerHTML = D.companies.map((c) => `<button class="chip co" data-cmp="${esc(c.id)}" aria-pressed="${sel.includes(c.id)}">${sel.includes(c.id) ? "✓ " : ""}${esc(c.name_ko)}</button>`).join("");
+  const cs = sel.map((id) => byId[id]).filter(Boolean);
+  if (cs.length < 2) { $("#cmp-out").innerHTML = `<p class="sub" style="margin:8px 0 0">${sel.length === 0 ? "비교할 기업을 2곳 이상 고르세요" : "1곳 더 고르면 비교표가 나타납니다"}</p>`; return; }
+  const rows = [
+    ["경쟁력", (c) => c.calc.total], ["고객 매력도", (c) => c.calc.attract ?? "–"],
+    ["기술", (c) => c.scores.tech[0]], ["양산", (c) => c.scores.scale[0]], ["자본", (c) => c.scores.capital[0]], ["실행 신뢰도", (c) => c.scores.execution[0]],
+    ["밸류", (c) => c.valuation?.v != null ? usdM(c.valuation.v) : "–"], ["누적 출하", (c) => c.cum_units?.v != null ? units(c.cum_units.v) : "–"],
+    ["생산능력(연)", (c) => c.capacity?.v != null ? units(c.capacity.v) : "–"], ["상장 단계", (c) => c.listing.label],
+  ];
+  $("#cmp-out").innerHTML = `<div class="card" style="padding:0;overflow-x:auto;margin-top:4px"><table class="cmp">
+    <tr><th></th>${cs.map((c) => `<th><button class="chip co" data-co="${esc(c.id)}" style="font-weight:700">${esc(c.name_ko)}</button></th>`).join("")}</tr>
+    ${rows.map(([label, f]) => `<tr><th style="text-align:left">${esc(label)}</th>${cs.map((c) => `<td>${f(c)}</td>`).join("")}</tr>`).join("")}
+  </table></div>
+  <p class="sub" style="margin:8px 0 0">기업명을 누르면 상세 정보가 열립니다. <button class="chip" data-cmp-clear>선택 지우기</button></p>`;
 }
 
 // ---------- 부품 기회 ----------
@@ -1675,9 +1780,21 @@ function renderSpecs() {
   renderActMix("#act-mix2");
 }
 
+function renderKoreaBoard() {
+  const kf = store.get("kbFilter", "all");
+  const KF = [["all", "전체"], ["gap", "국내 공백만"], ["swap", "비중국 대체만"], ["news", "최근 소식 있음"]];
+  $("#kboard-filter").innerHTML = KF.map(([id, l]) => `<button class="chip" data-kf="${id}" aria-pressed="${id === kf}">${l}</button>`).join("");
+  const rows = (D.korea_board || []).filter((r) => kf === "all" || (kf === "gap" ? r.gap : kf === "swap" ? r.swap : r.news_30d > 0));
+  $("#kboard-sub").textContent = `고객 매력도 × 부품 원가 비중 × 국내 공백 가산 × 비중국 대체 수요 가산 − 자체 생산 감점. 고객당 2개까지, 1위=100점. ${rows.length}/${(D.korea_board || []).length}건 표시`;
+  $("#kboard").innerHTML = foldRows(rows.map((r, i) => `<button class="row" data-co="${esc(r.company)}" style="align-items:start">
+    <span class="t"><span class="muted num">${i + 1}.</span> <b>${esc(byId[r.company]?.name_ko || r.company)}</b> · ${esc(r.part_name.replace(/\(.*\)/, ""))} ${r.gap ? '<span class="b gap">국내 공백</span>' : ""}${r.swap ? '<span class="b official">비중국 대체</span>' : ""}${r.news_30d ? `<span class="b reported">최근 소식 ${r.news_30d}</span>` : ""}</span>
+    <span class="r"><span class="b ${r.how.startsWith("접근") ? "t3" : "reported"}">${esc(r.how)}</span> <b class="num">${r.score}</b></span>
+    <span class="s" style="grid-column:1/-1">${r.why.map(esc).join(" · ")}</span></button>`), 12) || '<div class="empty">조건에 맞는 항목이 없습니다</div>';
+}
 function renderParts() {
   renderCalc();
   renderSpecs();
+  renderKoreaBoard();
   const items = D.bom.items.filter((i) => !i.module).sort((a, b) => b.share - a.share);
   const max = items[0].share;
   $("#bom-sub").textContent = `대당 BOM 약 $${D.bom.unit_bom_2026.toLocaleString()}(2026 추정) 중 비중. 액추에이터 계열(감속기·모터·스크류·드라이버·엔코더)이 절반 이상`;
@@ -1911,6 +2028,28 @@ function renderStrat() {
 // ---------- 기업 상세 시트 ----------
 const AX = { tech: "기술", scale: "양산", capital: "자본", execution: "실행 신뢰도", open: "조달 개방성", geo: "지정학 접근성" };
 const FACTS = [["valuation", "밸류", usdM], ["funding_total", "누적 조달", usdM], ["revenue", "매출", usdM], ["orders", "수주", usdM], ["cum_units", "누적 출하", units], ["target_2026", "2026 목표", units], ["capacity", "생산능력(연)", units], ["price", "판매가", (v) => usd(v)]];
+function trendChart(points, key, color) {
+  // points: [[date, total, attract], ...] 오래된 순. key: 1=경쟁력, 2=고객 매력도
+  const vals = points.map((p) => p[key]).filter((v) => v != null);
+  if (vals.length < 2) return "";
+  const W = 300, H = 60, pad = 4;
+  const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const xs = points.map((_, i) => pad + (i / (points.length - 1)) * (W - pad * 2));
+  const pts = points.map((p, i) => (p[key] == null ? null : `${xs[i].toFixed(1)},${(H - pad - ((p[key] - lo) / span) * (H - pad * 2)).toFixed(1)}`)).filter(Boolean).join(" ");
+  const last = points.at(-1);
+  return `<svg class="trend" viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 추이"><polyline points="${pts}" style="stroke:${color}"/>
+    <circle cx="${xs.at(-1).toFixed(1)}" cy="${(H - pad - ((last[key] - lo) / span) * (H - pad * 2)).toFixed(1)}" r="2.6" style="fill:${color}"/></svg>`;
+}
+function trendFold(id) {
+  const h = (D.score_history || {})[id];
+  if (!h || h.length < 2) return "";
+  const first = h[0], last = h.at(-1);
+  const d = (a, b) => (a == null || b == null ? "" : `${b - a >= 0 ? "+" : ""}${b - a}`);
+  return `<p class="sub" style="margin:0 0 6px">${esc(first[0])} → ${esc(last[0])} (${h.length}개 기록)</p>
+    <div class="trend-row"><span>경쟁력</span>${trendChart(h, 1, "var(--accent)")}<b class="num">${last[1]}<small class="muted"> ${d(first[1], last[1])}</small></b></div>
+    ${last[2] != null ? `<div class="trend-row"><span>고객 매력도</span>${trendChart(h, 2, "var(--cat-2)")}<b class="num">${last[2]}<small class="muted"> ${d(first[2], last[2])}</small></b></div>` : ""}
+    <p class="sub" style="margin:6px 0 0">점수가 바뀐 날마다 기록해요(최대 24개). 기록이 쌓일수록 추이가 길어집니다.</p>`;
+}
 function openSheet(id) {
   const c = byId[id];
   if (!c) return;
@@ -1923,7 +2062,8 @@ function openSheet(id) {
   const nws = (D.news || []).filter((x) => (x.companies || []).includes(id) || (!x.companies?.length && x.query === id)).slice(0, 6);
   const props = (D.proposals || []).filter((p) => p.company === id);
   const srcs = [...new Set([c.src, c.listing.src, c.sourcing?.src, ...FACTS.map(([k]) => c[k]?.src), ...(c.funding || []).map((r) => r.src)].filter(safeUrl))];
-  $("#sh-title").innerHTML = `${esc(c.name_ko)} ${tierB(c)}<small>${esc(c.name)} · ${esc(COUNTRY[c.country] || c.country)}${ownerCountry(c) ? ` (소유 기준 ${esc(COUNTRY[ownerCountry(c)])} 계열 — ${esc(byId[c.parent].name_ko)})` : ""} · ${esc(c.listing.label)}${c.listing.ticker ? ` (${esc(c.listing.ticker)})` : ""}</small>`;
+  const watched = isWatched(id);
+  $("#sh-title").innerHTML = `<button class="star" data-watch="${esc(id)}" aria-pressed="${watched}" aria-label="관심 기업 ${watched ? "해제" : "추가"}">${watched ? "★" : "☆"}</button> ${esc(c.name_ko)} ${tierB(c)}<small>${esc(c.name)} · ${esc(COUNTRY[c.country] || c.country)}${ownerCountry(c) ? ` (소유 기준 ${esc(COUNTRY[ownerCountry(c)])} 계열 — ${esc(byId[c.parent].name_ko)})` : ""} · ${esc(c.listing.label)}${c.listing.ticker ? ` (${esc(c.listing.ticker)})` : ""}</small>`;
   const order = D.companies.map((x) => x.id), at = order.indexOf(id);
   const prev = byId[order[(at - 1 + order.length) % order.length]], next = byId[order[(at + 1) % order.length]];
   const keyFact = ["cum_units", "valuation", "capacity", "funding_total"].find((k) => c[k]?.v != null);
@@ -1946,6 +2086,7 @@ function openSheet(id) {
     </div>
     ${fold(`점수 근거 <span class="muted" style="font-weight:400;font-size:.78rem">경쟁력 ${c.calc.total} · 매력도 ${c.calc.attract ?? "–"}</span>`, scoreRows(["tech", "scale", "capital", "execution"]) + (c.calc.attract != null ? `<p class="sub" style="margin:8px 0 4px">고객 매력도 = 양산 + 자본 + 아래 두 축</p>${scoreRows(["open", "geo"])}` : ""))}
     ${fold("핵심 수치", facts ? `<div class="facts">${facts}</div>` : "", true)}
+    ${fold("점수 추이", trendFold(id))}
     ${fold("검증 대기 (AI 추출)", props.map((p) => `<div class="rm"><span class="w">${esc(p.date)}</span><span>${FIELD[p.field]} ${fmtUnit(p.curated, p.unit)} → <b>${fmtUnit(p.proposed, p.unit)}</b></span><span>${link(p.url, "원문")}</span></div>`).join(""), true)}
     ${fold(`최근 소식 ${nws.length}건`, nws.length ? `<div class="list news">${nws.map((x) => newsRow(x, false)).join("")}</div>` : "", true)}
     ${q ? fold(`주가 <span class="muted mono" style="font-weight:400;font-size:.78rem">${esc(q.symbol)}</span>`, `<div style="display:flex;align-items:center;gap:12px;font-size:.85rem">${spark(q.spark)}<span><b class="num">${q.last.toLocaleString("ko-KR")}</b> ${esc(q.currency || "")} · 1주 ${pct(q.chg_1w)} · 1개월 ${pct(q.chg_1m)} <span class="muted">(${esc(q.date)} ${esc(q.note || "")})</span></span></div>`, true) : ""}
@@ -2009,12 +2150,17 @@ function route() {
   window.scrollTo(0, 0);
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-sensp],[data-share],[data-kpi],[data-hubtool],[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-pview],[data-hm],[data-lmsort],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf]");
+  const t = e.target.closest("[data-sensp],[data-share],[data-kpi],[data-hubtool],[data-pl],[data-plclear],[data-pcoclear],[data-pco],[data-pview],[data-hm],[data-lmsort],[data-copy],[data-tile],[data-qs],[data-cf],[data-jump],[data-sort],[data-co],[data-url],[data-role],[data-period],[data-lens],[data-preset],[data-group],[data-scn],[data-nf],[data-opt],[data-cty],[data-rmf],[data-watch],[data-dismiss],[data-cmp],[data-cmp-clear],[data-kf]");
   if (!t) return;
   if (t.dataset.url && safeUrl(t.dataset.url)) return window.open(t.dataset.url, "_blank", "noopener");
   if (t.dataset.share !== undefined) { copyText(shareUrl()).then(() => { const o = t.textContent; t.textContent = "복사됨 ✓ — 붙여넣어 공유하세요"; setTimeout(() => (t.textContent = o), 2200); }); return; }
   if (t.dataset.sensp) { const p = SENS_PRESETS.find(([id]) => id === t.dataset.sensp); store.set("sensP", p[0]); store.set("sensW", p[0] === "base" ? null : p[2]); renderSens(); return; }
   if (t.dataset.kpi) return openKpi(t.dataset.kpi);
+  if (t.dataset.watch) { toggleWatch(t.dataset.watch); if (!$("#sheet").hidden) openSheet(t.dataset.watch); renderWatch(); return; }
+  if (t.dataset.dismiss) { dismissProp(t.dataset.dismiss); renderExec(); return; }
+  if (t.dataset.cmp) { toggleCompare(t.dataset.cmp); renderCompare(); return; }
+  if (t.dataset.cmpClear !== undefined) { store.set("compare", []); renderCompare(); return; }
+  if (t.dataset.kf) { store.set("kbFilter", t.dataset.kf); renderKoreaBoard(); return; }
   if (t.dataset.co) return openSheet(t.dataset.co);
   if (t.dataset.tile) { store.set("tile", store.get("tile", null) === t.dataset.tile ? null : t.dataset.tile); renderHome(); return; }
   if (t.dataset.pl) { setPatLayer(t.dataset.pl); return; }
@@ -2110,6 +2256,24 @@ fetch("data/dashboard.json", { cache: "no-cache" }).then((r) => { if (!r.ok) thr
   route();
 }).catch((err) => { const box = $("#err"); box.hidden = false; box.textContent = `데이터를 불러오지 못했습니다 (${err.message}). 잠시 후 다시 열어 주세요.`; });
 
+$("#data-status").addEventListener("toggle", () => {
+  if (!$("#data-status").open || $("#data-status").dataset.loaded) return;
+  $("#data-status").dataset.loaded = "1";
+  fetch("data/status.json", { cache: "no-cache" }).then((r) => r.json()).then((st) => {
+    const ago = (iso) => { if (!iso) return "—"; const m = (Date.now() - new Date(iso)) / 60000; return !isFinite(m) ? iso : m < 90 ? `${Math.max(1, Math.round(m))}분 전` : m < 2880 ? `${Math.round(m / 60)}시간 전` : `${Math.round(m / 1440)}일 전`; };
+    const dot = (ok, warn) => `<i class="st-dot ${ok ? "ok" : warn ? "warn" : "bad"}"></i>`;
+    const rows = [
+      ["뉴스 수집·분류", st.news, `${st.news.items}건 · 분류 대기 ${st.news.pending}건${(st.news.warnings || []).length ? " · " + st.news.warnings.join(", ") : ""}`, st.news.pending === 0, st.news.pending < 30],
+      ["주가", st.prices, `종목 ${st.prices.symbols}개`, true, true],
+      ["주간 다이제스트", st.digest, "", !!st.digest.generated_at, true],
+      ["논문 신호", st.papers, "", !!st.papers.generated_at, true],
+    ];
+    $("#data-status-body").innerHTML = `<ul class="st-list">${rows.map(([label, o, sub, ok, warn]) =>
+      `<li>${dot(ok, warn)}<span>${esc(label)}</span><small>${ago(o.generated_at)}${sub ? " · " + esc(sub) : ""}</small></li>`).join("")}
+      <li>${dot(true, true)}<span>AI 사용</span><small>오늘 ${st.ai.today}회${st.ai.cap ? ` (보장량 ${st.ai.cap}회)` : ""}</small></li></ul>
+      <p class="sub" style="margin:8px 0 0">뉴스·주가·논문은 매일, 다이제스트는 주 1회 자동 갱신됩니다.</p>`;
+  }).catch(() => { $("#data-status-body").innerHTML = '<p class="sub">상태 정보를 불러오지 못했습니다.</p>'; });
+});
 const THEMES = [["auto", "자동"], ["light", "밝게"], ["dark", "어둡게"]];
 function applyTheme(t) {
   if (t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
