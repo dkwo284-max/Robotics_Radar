@@ -373,6 +373,38 @@ details.fold[open] > summary::after { content: "접기"; }
   main { padding-bottom: 48px; }
 }
 .warnbox { font-size: 0.8rem; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--bad); }
+/* 결론 홈 · 순위 구성 · 게이지 · 공급망 · 조달 타임라인 · 주가×사건 · 상세 요약 · 리포트 */
+.hx-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; } .hx-head h2 { margin: 0; }
+.hx-grid { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); margin-top: 10px; }
+@media (min-width: 820px) { .hx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.hx-col { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px 12px; min-width: 0; }
+.hx-col h3 { margin: 0 0 6px; font-size: .86rem; }
+.hx-it { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: .84rem; text-align: left; width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; font-family: inherit; cursor: pointer; }
+.hx-it:first-of-type { border-top: 0; } .hx-it .n { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-size: .72rem; font-weight: 700; }
+.hx-it small { display: block; color: var(--muted); font-size: .74rem; margin-top: 1px; } .hx-it a { color: inherit; text-decoration: none; }
+.rv { display: grid; gap: 3px; }
+.rv-row { display: grid; grid-template-columns: 1.6em minmax(70px, 130px) minmax(0, 1fr) 4.6em; gap: 8px; align-items: center; font-size: .8rem; background: none; border: 0; color: inherit; font-family: inherit; text-align: left; padding: 2px 0; cursor: pointer; width: 100%; }
+.rv-row .rk { color: var(--muted); text-align: right; font-size: .74rem; } .rv-row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rv-bar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; background: var(--raised); } .rv-bar i { display: block; height: 100%; }
+.rv-row .v { text-align: right; font-variant-numeric: tabular-nums; } .rv-row .v small { font-size: .7rem; }
+.gg { display: grid; grid-template-columns: minmax(80px, 120px) minmax(0, 1fr) 5.4em; gap: 8px; align-items: center; padding: 8px 4px; border-top: 1px solid var(--line); font-size: .82rem; background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; font-family: inherit; text-align: left; width: 100%; cursor: pointer; }
+.gg:first-child { border-top: 0; } .gg .tr { height: 12px; border-radius: 6px; background: var(--raised); overflow: hidden; position: relative; } .gg .tr i { display: block; height: 100%; border-radius: 6px; }
+.gg .tr.none { background: repeating-linear-gradient(45deg, var(--raised), var(--raised) 5px, transparent 5px, transparent 10px); }
+.gg small { grid-column: 1 / -1; color: var(--muted); font-size: .74rem; } .gg .p { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.chain-scroll { overflow-x: auto; } #chain { min-width: 640px; width: 100%; height: auto; display: block; } #fundtl { min-width: 620px; width: 100%; height: auto; display: block; }
+#chain text, #fundtl text, #pxev text { font-size: 10px; fill: currentColor; } #chain .lk { fill: none; stroke: var(--muted); stroke-opacity: .35; stroke-width: 1.2; }
+#chain .lk.kr { stroke: var(--cat-3); stroke-opacity: .9; stroke-width: 2; } #chain .kr-t { fill: var(--cat-3); font-weight: 700; } #chain .co-t { font-weight: 700; cursor: pointer; }
+.sh-top { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; align-items: center; margin-bottom: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; }
+@media (max-width: 480px) { .sh-top { grid-template-columns: 1fr; justify-items: center; } }
+.sh-top svg { width: 150px; height: 150px; } .sh-top svg text { font-size: 9px; fill: currentColor; opacity: .75; }
+.sh-top ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: .82rem; } .sh-top li b { font-size: .74rem; margin-right: 4px; }
+.rep h3 { margin: 14px 0 4px; font-size: .95rem; } .rep ul, .rep ol { margin: 0; padding-left: 1.2em; font-size: .86rem; display: grid; gap: 3px; } .rep table { width: 100%; border-collapse: collapse; font-size: .82rem; } .rep td, .rep th { padding: 3px 4px; border-top: 1px solid var(--line); text-align: left; }
+@media print {
+  body > *:not(#sheet) { display: none !important; }
+  body { padding: 0 !important; background: #fff !important; color: #000 !important; }
+  #sheet { position: static !important; max-height: none !important; height: auto !important; box-shadow: none !important; transform: none !important; border: 0 !important; width: 100% !important; overflow: visible !important; }
+  #sheet .x, .noprint { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -389,6 +421,12 @@ details.fold[open] > summary::after { content: "접기"; }
 
   <!-- 개요 -->
   <div class="panel" id="p-home" data-panel>
+    <section class="full hx" id="hx-sec" aria-label="이번 주 결론">
+      <div class="hx-head"><h2>🧭 이번 주 결론</h2><button type="button" class="chip" data-hxreport>🖨 주간 리포트</button></div>
+      <p class="sub" id="hx-sub"></p>
+      <div class="chips" id="hx-parts" role="group" aria-label="관심 부품"></div>
+      <div class="hx-grid" id="hx-grid"></div>
+    </section>
     <section id="watch-sec" hidden>
       <h2>⭐ 관심 기업</h2>
       <p class="sub">기업 상세의 별표로 추가합니다. 이 기기에만 저장되고, 관련 소식·경보가 여기 먼저 모입니다.</p>
@@ -611,6 +649,12 @@ details.fold[open] > summary::after { content: "접기"; }
       <p class="sub" id="rank-sub"></p>
       <div class="list" id="rank"></div>
     </section>
+    <section class="full" id="rankviz-sec">
+      <h2>점수 구성으로 본 순위 <span class="b estimate">기준일 변동 표시</span></h2>
+      <p class="sub" id="rankviz-sub"></p>
+      <div class="rv" id="rankviz"></div>
+      <div class="legend" id="rankviz-legend"></div>
+    </section>
     <section id="cmp-sec">
       <h2>⚖ 기업 비교</h2>
       <p class="sub">2~4곳을 고르면 점수·핵심 수치·스펙을 나란히 봅니다. 선택은 이 기기에 저장됩니다.</p>
@@ -644,6 +688,12 @@ details.fold[open] > summary::after { content: "접기"; }
         <svg id="c-chart" viewBox="0 0 360 150" role="img" aria-label="연도별 매출 기회"></svg>
         <p class="sub" style="margin:0" id="c-note"></p>
       </div>
+    </section>
+    <section class="full" id="chain-sec">
+      <h2>공급망 관계도 <span class="b reported">공개 정보 기준</span></h2>
+      <p class="sub" id="chain-sub"></p>
+      <div class="chain-scroll"><svg id="chain" role="img" aria-label="공급사·파트너 → 로봇 기업 → 고객 관계도"></svg></div>
+      <div class="legend" id="chain-legend"></div>
     </section>
     <section id="kboard-sec">
       <h2>🇰🇷 한국 부품사 기회 보드 <span class="b estimate">규칙 기반 추정</span></h2>
@@ -688,6 +738,11 @@ details.fold[open] > summary::after { content: "접기"; }
       <div class="chart"><svg id="scn" viewBox="0 0 360 200" role="img" aria-label="출하 시나리오"></svg><div class="legend" id="scn-legend"></div></div>
     </section>
     <section>
+      <h2>양산 진척 게이지</h2>
+      <p class="sub">2026 목표 대비 누적 출하, 생산능력 대비 비율. 목표가 공개된 곳을 먼저 보여 줍니다.</p>
+      <div class="list" id="gauge"></div>
+    </section>
+    <section>
       <h2>기업별 양산 현황</h2>
       <p class="sub">누적 출하 · 2026 목표 · 생산능력. 실행 신뢰도는 과거 발표 대비 달성 이력</p>
       <div class="list" id="prod"></div>
@@ -712,6 +767,13 @@ details.fold[open] > summary::after { content: "접기"; }
       <div class="chips" id="q-sort" style="margin-bottom:10px"></div>
       <div class="list" id="quotes"></div>
     </section>
+    <section id="pxev-sec" hidden>
+      <h2>주가와 사건 겹쳐 보기</h2>
+      <p class="sub">최근 약 3개월 종가 위에 핵심 이벤트·핵심 소식을 점으로 표시합니다. 점의 날짜는 거래일 기준 근사값입니다.</p>
+      <div class="chips" id="pxev-co" style="margin-bottom:8px"></div>
+      <div class="chart"><svg id="pxev" viewBox="0 0 360 170" role="img" aria-label="주가와 이벤트"></svg></div>
+      <div class="list news" id="pxev-list"></div>
+    </section>
     <section>
       <h2>IPO 파이프라인</h2>
       <p class="sub">비상장 → IPO 준비 → 신청·심사 → 공모 → 상장. 상장사 사업부·자회사(테슬라·현대차 등)는 제외</p>
@@ -726,6 +788,11 @@ details.fold[open] > summary::after { content: "접기"; }
       <h2>밸류에이션</h2>
       <p class="sub">최근 라운드·보도 기준 (USD)</p>
       <div class="chart" id="vals"></div>
+    </section>
+    <section class="full">
+      <h2>자금 조달 타임라인</h2>
+      <p class="sub">원 크기 = 조달 금액, 숫자 = 라운드 뒤 밸류. 원을 누르면 기업 상세가 열립니다.</p>
+      <div class="chain-scroll"><svg id="fundtl" role="img" aria-label="기업별 자금 조달 타임라인"></svg></div>
     </section>
     <section>
       <h2>최근 12개월 자금 조달</h2>
@@ -878,7 +945,7 @@ const newsTitle = (x) => esc(x.title_ko || x.title);
 function newsRow(x, chips = true) {
   const imp = x.importance >= 3 ? '<span class="imp3">핵심</span>' : x.importance === 2 ? '<span class="b reported">주목</span>' : "";
   return `<div class="ev"><span class="d">${esc(x.date.slice(2).replace(/-/g, "."))}</span><span class="t">${newB(x.date)} ${newsTitle(x)}${x.summary_ko ? `<small>${esc(x.summary_ko)}</small>` : ""}</span>
-    <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${x.n_src > 1 ? `<span class="b t3" title="같은 내용을 보도한 매체: ${esc((x.also || []).join(", "))}${x.n_src - 1 > (x.also || []).length ? " 외" : ""}">외 ${x.n_src - 1}곳 보도</span>` : ""}${x.ai ? "" : '<span class="b t3" title="AI 가 아직 분류·한국어 요약하지 않은 기사 — 다음 실행(하루 AI 한도 안)에서 이어서 처리됩니다. 영어 제목은 원문 그대로예요">번역 대기</span>'}${link(x.url, "원문")}</span></div>`;
+    <span class="m">${imp}${x.type && x.type !== "other" ? `<span class="b t3">${TYPE[x.type]}</span>` : ""}${chips ? (x.companies || []).map(coChip).join("") : ""}<span class="muted">${esc(x.source || "")}</span>${propChip(x)}${x.n_src > 1 ? `<span class="b t3" title="같은 내용을 보도한 매체: ${esc((x.also || []).join(", "))}${x.n_src - 1 > (x.also || []).length ? " 외" : ""}">외 ${x.n_src - 1}곳 보도</span>` : ""}${x.ai ? "" : '<span class="b t3" title="AI 가 아직 분류·한국어 요약하지 않은 기사 — 다음 실행(하루 AI 한도 안)에서 이어서 처리됩니다. 영어 제목은 원문 그대로예요">번역 대기</span>'}${link(x.url, "원문")}</span></div>`;
 }
 const ROLE_BY_TYPE = { funding: ["exec"], ipo: ["exec"], policy: ["exec"], org: ["exec"], production: ["exec", "strategy"],
   product: ["strategy", "engineer"], deploy: ["strategy"], partner: ["exec", "strategy"], supply: ["exec", "engineer"], other: [] };
@@ -1358,6 +1425,7 @@ function renderWatch() {
   }).join("");
 }
 function renderHome() {
+  hxHome();
   renderWatch();
   const role = store.get("role", "exec");
   document.querySelectorAll("[data-role]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.role === role)));
@@ -1605,6 +1673,7 @@ function renderSens() {
   }), 10);
 }
 function renderMap() {
+  hxRank();
   const preset = store.get("preset", "power");
   let group = store.get("group", "all");
   document.querySelectorAll("[data-preset]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.preset === preset)));
@@ -1792,6 +1861,7 @@ function renderKoreaBoard() {
     <span class="s" style="grid-column:1/-1">${r.why.map(esc).join(" · ")}</span></button>`), 12) || '<div class="empty">조건에 맞는 항목이 없습니다</div>';
 }
 function renderParts() {
+  hxChain();
   renderCalc();
   renderSpecs();
   renderKoreaBoard();
@@ -1820,6 +1890,7 @@ function renderParts() {
 
 // ---------- 양산 ----------
 function renderProd() {
+  hxGauge();
   const shareColors = ["var(--cat-2)", "color-mix(in oklab, var(--cat-2) 60%, var(--surface))", "color-mix(in oklab, var(--cat-2) 30%, var(--surface))", "var(--cat-1)"];
   const st = Object.fromEntries(D.stats.map((s) => [s.k, s]));
   $("#share-sub").innerHTML = `전 세계 약 ${units(st.h1_2026_units.v)}. ${esc(st.h1_2026_units.note)} ${link(st.h1_2026_units.src)}`;
@@ -1865,8 +1936,200 @@ function renderProd() {
   }).join("");
 }
 
+// ---------- 결론 홈 · 순위 구성 · 게이지 · 공급망 · 조달 타임라인 · 주가×사건 · 상세 요약 · 리포트 (AI 없음) ----------
+const HX_PARTS = [["all", "전체"], ["actuator", "액추에이터"], ["hand", "손"], ["battery", "배터리"], ["sensor", "센서"], ["ai", "AI·칩"]];
+const partLayer = (r) => { const t = `${r.part || ""} ${r.part_name || ""}`; return /hand|손/.test(t) ? "hand" : /batt|배터리/.test(t) ? "battery" : /sens|센서|비전|토크/.test(t) ? "sensor" : /comp|컴퓨|칩|제어/.test(t) ? "ai" : "actuator"; };
+const whenKey = (w) => { const m = String(w || "").match(/^(\d{4})(?:-(H1|H2|Q[1-4]|\d{2}))?/); if (!m) return "9999-12"; const x = m[2]; return `${m[1]}-${!x ? "12" : x === "H1" ? "06" : x === "H2" ? "12" : x[0] === "Q" ? String(+x[1] * 3).padStart(2, "0") : x}`; };
+const daysAgo = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+function hxData() {
+  const part = store.get("hxPart", "all"), since = daysAgo(7);
+  const news7 = (D.news || []).filter((x) => x.date >= since && (part === "all" || x.layer === part));
+  const changes = [...news7].sort((a, b) => (b.importance || 0) - (a.importance || 0) || (b.n_src || 1) - (a.n_src || 1) || b.date.localeCompare(a.date)).slice(0, 3);
+  let cos;
+  if (part === "all") {
+    const sc = {};
+    for (const x of news7) for (const id of x.companies || []) { const o = (sc[id] ||= { id, n: 0, key: 0 }); o.n++; if (x.importance >= 3) o.key++; }
+    cos = Object.values(sc).filter((o) => byId[o.id]).sort((a, b) => (b.key * 5 + b.n + (isWatched(b.id) ? 3 : 0)) - (a.key * 5 + a.n + (isWatched(a.id) ? 3 : 0))).slice(0, 3)
+      .map((o) => ({ id: o.id, why: `7일 소식 ${o.n}건${o.key ? ` · 핵심 ${o.key}건` : ""}${isWatched(o.id) ? " · 관심 기업" : ""}` }));
+  } else {
+    const seen = new Set();
+    cos = (D.korea_board || []).filter((r) => partLayer(r) === part && byId[r.company] && !seen.has(r.company) && seen.add(r.company)).slice(0, 3)
+      .map((r) => ({ id: r.company, why: `${r.part_name} 기회 ${r.score}점 · ${r.how}` }));
+  }
+  const nowKey = TODAY.slice(0, 7);
+  const miles = D.companies.flatMap((c) => c.roadmap.filter((r) => r.status === "planned" && whenKey(r.when) >= nowKey).map((r) => ({ ...r, c })))
+    .sort((a, b) => whenKey(a.when).localeCompare(whenKey(b.when)) || b.c.calc.total - a.c.calc.total).slice(0, 3);
+  return { part, since, changes, cos, miles, n: news7.length };
+}
+function hxHome() {
+  const d = hxData();
+  $("#hx-parts").innerHTML = HX_PARTS.map(([k, l]) => `<button class="chip" data-hxpart="${k}" aria-pressed="${k === d.part}">${l}</button>`).join("");
+  $("#hx-sub").textContent = `최근 7일 소식 ${d.n}건에서 추렸습니다${d.part === "all" ? "" : ` (관심 부품: ${HX_PARTS.find((x) => x[0] === d.part)[1]})`}. 관심 부품을 고르면 결론·기업이 그 부품 기준으로 바뀌고, 선택은 이 기기에만 저장됩니다.`;
+  const col = (title, rows, empty) => `<div class="hx-col"><h3>${title}</h3>${rows.join("") || `<p class="sub" style="margin:0">${empty}</p>`}</div>`;
+  $("#hx-grid").innerHTML =
+    col("가장 중요한 변화 3", d.changes.map((x, i) => `<div class="hx-it"><span class="n">${i + 1}</span><span>${safeUrl(x.url) ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${newsTitle(x)}</a>` : newsTitle(x)}
+      <small>${esc(x.date.slice(5).replace("-", "/"))}${x.type && TYPE[x.type] ? " · " + TYPE[x.type] : ""}${(x.companies || []).slice(0, 2).map((id) => " · " + esc(coLabel(id))).join("")}${x.n_src > 1 ? ` · ${x.n_src}곳 보도` : ""}${propChip(x)}</small></span></div>`), "이 기간에 해당 소식이 없습니다") +
+    col("지금 주목할 기업 3", d.cos.map((o, i) => `<button class="hx-it" data-co="${esc(o.id)}"><span class="n">${i + 1}</span><span>${esc(byId[o.id].name_ko)} ${tierB(byId[o.id])}<small>${esc(o.why)}</small></span></button>`), "해당 기업이 없습니다") +
+    col("다음 마일스톤 3", d.miles.map((m, i) => `<button class="hx-it" data-co="${esc(m.c.id)}"><span class="n">${i + 1}</span><span>${esc(m.title)}<small>${esc(m.c.name_ko)} · ${esc(m.when)} · ${TYPE_RM[m.type] || ""}</small></span></button>`), "예정된 일정이 없습니다");
+}
+// 소식 → 수치 영향: 같은 기사에서 나온 '검증 대기 수치'가 있으면 표시
+let propIdx = null;
+const propsByUrl = () => (propIdx ||= (D.proposals || []).reduce((m, p) => ((m[p.url] ||= []).push(p), m), {}));
+const propText = (p) => `${FIELD[p.field] || p.field} ${fmtUnit(p.curated, p.unit)} → ${fmtUnit(p.proposed, p.unit)}`;
+function propChip(x) { const ps = propsByUrl()[x.url]; return ps ? ` <span class="b M" title="이 기사에서 뽑힌 검증 대기 수치">📊 ${esc(propText(ps[0]))}${ps.length > 1 ? ` 외 ${ps.length - 1}` : ""}</span>` : ""; }
+
+const RV_AX = [["tech", "기술", "var(--cat-1)"], ["scale", "양산", "var(--cat-2)"], ["capital", "자본", "var(--cat-3)"], ["execution", "실행 신뢰도", "var(--cat-4)"]];
+function hxRank() {
+  const list = [...D.companies].sort((a, b) => b.calc.total - a.calc.total);
+  const moved = list.filter((c) => c.calc.move != null && c.calc.move !== 0).length;
+  $("#rankviz-sub").textContent = `총점(100점)을 기술 30 · 양산 30 · 자본 20 · 실행 20 으로 나눠 색으로 쌓았습니다. ${moved ? `직전 기준일 대비 점수가 바뀐 기업 ${moved}곳에 ▲▼ 표시.` : `점수 이력은 ${(D.coverage || {}).tracking_since || D.as_of}부터 쌓이는 중이라 아직 변동 표시가 없습니다 — 기준일이 바뀌면 ▲▼ 가 붙습니다.`}`;
+  $("#rankviz").innerHTML = list.map((c, i) => {
+    const mv = c.calc.move;
+    return `<button class="rv-row" data-co="${esc(c.id)}"><span class="rk">${i + 1}</span><span class="nm">${esc(c.name_ko)}</span>
+      <span class="rv-bar" title="${RV_AX.map(([k, l]) => `${l} ${c.scores[k][0]}/${D.axes[k]}`).join(" · ")}">${RV_AX.map(([k, , col]) => `<i style="width:${c.scores[k][0]}%;background:${col}"></i>`).join("")}</span>
+      <span class="v"><b>${c.calc.total}</b> ${mv ? `<small class="${mv > 0 ? "up" : "down"}">${mv > 0 ? "▲" : "▼"}${Math.abs(mv)}</small>` : ""}</span></button>`;
+  }).join("");
+  $("#rankviz-legend").innerHTML = RV_AX.map(([, l, col]) => `<span><i class="dot" style="background:${col}"></i>${l}</span>`).join("");
+}
+
+function hxGauge() {
+  const tr = Object.fromEntries(((D.track || {}).rows || []).map((r) => [r.company, r]));
+  const rows = D.companies.filter((c) => c.group === "body" && (c.cum_units?.v != null || c.target_2026?.v != null || c.capacity?.v != null)).map((c) => {
+    const u = c.cum_units?.v, t = c.target_2026?.v, cap = c.capacity?.v;
+    return { c, u, t, cap, pct: u != null && t ? u / t : null, late: (tr[c.id]?.delayed || 0) + (tr[c.id]?.overdue || 0) };
+  }).sort((a, b) => (b.pct != null) - (a.pct != null) || (b.pct ?? 0) - (a.pct ?? 0) || (b.u || 0) - (a.u || 0));
+  $("#gauge").innerHTML = rows.map(({ c, u, t, cap, pct, late }) => {
+    const col = pct == null ? "var(--muted)" : pct >= 0.7 ? "var(--good)" : pct >= 0.35 ? "var(--warn)" : "var(--bad)";
+    return `<button class="gg" data-co="${esc(c.id)}"><span>${esc(c.name_ko.replace(/\(.*\)/, ""))}${late ? ' <span class="b M">지연</span>' : ""}</span>
+      <span class="tr${pct == null ? " none" : ""}">${pct != null ? `<i style="width:${Math.min(100, pct * 100).toFixed(1)}%;background:${col}"></i>` : ""}</span>
+      <span class="p">${pct != null ? Math.round(pct * 100) + "%" : "—"}</span>
+      <small>누적 ${u != null ? units(u) : "미공개"} · 2026 목표 ${t != null ? units(t) : "미공개"}${cap ? ` · 생산능력 ${units(cap)}${u != null ? ` (누적이 연 능력의 ${Math.round((u / cap) * 100)}%)` : ""}` : ""}${late ? ` · 지연·기한 경과 일정 ${late}건` : ""}</small></button>`;
+  }).join("") || '<div class="empty">표시할 수치가 없습니다</div>';
+}
+
+const isKr = (t) => /삼성|엘지|현대|기아|두산|레인보우|에스비비테크|한화|포스코|네이버|로보티즈|에스피지|\bLG\b|\bSK\b|\bHD\b|Samsung|Hyundai|Kia\b|Doosan|Rainbow|Hanwha|POSCO|Naver/i.test(t);
+const short = (t) => t.replace(/\s*[\(（].*$/, "").trim().slice(0, 22);
+function hxChain() {
+  const cos = D.companies.filter((c) => (c.sourcing?.suppliers || []).length + (c.partners || []).length + (c.customers || []).length > 0)
+    .sort((a, b) => b.calc.total - a.calc.total).slice(0, 12);
+  const L = [], R = [], links = [];
+  const add = (arr, name) => { let i = arr.indexOf(name); if (i < 0) { arr.push(name); i = arr.length - 1; } return i; };
+  cos.forEach((c, ci) => {
+    for (const x of [...(c.sourcing?.suppliers || []), ...(c.partners || []).slice(0, 3)]) links.push({ side: "L", i: add(L, short(x)), ci, kr: isKr(x) });
+    for (const x of (c.customers || []).slice(0, 3)) links.push({ side: "R", i: add(R, short(x)), ci, kr: isKr(x) });
+  });
+  const rowH = 17, n = Math.max(L.length, R.length, cos.length), H = n * rowH + 30, W = 760, xL = 190, xC1 = 330, xC2 = 430, xR = 570;
+  const y = (i, len) => 22 + (i + 0.5) * ((H - 30) / len);
+  const krL = new Set(links.filter((l) => l.side === "L" && l.kr).map((l) => l.i)), krR = new Set(links.filter((l) => l.side === "R" && l.kr).map((l) => l.i));
+  const path = (x1, y1, x2, y2) => `M${x1},${y1} C${(x1 + x2) / 2},${y1} ${(x1 + x2) / 2},${y2} ${x2},${y2}`;
+  $("#chain").setAttribute("viewBox", `0 0 ${W} ${H}`);
+  $("#chain").innerHTML = `<text x="${xL}" y="10" text-anchor="end" opacity=".6">공급사 · 파트너</text><text x="${(xC1 + xC2) / 2}" y="10" text-anchor="middle" opacity=".6">로봇 기업</text><text x="${xR}" y="10" opacity=".6">고객 · 투입처</text>` +
+    links.map((l) => (l.side === "L" ? `<path class="lk${l.kr ? " kr" : ""}" d="${path(xL + 4, y(l.i, L.length), xC1 - 4, y(l.ci, cos.length))}"/>` : `<path class="lk${l.kr ? " kr" : ""}" d="${path(xC2 + 4, y(l.ci, cos.length), xR - 4, y(l.i, R.length))}"/>`)).join("") +
+    L.map((t, i) => `<text x="${xL}" y="${y(i, L.length) + 3}" text-anchor="end"${krL.has(i) ? ' class="kr-t"' : ""}>${esc(t)}</text>`).join("") +
+    cos.map((c, i) => `<text class="co-t" data-co="${esc(c.id)}" x="${(xC1 + xC2) / 2}" y="${y(i, cos.length) + 3}" text-anchor="middle" style="fill:${cColor(c.country)}">${esc(short(c.name_ko))}</text>`).join("") +
+    R.map((t, i) => `<text x="${xR}" y="${y(i, R.length) + 3}"${krR.has(i) ? ' class="kr-t"' : ""}>${esc(t)}</text>`).join("");
+  const nsup = D.companies.filter((c) => (c.sourcing?.suppliers || []).length).length;
+  $("#chain-sub").textContent = `점수 상위 ${cos.length}개 기업의 공개된 공급사·파트너(왼쪽)와 고객(오른쪽)입니다. 굵은 색 선은 한국 기업이 닿아 있는 경로. 공급사가 공개된 기업은 ${nsup}곳뿐이라 왼쪽은 파트너·투자자가 섞여 있습니다.`;
+  $("#chain-legend").innerHTML = `<span><i class="dot" style="background:var(--cat-3)"></i>한국 기업 경로</span><span><i class="dot" style="background:var(--cat-1)"></i>미국 로봇사</span><span><i class="dot" style="background:var(--cat-2)"></i>중국 로봇사</span>`;
+}
+
+function hxFund() {
+  const rows = D.companies.filter((c) => (c.funding || []).some((r) => r.amount)).map((c) => ({ c, f: c.funding.filter((r) => r.amount && /^\d{4}-\d{2}/.test(r.date)) })).filter((r) => r.f.length)
+    .sort((a, b) => b.f.at(-1).date.localeCompare(a.f.at(-1).date));
+  const all = rows.flatMap((r) => r.f);
+  if (!all.length) { $("#fundtl").innerHTML = ""; return; }
+  const t = (d) => +d.slice(0, 4) * 12 + +d.slice(5, 7) - 1;
+  const t0 = Math.min(...all.map((r) => t(r.date))) - 1, t1 = +TODAY.slice(0, 4) * 12 + +TODAY.slice(5, 7) - 1;
+  const W = 760, lane = 30, H = rows.length * lane + 34, L = 120, R = 30, maxA = Math.max(...all.map((r) => r.amount));
+  const x = (d) => L + ((t(d) - t0) / Math.max(1, t1 - t0)) * (W - L - R);
+  let g = "";
+  for (let m = Math.ceil(t0 / 6) * 6; m <= t1; m += 6) { const xx = L + ((m - t0) / Math.max(1, t1 - t0)) * (W - L - R); g += `<line x1="${xx}" x2="${xx}" y1="16" y2="${H - 14}" stroke="currentColor" opacity=".08"/><text x="${xx}" y="${H - 2}" text-anchor="middle" opacity=".6">${Math.floor(m / 12)}.${String((m % 12) + 1).padStart(2, "0")}</text>`; }
+  rows.forEach(({ c, f }, i) => {
+    const yy = 28 + i * lane;
+    g += `<text x="${L - 8}" y="${yy + 3}" text-anchor="end" data-co="${esc(c.id)}" style="cursor:pointer;font-weight:600">${esc(short(c.name_ko))}</text><line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="currentColor" opacity=".1"/>`;
+    if (f.length > 1) g += `<polyline fill="none" stroke="${cColor(c.country)}" stroke-opacity=".5" stroke-width="1.5" points="${f.map((r) => `${x(r.date)},${yy}`).join(" ")}"/>`;
+    for (const r of f) {
+      const rad = 3 + Math.sqrt(r.amount / maxA) * 11;
+      g += `<circle data-co="${esc(c.id)}" cx="${x(r.date)}" cy="${yy}" r="${rad.toFixed(1)}" fill="${cColor(c.country)}" fill-opacity=".55" stroke="${cColor(c.country)}" style="cursor:pointer"><title>${esc(c.name_ko)} ${esc(r.date)} ${esc(r.round)} ${usdM(r.amount)}${r.val ? ` · 밸류 ${usdM(r.val)}` : ""}</title></circle>`;
+      g += `<text x="${x(r.date)}" y="${yy - rad - 2}" text-anchor="middle">${usdM(r.amount)}${r.val ? ` · ${usdM(r.val)}` : ""}</text>`;
+    }
+  });
+  $("#fundtl").setAttribute("viewBox", `0 0 ${W} ${H}`);
+  $("#fundtl").innerHTML = g;
+}
+
+function hxPx() {
+  const qs = Object.entries(D.quotes || {}).filter(([id, q]) => byId[id] && (q.spark || []).length > 5);
+  $("#pxev-sec").hidden = !qs.length;
+  if (!qs.length) return;
+  let sel = store.get("pxCo", qs[0][0]);
+  if (!qs.some(([id]) => id === sel)) sel = qs[0][0];
+  $("#pxev-co").innerHTML = qs.map(([id]) => `<button class="chip" data-pxco="${esc(id)}" aria-pressed="${id === sel}">${esc(short(byId[id].name_ko))}</button>`).join("");
+  const q = D.quotes[sel], v = q.spark, n = v.length, W = 360, H = 170, L = 38, R = 8, T = 10, B = 20;
+  const lo = Math.min(...v), hi = Math.max(...v), sx = (i) => L + (i / (n - 1)) * (W - L - R), sy = (p) => T + (1 - (p - lo) / Math.max(1e-9, hi - lo)) * (H - T - B);
+  // 날짜 → 거래일 색인(주말만 뺀 근사): 마지막 종가일에서 거꾸로 센다
+  const idxOf = (date) => { let d = new Date(q.date + "T00:00:00Z"), i = n - 1; const t = new Date(date + "T00:00:00Z"); if (t > d) return null; while (d > t && i > 0) { d = new Date(d - 864e5); if (d.getUTCDay() % 6) i--; } return d <= t ? i : null; };
+  const evs = [...D.events.filter((e) => e.ids.includes(sel)).map((e) => ({ date: e.date, title: e.title, url: e.src, k: "이벤트" })),
+    ...(D.news || []).filter((x) => x.importance >= 3 && (x.companies || []).includes(sel)).map((x) => ({ date: x.date, title: x.title_ko || x.title, url: x.url, k: "핵심 소식" }))]
+    .map((e) => ({ ...e, i: idxOf(e.date) })).filter((e) => e.i != null && e.i > 0).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+  $("#pxev").innerHTML = [lo, (lo + hi) / 2, hi].map((p) => `<line x1="${L}" x2="${W - R}" y1="${sy(p)}" y2="${sy(p)}" stroke="currentColor" opacity=".08"/><text x="${L - 4}" y="${sy(p) + 3}" text-anchor="end" opacity=".6">${p >= 1000 ? Math.round(p).toLocaleString("ko-KR") : p.toFixed(1)}</text>`).join("") +
+    `<polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${v.map((p, i) => `${sx(i).toFixed(1)},${sy(p).toFixed(1)}`).join(" ")}"/>` +
+    evs.map((e, k) => `<circle cx="${sx(e.i).toFixed(1)}" cy="${sy(v[e.i]).toFixed(1)}" r="5" fill="var(--warn)" stroke="var(--surface)" stroke-width="1.5"><title>${esc(e.date)} ${esc(e.title)}</title></circle><text x="${sx(e.i).toFixed(1)}" y="${(sy(v[e.i]) - 8).toFixed(1)}" text-anchor="middle" style="font-weight:700">${k + 1}</text>`).join("") +
+    `<text x="${W - R}" y="${H - 5}" text-anchor="end" opacity=".6">${esc(q.date)} · ${esc(q.symbol)} ${q.last.toLocaleString("ko-KR")} ${esc(q.currency || "")}</text>`;
+  $("#pxev-list").innerHTML = evs.map((e, k) => {
+    const a = v[e.i], b = v[Math.min(n - 1, e.i + 5)], ch = ((b - a) / a) * 100;
+    return `<div class="ev"><span class="d">${k + 1} · ${esc(e.date.slice(2).replace(/-/g, "."))}</span><span class="t">${safeUrl(e.url) ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}</span>
+      <span class="m"><span class="b t3">${e.k}</span>${e.i + 5 <= n - 1 ? `이후 5거래일 ${pct(ch)}` : '<span class="muted">이후 5거래일 미경과</span>'}</span></div>`;
+  }).join("") || '<div class="empty">이 기간에 겹쳐 볼 이벤트가 없습니다</div>';
+}
+
+// 기업 상세 맨 위: 점수 레이더 + 강점·약점·다음 일정 + 수치 근거 기사
+function hxSheetTop(c) {
+  const keys = Object.keys(D.axes), n = keys.length, R = 52, cx = 75, cy = 75;
+  const pt = (i, r) => [cx + Math.sin((i / n) * 2 * Math.PI) * r, cy - Math.cos((i / n) * 2 * Math.PI) * r];
+  const ratio = keys.map((k) => c.scores[k][0] / D.axes[k]);
+  const ring = (f) => `<polygon points="${keys.map((_, i) => pt(i, R * f).map((x) => x.toFixed(1)).join(",")).join(" ")}" fill="none" stroke="currentColor" opacity=".15"/>`;
+  const svg = `<svg viewBox="0 0 150 150" role="img" aria-label="점수 레이더: ${keys.map((k, i) => `${AX[k]} ${Math.round(ratio[i] * 100)}%`).join(", ")}">${ring(1)}${ring(0.5)}
+    <polygon points="${ratio.map((f, i) => pt(i, R * Math.max(0.04, f)).map((x) => x.toFixed(1)).join(",")).join(" ")}" fill="var(--accent)" fill-opacity=".28" stroke="var(--accent)" stroke-width="1.6"/>
+    ${keys.map((k, i) => { const [x, y] = pt(i, R + 12); return `<text x="${x.toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="middle">${AX[k].slice(0, 5)}</text>`; }).join("")}</svg>`;
+  const order = keys.map((k, i) => ({ k, f: ratio[i] })).sort((a, b) => b.f - a.f);
+  const li = (o, tag, cls) => `<li><b class="b ${cls}">${tag}</b>${AX[o.k]} ${c.scores[o.k][0]}/${D.axes[o.k]}${c.scores[o.k][1] ? ` <span class="muted">— ${esc(c.scores[o.k][1])}</span>` : ""}</li>`;
+  const next = c.roadmap.filter((r) => r.status === "planned").sort((a, b) => whenKey(a.when).localeCompare(whenKey(b.when)))[0];
+  const props = (D.proposals || []).filter((p) => p.company === c.id).slice(0, 4);
+  return `<div class="sh-top">${svg}<ul>${order.slice(0, 2).map((o) => li(o, "강점", "H")).join("")}${order.slice(-2).reverse().map((o) => li(o, "약점", "M")).join("")}
+    <li><b class="b t3">다음 일정</b>${next ? `${esc(next.title)} <span class="muted">(${esc(next.when)})</span>` : '<span class="muted">예정된 일정 없음</span>'}</li></ul></div>
+    ${props.length ? `<details class="fold" style="margin-bottom:10px"><summary><b>📊 수치 근거 기사 ${props.length}건</b> <span class="muted" style="font-size:.76rem">검증 대기</span></summary><div class="list news" style="margin-top:6px">${props.map((p) =>
+      `<div class="ev"><span class="d">${esc((p.date || "").slice(2).replace(/-/g, "."))}</span><span class="t">${esc(propText(p))}<small>${link(p.url, p.title || "근거 기사")}</small></span></div>`).join("")}</div></details>` : ""}`;
+}
+
+function openReport() {
+  const role = store.get("role", "exec"), d = hxData(), dg = D.digest, dr = dg?.roles?.[role];
+  const top = [...D.companies].sort((a, b) => b.calc.total - a.calc.total).slice(0, 10);
+  $("#sh-title").textContent = "주간 리포트";
+  $("#sh-body").innerHTML = `<div class="rep"><p class="sub" style="margin:0">로봇 레이더 · ${esc(d.since)} ~ ${esc(TODAY)} · ${ROLE_NAME[role]} 관점${d.part === "all" ? "" : ` · 관심 부품 ${HX_PARTS.find((x) => x[0] === d.part)[1]}`} · 큐레이션 기준일 ${esc(D.as_of)}</p>
+    <p class="noprint" style="margin:8px 0"><button type="button" class="chip" data-hxprint>🖨 인쇄 / PDF 로 저장</button></p>
+    ${dr ? `<h3>이번 주 요약</h3><p style="margin:0 0 4px;font-weight:700">${esc(dr.headline)}</p><ul>${dr.bullets.map((b) => `<li>${esc(b.text)}</li>`).join("")}</ul>` : ""}
+    <h3>가장 중요한 변화</h3><ol>${d.changes.map((x) => `<li>${newsTitle(x)} <span class="muted">(${esc(x.date)}${x.source ? ", " + esc(x.source) : ""})</span></li>`).join("") || "<li>없음</li>"}</ol>
+    <h3>주목할 기업</h3><ol>${d.cos.map((o) => `<li><b>${esc(byId[o.id].name_ko)}</b> — ${esc(o.why)}</li>`).join("") || "<li>없음</li>"}</ol>
+    <h3>경보</h3><ul>${(D.alerts || []).slice(0, 5).map((a) => `<li>${esc(a.title)}${a.sub ? ` <span class="muted">— ${esc(a.sub)}</span>` : ""}</li>`).join("") || "<li>없음</li>"}</ul>
+    <h3>다가오는 마일스톤</h3><ul>${D.companies.flatMap((c) => c.roadmap.filter((r) => r.status === "planned" && whenKey(r.when) >= TODAY.slice(0, 7)).map((r) => ({ ...r, c }))).sort((a, b) => whenKey(a.when).localeCompare(whenKey(b.when))).slice(0, 6).map((m) => `<li>${esc(m.when)} · ${esc(m.c.name_ko)} — ${esc(m.title)}</li>`).join("") || "<li>없음</li>"}</ul>
+    <h3>점수 상위 10</h3><table><thead><tr><th>#</th><th>기업</th><th>총점</th><th>Tier</th><th>누적 출하</th></tr></thead><tbody>${top.map((c, i) => `<tr><td>${i + 1}</td><td>${esc(c.name_ko)}</td><td>${c.calc.total}</td><td>T${c.calc.tier}</td><td>${c.cum_units?.v != null ? units(c.cum_units.v) : "—"}</td></tr>`).join("")}</tbody></table>
+    <p class="sub" style="margin-top:10px">수치는 공개 자료·보도·추정이 섞여 있으며 투자 권유가 아닙니다.</p></div>`;
+  $("#scrim").hidden = false; $("#sheet").hidden = false; document.body.classList.add("locked");
+  $("#sheet").scrollTop = 0; $("#sh-x").focus();
+}
+document.addEventListener("click", (e) => {
+  const el = (q) => e.target.closest(q);
+  let x;
+  if ((x = el("[data-hxpart]"))) { store.set("hxPart", x.dataset.hxpart); hxHome(); return; }
+  if (el("[data-hxprint]")) { window.print(); return; }
+  if (el("[data-hxreport]")) { openReport(); return; }
+  if ((x = el("[data-pxco]"))) { store.set("pxCo", x.dataset.pxco); hxPx(); return; }
+});
+
 // ---------- 자본·IPO ----------
 function renderCapital() {
+  hxFund(); hxPx();
   const qs = Object.entries(D.quotes || {}).filter(([id]) => byId[id]);
   $("#quotes-sec").hidden = !qs.length;
   $("#quotes-sub").textContent = "최근 3개월 종가 추이 · 1주·1개월 변화 (Yahoo Finance, 매일 갱신)";
@@ -2100,6 +2363,7 @@ function openSheet(id) {
     ${fold("리스크", c.risks.length ? `<ul class="plain">${c.risks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "")}
     ${fold("관련 이벤트", evs.map((e) => `<div class="rm"><span class="w">${esc(e.date)}</span><span>${esc(e.title)}</span><span>${link(e.src)}</span></div>`).join(""))}
     ${fold("출처", srcs.length ? `<ul class="plain">${srcs.map((u) => `<li>${link(u, new URL(u).hostname.replace(/^www\./, ""))}</li>`).join("")}</ul>` : "")}`;
+  $("#sh-body").insertAdjacentHTML("afterbegin", hxSheetTop(c));
   $("#scrim").hidden = false; $("#sheet").hidden = false; document.body.classList.add("locked");
   $("#sheet").scrollTop = 0; $("#sh-x").focus();
 }
