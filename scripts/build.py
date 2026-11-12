@@ -469,6 +469,10 @@ def change_log(companies: list[dict], strategy: dict, specs: dict, today: str, p
 
 def build(history: dict | None = None) -> tuple[dict, list[str]]:
     raw = load("companies.json")
+    import autoapply
+    import playbook
+
+    auto_used = autoapply.apply_overlay(raw["companies"])  # 자동 확인된 최신 수치(덧씌움) — 큐레이션 값보다 새로울 때만
     market = load("market.json")
     strategy = load("strategy.json")
     specs = load("specs.json")
@@ -569,6 +573,8 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "papers": papers_blk,
         "news_meta": {"generated_at": news.get("generated_at"), "ai": news.get("ai"), "warnings": news.get("warnings", [])},
         "proposals": news.get("proposals", []),
+        "auto_updates": auto_used,
+        "playbook": playbook.build(companies, news.get("items", []), date.today().isoformat()),
         "quotes": prices.get("quotes", {}),
         "alerts": alerts(companies, news, prices, moves, today),
         "strategy": strategy,

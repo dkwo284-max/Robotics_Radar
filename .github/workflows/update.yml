@@ -74,7 +74,7 @@ jobs:
         run: |
           git config user.name "robotics-radar-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add web/data data/history.json data/state.json data/changes.json
+          git add web/data data/history.json data/state.json data/changes.json data/auto_updates.json 2>/dev/null || git add web/data data/history.json data/state.json data/changes.json
           if git diff --cached --quiet; then echo "no changes"; exit 0; fi
           git commit -m "data: $(date -u +%F)"
           # 동시에 돌던 다른 실행(푸시 빌드 등)이 같은 데이터 파일을 먼저 커밋했어도 이번 실행의 데이터가 이기도록(-X theirs = 되감기 중인 내 커밋),

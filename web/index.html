@@ -405,6 +405,30 @@ details.fold[open] > summary::after { content: "접기"; }
   #sheet { position: static !important; max-height: none !important; height: auto !important; box-shadow: none !important; transform: none !important; border: 0 !important; width: 100% !important; overflow: visible !important; }
   #sheet .x, .noprint { display: none !important; }
 }
+.pb-pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; font-size: .84rem; }
+.pb-pick select { font: inherit; font-size: 16px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); max-width: 100%; }
+.pb-sum { border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--line)); background: color-mix(in oklab, var(--accent) 7%, var(--surface)); border-radius: 12px; padding: 10px 12px; font-size: .88rem; display: grid; gap: 4px; }
+.pb-sum b.big { font-size: 1.25rem; }
+.pb-gaps { display: grid; gap: 6px; margin: 10px 0; }
+.pb-gap { display: grid; grid-template-columns: 5.4em minmax(0, 1fr) 7.2em; gap: 8px; align-items: center; font-size: .8rem; }
+.pb-gap .tr { position: relative; height: 14px; border-radius: 7px; background: var(--raised); }
+.pb-gap .tr i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; background: var(--accent); }
+.pb-gap .tr u { position: absolute; top: -3px; bottom: -3px; width: 3px; border-radius: 2px; background: var(--warn); }
+.pb-gap small { grid-column: 2 / -1; color: var(--muted); font-size: .72rem; }
+.pb-gap .v { text-align: right; font-variant-numeric: tabular-nums; }
+.pb-h { margin: 12px 0 6px; font-size: .92rem; }
+.pb-acts { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .pb-acts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pb-act { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px 12px; display: grid; gap: 6px; min-width: 0; }
+.pb-act.on { border-color: color-mix(in oklab, var(--accent) 55%, var(--line)); }
+.pb-act label { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: start; cursor: pointer; font-weight: 700; font-size: .9rem; }
+.pb-act input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); }
+.pb-act .g { color: var(--good); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pb-act p { margin: 0; font-size: .8rem; } .pb-act p b { font-size: .72rem; margin-right: 4px; }
+.pb-act .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.pb-tl { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.pb-tl > div { border: 1px dashed var(--line); border-radius: 10px; padding: 8px 10px; font-size: .8rem; } .pb-tl h4 { margin: 0 0 4px; font-size: .8rem; }
+.pb-tl ul { margin: 0; padding-left: 1.1em; display: grid; gap: 2px; }
 </style>
 </head>
 <body>
@@ -426,6 +450,12 @@ details.fold[open] > summary::after { content: "접기"; }
       <p class="sub" id="hx-sub"></p>
       <div class="chips" id="hx-parts" role="group" aria-label="관심 부품"></div>
       <div class="hx-grid" id="hx-grid"></div>
+    </section>
+    <section class="full hx" id="pb-sec" aria-label="최상급이 되려면" hidden>
+      <div class="hx-head"><h2>🏁 최상급이 되려면 <span class="b estimate">규칙 기반 · 파일럿</span></h2><button type="button" class="chip" data-pbreport>🖨 한 장 보고서</button></div>
+      <p class="sub" id="pb-sub"></p>
+      <div class="pb-pick"><label for="pb-co">대상 기업</label><select id="pb-co"></select><span class="muted" id="pb-parent"></span></div>
+      <div id="pb-body"></div>
     </section>
     <section id="watch-sec" hidden>
       <h2>⭐ 관심 기업</h2>
@@ -506,6 +536,7 @@ details.fold[open] > summary::after { content: "접기"; }
       <section id="fresh-sec" hidden>
         <h2>큐레이션 값 신선도 <span class="b M" id="fresh-n"></span></h2>
         <p class="sub" id="fresh-sub"></p>
+        <div id="auto-list"></div>
         <details class="card fold"><summary><h3 style="display:inline">갱신 대기 목록</h3></summary><div class="list" id="fresh-list" style="margin-top:8px"></div></details>
       </section>
     </div>
@@ -1426,6 +1457,7 @@ function renderWatch() {
 }
 function renderHome() {
   hxHome();
+  hxPlaybook();
   renderWatch();
   const role = store.get("role", "exec");
   document.querySelectorAll("[data-role]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.role === role)));
@@ -1570,6 +1602,11 @@ function renderExec() {
   const fr = D.freshness || { stale: [], total: 0 };
   $("#fresh-sec").hidden = !fr.total;
   $("#fresh-n").textContent = `${fr.stale.length}/${fr.total}건 오래됨`;
+  {
+    const au = D.auto_updates || [], box = document.getElementById("auto-list");
+    if (box) box.innerHTML = `<p class="sub" style="margin:8px 0 6px">🤖 자동 반영 ${au.length}건 — 서로 다른 기사 2건 이상이 같은 값을 말하고, 제목에 그 기업이 나오며, AI 재확인을 통과한 수치만 매일 수집 때 반영합니다. 뉴스에 숫자가 나오지 않는 항목은 자동으로 갱신되지 않습니다.</p>` +
+      (au.length ? `<div class="list">${au.map((x) => `<button class="row" data-co="${esc(x.company)}"><span class="t">${esc(byId[x.company]?.name_ko || x.company)} · ${esc(FIELD[x.field] || x.field)}</span><span class="r">${fmtUnit(x.prev?.v ?? null, x.field === "price" ? "USD" : ["cum_units", "capacity", "target_2026"].includes(x.field) ? "units" : "USD_M")} → <b>${fmtUnit(x.v, x.field === "price" ? "USD" : ["cum_units", "capacity", "target_2026"].includes(x.field) ? "units" : "USD_M")}</b></span><span class="s">${esc(x.date)} 반영 · 기준 ${esc(x.as_of)} · ${x.sources.map((s) => esc(s.title)).join(" / ")}</span></button>`).join("")}</div>` : "");
+  }
   $("#fresh-sub").textContent = `밸류·누적 조달·출하·생산능력처럼 사람이 갱신하는 값 ${fr.total}건 중 기준일이 ${fr.threshold}개월 넘은 것이 ${fr.stale.length}건입니다. 오래된 값은 기업 상세에서도 '오래됨'으로 표시됩니다. 갱신하려면 data/companies.json 의 값과 as_of 를 고치세요.`;
   $("#fresh-list").innerHTML = fr.stale.map((x) => `<button class="row" data-co="${esc(x.company)}"><span class="t">${esc(byId[x.company]?.name_ko || x.company)} · ${esc(FIELD[x.field] || x.field)}</span><span class="r"><span class="b M">${x.months}개월</span></span><span class="s">기준일 ${esc(x.as_of)}</span></button>`).join("") || '<div class="empty">오래된 값이 없습니다</div>';
   $("#policies").innerHTML = D.policies.map((p) => `
@@ -2134,6 +2171,71 @@ document.addEventListener("click", (e) => {
   if ((x = el("[data-pxco]"))) { store.set("pxCo", x.dataset.pxco); hxPx(); return; }
 });
 
+// ---------- 최상급이 되려면 (규칙 기반 파일럿) ----------
+const PB = () => D.playbook;
+const pbTarget = () => { const P = PB(); const id = store.get("pbCo", P.default); return P.targets[id] ? id : P.default; };
+const pbPicked = (t) => { const all = store.get("pbPick", {}); return new Set(all[t.id] || t.shortest.length ? (all[t.id] || t.shortest) : []); };
+const pbHorizon = (m) => (m <= 6 ? "6개월 안" : m <= 12 ? "1년 안" : "2년 안");
+function pbSim(t) {
+  const picked = pbPicked(t), gain = t.actions.filter((a) => picked.has(a.id)).reduce((x, a) => x + a.gain, 0), total = t.total + gain;
+  const others = Object.entries(PB().totals).filter(([id]) => id !== t.id).map(([, v]) => v);
+  return { picked, gain, total, rank: 1 + others.filter((v) => v > total).length };
+}
+function pbHtml(t, forReport = false) {
+  const P = PB(), c = byId[t.id], par = t.parent ? byId[t.parent] : null, sim = pbSim(t), n = Object.keys(P.totals).length;
+  const lead = t.leader ? byId[t.leader] : null;
+  const sum = `<div class="pb-sum"><span>지금 <b class="big">${t.total}점 · ${t.rank}위</b> <span class="muted">(로봇 본체 기업 ${n}곳 중, 1위 ${lead ? esc(lead.name_ko) : "-"} ${t.leader_total ?? "-"}점)</span></span>
+    <span>고른 행동 ${sim.picked.size}개를 해내면 <b class="big ${sim.rank === 1 ? "up" : ""}">${sim.total}점 · ${sim.rank}위</b> <span class="muted">(+${sim.gain}점 · 모든 행동을 다 하면 ${t.reachable}점)</span></span>
+    ${t.rank === 1 ? "<span>이미 총점 1위입니다. 아래는 축별로 남은 격차입니다.</span>" : t.shortest.length ? `<span class="muted">1위가 되는 가장 짧은 길: ${t.shortest.map((id) => esc((t.actions.find((a) => a.id === id) || {}).title || id)).join(" + ")}</span>` : `<span class="muted">제안된 행동을 모두 해도 1위 ${t.leader_total}점에는 못 미칩니다 — 1위 기업이 멈춰 있다는 가정에서도 그렇습니다.</span>`}</div>`;
+  const gaps = `<div class="pb-gaps">${t.gaps.map((g) => { const mx = D.axes[g.axis]; return `<div class="pb-gap"><span>${P.axes[g.axis]}</span>
+      <span class="tr" title="${esc(c.name_ko)} ${g.score}/${mx} · 1위 ${esc(coLabel(g.leader))} ${g.leader_score}/${mx}"><i style="width:${(g.score / mx) * 100}%"></i><u style="left:calc(${(g.leader_score / mx) * 100}% - 1px)"></u></span>
+      <span class="v"><b>${g.score}</b>/${mx} ${g.gap ? `<span class="down">−${g.gap}</span>` : '<span class="up">1위</span>'}</span>
+      <small>${g.gap ? `1위 ${esc(coLabel(g.leader))} ${g.leader_score}점 — ${esc(g.leader_why || "")}` : esc(g.why || "")}</small></div>`; }).join("")}</div>`;
+  const act = (a) => { const on = sim.picked.has(a.id), pr = a.progress; return `<div class="pb-act${on ? " on" : ""}">
+      <label>${forReport ? `<span>${on ? "☑" : "☐"}</span>` : `<input type="checkbox" data-pbact="${a.id}"${on ? " checked" : ""}>`}<span>${esc(a.title)}</span><span class="g">+${a.gain}점</span></label>
+      <div class="tags"><span class="b t3">${P.axes[a.axis]}</span><span class="b reported">${pbHorizon(a.months)}</span>${pr.n ? `<span class="b H">최근 30일 관련 소식 ${pr.n}건</span>` : '<span class="b t3">최근 관련 소식 없음</span>'}</div>
+      <p>${esc(a.detail)}</p>
+      <p><b class="b official">${a.has_parent && par ? esc(par.name_ko) + "이 할 일" : "뒷받침할 일"}</b>${esc(a.support)}</p>
+      <p><b class="b t3">선례</b>${esc(coLabel(a.precedent.company))} — ${esc(a.precedent.text || "")}</p>
+      <p><b class="b M">위험</b>${esc(a.risk)}</p>
+      ${pr.n && !forReport ? `<p class="muted">진척 신호: ${safeUrl(pr.url) ? `<a href="${esc(pr.url)}" target="_blank" rel="noopener">${esc(pr.title)}</a>` : esc(pr.title)} (${esc(pr.date.slice(5).replace("-", "/"))})</p>` : ""}</div>`; };
+  const cols = [[6, "6개월 안"], [12, "1년 안"], [24, "2년 안"]].map(([m, l]) => { const xs = t.actions.filter((a) => a.months === m); return xs.length ? `<div><h4>${l}</h4><ul>${xs.map((a) => `<li>${esc(a.title)} <span class="muted">+${a.gain}</span></li>`).join("")}</ul></div>` : ""; }).join("");
+  const rm = t.roadmap.length ? `<div><h4>이미 발표한 일정</h4><ul>${t.roadmap.map((r) => `<li>${esc(r.when)} · ${esc(r.title)}</li>`).join("")}</ul></div>` : "";
+  return `${sum}<h3 class="pb-h">① 축별 격차 <span class="muted" style="font-weight:400;font-size:.76rem">파란 막대 = ${esc(c.name_ko)}, 노란 선 = 그 축 1위</span></h3>${gaps}
+    <h3 class="pb-h">② 해야 할 행동${par ? `과 ${esc(par.name_ko)}의 지원` : ""} <span class="muted" style="font-weight:400;font-size:.76rem">${forReport ? "" : "체크하면 위 예상 점수가 바뀝니다"}</span></h3>
+    <div class="pb-acts">${t.actions.map(act).join("") || '<p class="sub">모든 축에서 1위라 제안할 행동이 없습니다.</p>'}</div>
+    <h3 class="pb-h">③ 실행 순서</h3><div class="pb-tl">${cols}${rm}</div>
+    ${t.risks.length ? `<p class="sub" style="margin-top:8px">이 기업의 기존 위험 요인: ${t.risks.map(esc).join(" · ")}</p>` : ""}`;
+}
+function hxPlaybook() {
+  const P = PB(), sec = $("#pb-sec");
+  if (!P || !P.default) { sec.hidden = true; return; }
+  sec.hidden = false;
+  const id = pbTarget(), t = P.targets[id], par = t.parent ? byId[t.parent] : null;
+  $("#pb-co").innerHTML = Object.keys(P.targets).sort((a, b) => P.totals[b] - P.totals[a]).map((k) => `<option value="${esc(k)}"${k === id ? " selected" : ""}>${esc(coLabel(k))} (${P.totals[k]}점)</option>`).join("");
+  $("#pb-parent").textContent = par ? `모회사: ${par.name_ko}` : "모회사 없음 — 전략 투자자·핵심 고객이 할 일로 표시";
+  $("#pb-sub").textContent = "경쟁력 총점(기술 30 · 양산 30 · 자본 20 · 실행 신뢰도 20)에서 1위가 되려면 무엇을 해야 하는지, 축마다 1위 기업과 견줘 뽑았습니다. 예상 점수는 격차를 행동별로 나눈 추정이고, 이 앱의 점수 체계 기준이라 실제 사업 판단과 다를 수 있습니다.";
+  $("#pb-body").innerHTML = pbHtml(t);
+}
+function openPbReport() {
+  const t = PB().targets[pbTarget()], c = byId[t.id], par = t.parent ? byId[t.parent] : null;
+  $("#sh-title").textContent = `${c.name_ko} — 최상급이 되려면`;
+  $("#sh-body").innerHTML = `<div class="rep"><p class="sub" style="margin:0">로봇 레이더 · ${esc(TODAY)} · 큐레이션 기준일 ${esc(D.as_of)}${par ? ` · 모회사 ${esc(par.name_ko)}` : ""} · 규칙 기반 추정(파일럿)</p>
+    <p class="noprint" style="margin:8px 0"><button type="button" class="chip" data-hxprint>🖨 인쇄 / PDF 로 저장</button></p>${pbHtml(t, true)}
+    <p class="sub" style="margin-top:10px">점수는 공개 자료·보도·추정을 바탕으로 한 이 앱의 큐레이션 체계 기준이며 투자·경영 판단의 근거로 단독 사용할 수 없습니다.</p></div>`;
+  $("#scrim").hidden = false; $("#sheet").hidden = false; document.body.classList.add("locked");
+  $("#sheet").scrollTop = 0; $("#sh-x").focus();
+}
+document.addEventListener("change", (e) => {
+  if (e.target.id === "pb-co") { store.set("pbCo", e.target.value); hxPlaybook(); return; }
+  if (e.target.dataset && e.target.dataset.pbact) {
+    const t = PB().targets[pbTarget()], all = store.get("pbPick", {}), cur = pbPicked(t);
+    if (e.target.checked) cur.add(e.target.dataset.pbact); else cur.delete(e.target.dataset.pbact);
+    all[t.id] = [...cur]; store.set("pbPick", all); hxPlaybook();
+  }
+});
+document.addEventListener("click", (e) => { if (e.target.closest("[data-pbreport]")) openPbReport(); });
+
 // ---------- 자본·IPO ----------
 function renderCapital() {
   hxFund(); hxPx();
@@ -2326,7 +2428,7 @@ function openSheet(id) {
   const s = c.scores, top = D.axes;
   const scoreRows = (keys) => keys.map((k) => `<div class="score"><span>${AX[k]}</span><span class="track"><i style="width:${(s[k][0] / top[k]) * 100}%"></i></span><span class="num" style="text-align:right">${s[k][0]}/${top[k]}</span>${s[k][1] ? `<span class="why">${esc(s[k][1])}</span>` : ""}</div>`).join("");
   const facts = FACTS.filter(([k]) => c[k] && (c[k].v != null || c[k].note)).map(([k, l, f]) => `
-    <div class="fact"><span class="k">${l}</span><span class="v"><b>${c[k].v != null ? f(c[k].v) : "미공개"}</b> ${kindB(c[k].kind)} ${c[k].as_of ? `<span class="muted mono" style="font-size:.74rem">${esc(c[k].as_of)}</span> ${staleB(c[k].as_of)}` : ""} ${link(c[k].src)}</span>${c[k].note ? `<span class="n">${esc(c[k].note)}</span>` : ""}</div>`).join("");
+    <div class="fact"><span class="k">${l}</span><span class="v"><b>${c[k].v != null ? f(c[k].v) : "미공개"}</b> ${kindB(c[k].kind)} ${c[k].as_of ? `<span class="muted mono" style="font-size:.74rem">${esc(c[k].as_of)}</span> ${staleB(c[k].as_of)}` : ""}${c[k].auto ? ` <span class="b estimate" title="보도 ${c[k].auto.sources.length}건이 같은 값을 말하고 AI 재확인을 통과해 ${esc(c[k].auto.date)}에 자동 반영 (이전 값 ${c[k].auto.prev.v ?? "없음"})">자동 반영</span>` : ""} ${link(c[k].src)}</span>${c[k].note ? `<span class="n">${esc(c[k].note)}</span>` : ""}</div>`).join("");
   const evs = D.events.filter((e) => e.ids.includes(id));
   const q = (D.quotes || {})[id];
   const nws = (D.news || []).filter((x) => (x.companies || []).includes(id) || (!x.companies?.length && x.query === id)).slice(0, 6);

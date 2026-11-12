@@ -61,6 +61,18 @@ def main(argv: list[str] | None = None) -> int:
         write_json(OUT / "news.json", news)
         requests += llm.requests
 
+    try:  # 검증 대기 수치 자동 반영: 여러 기사가 같은 값을 말하고 AI 재확인을 통과한 것만 (새 후보가 있을 때 요청 1회)
+        import autoapply
+
+        ap_llm = Gemini(cfg)
+        ap_llm.max_requests = 1
+        if args.no_news or requests + 1 > left:
+            ap_llm.key = ""
+        autoapply.run(companies, read_json(OUT / "news.json", {}), ap_llm)
+        requests += ap_llm.requests
+    except Exception as e:  # noqa: BLE001
+        log.warning("자동 반영 실패(무시하고 계속): %s", e)
+
     write_json(OUT / "prices.json", update_prices(cfg, read_json(OUT / "prices.json", {})))
     try:  # 논문 신호(arXiv, 키 불필요): 6일 지난 층만 갱신. 실패해도 나머지 파이프라인은 계속
         papers.main([])
