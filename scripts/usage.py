@@ -23,12 +23,23 @@ def used_today(data_dir: Path, today: str) -> int:
     return int(load(data_dir).get("days", {}).get(today, {}).get("requests", 0))
 
 
-def record(data_dir: Path, today: str, requests: int, cfg: dict, app: str = "robotics-radar", keep_days: int = 30) -> dict:
+def run_kind(default: str = "scheduled") -> str:
+    """이 실행의 종류: scheduled(정해진 시각의 정기 실행) / manual(수동·테스트). AI_PROFILE=production 이 정기 실행 표시."""
+    import os
+
+    return default if os.environ.get("AI_PROFILE", "").strip().lower() == "production" else "manual"
+
+
+def record(data_dir: Path, today: str, requests: int, cfg: dict, app: str = "robotics-radar", keep_days: int = 30, kind: str | None = None) -> dict:
+    """kind: scheduled(정기) · manual(수동) 등 — 종류별 요청 수를 by 에 따로 쌓는다 (My Hub 가 구분해 보여 준다)."""
     data = load(data_dir)
     days = data.get("days", {})
     d = days.setdefault(today, {"requests": 0, "runs": 0})
     d["requests"] += int(requests)
     d["runs"] += 1
+    by = d.setdefault("by", {})
+    k = kind or run_kind()
+    by[k] = by.get(k, 0) + int(requests)
     cutoff = (date.fromisoformat(today) - timedelta(days=keep_days)).isoformat()
     days = {k: v for k, v in sorted(days.items()) if k >= cutoff}
     out = {"app": app, "provider": cfg.get("llm", {}).get("provider", "gemini"),
