@@ -1,15 +1,4 @@
 {
  "applied": {},
- "checked": {
-  "unitree|valuation|42254": {
-   "date": "2026-11-12",
-   "ok": false,
-   "reason": "시기와 통화 환산 기준이 불분명하여 검증할 수 없습니다."
-  },
-  "agility|valuation|2667": {
-   "date": "2026-11-12",
-   "ok": false,
-   "reason": "기사의 시총 및 밸류에이션 수치가 일치하지 않아 확신할 수 없습니다."
-  }
- }
+ "checked": {}
 }
