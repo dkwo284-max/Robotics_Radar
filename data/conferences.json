@@ -1,0 +1,154 @@
+{
+  "as_of": "2026-11-13",
+  "note": "학회·전시회·기업 발표 행사 큐레이션. 날짜는 공식 페이지 기준이며 status=tentative 는 출처끼리 날짜가 다르거나 아직 공식 확정 전. precision=month 는 달만 알려진 행사. watch 는 '주목할 기업'(참가 확정 아님). 매주 scripts/conf_check.py 가 링크 생존만 점검(AI 미사용).",
+  "items": [
+    {
+      "id": "hsummit-sv-2026", "name": "Humanoids Summit Silicon Valley", "kind": "expo", "region": "US",
+      "start": "2026-12-01", "end": "2026-12-02", "city": "San Mateo, CA", "status": "confirmed",
+      "url": "https://humanoidssummit.com/silicon-valley-2026",
+      "why": "휴머노이드 전용 산업 행사. 스타트업 데모·투자자 세션이 몰려 차기 라운드·파일럿 고객 신호를 보기 좋음",
+      "watch": ["figure", "apptronik", "agility", "1x", "sanctuary"],
+      "roles": ["exec", "strategy"]
+    },
+    {
+      "id": "humanoids-2026", "name": "IEEE-RAS Humanoids 2026", "kind": "academic", "region": "US",
+      "start": "2026-12-06", "end": "2026-12-09", "city": "Santa Clara, CA", "status": "confirmed",
+      "url": "https://2026.ieee-humanoids.org/",
+      "why": "휴머노이드 분야 대표 학회(25회). 올해 주제는 '휴머노이드와 일의 미래' — 보행·전신 제어·조작 논문과 산업 패널",
+      "watch": ["bd", "agility", "apptronik", "rainbow", "nvidia"],
+      "roles": ["engineer", "strategy"]
+    },
+    {
+      "id": "neurips-2026", "name": "NeurIPS 2026", "kind": "academic", "region": "INTL",
+      "start": "2026-12-06", "end": "2026-12-12", "city": "Sydney (+Atlanta·Paris)", "status": "tentative",
+      "url": "https://neurips.cc/Conferences/2026/Dates",
+      "why": "로봇 파운데이션 모델·VLA·시뮬레이션 학습 논문이 대거 발표되는 AI 최대 학회. 올해는 3개 도시 분산 개최(도시별 일정은 공식 페이지 확인)",
+      "watch": ["deepmind", "pi", "nvidia", "skild"],
+      "roles": ["engineer", "strategy"]
+    },
+    {
+      "id": "ces-2027", "name": "CES 2027", "kind": "expo", "region": "US",
+      "start": "2027-01-06", "end": "2027-01-09", "city": "Las Vegas", "status": "confirmed",
+      "url": "https://www.ces.tech/",
+      "why": "연초 최대 전시. 한국 대기업·중국 업체의 휴머노이드·가정용 로봇 공개가 집중되고 NVIDIA 키노트가 그해 피지컬 AI 방향을 잡음",
+      "watch": ["lg", "samsung", "hyundai", "nvidia", "unitree", "doosan"],
+      "roles": ["exec", "strategy"]
+    },
+    {
+      "id": "mwc-2027", "name": "MWC Barcelona 2027", "kind": "expo", "region": "EU",
+      "start": "2027-03-01", "end": "2027-03-04", "city": "Barcelona", "status": "confirmed",
+      "url": "https://www.mwcbarcelona.com/",
+      "why": "통신 전시지만 최근 휴머노이드 데모·엣지 AI 칩 발표가 늘어남. 로봇 원격 운용·5G 연결 수요를 볼 수 있음",
+      "watch": ["samsung", "unitree", "agibot"],
+      "roles": ["strategy"]
+    },
+    {
+      "id": "hri-2027", "name": "ACM/IEEE HRI 2027", "kind": "academic", "region": "US",
+      "start": "2027-03-08", "end": "2027-03-12", "city": "Santa Clara, CA", "status": "confirmed",
+      "url": "https://humanrobotinteraction.org/2027/",
+      "why": "사람-로봇 상호작용 대표 학회. 가정·서비스 휴머노이드의 안전·수용성 연구 흐름",
+      "watch": ["1x", "figure"],
+      "roles": ["engineer"]
+    },
+    {
+      "id": "gtc-2027", "name": "NVIDIA GTC 2027", "kind": "keynote", "region": "US",
+      "start": "2027-03-15", "end": "2027-03-18", "city": "San Jose, CA", "status": "tentative",
+      "url": "https://www.nvidia.com/gtc/",
+      "why": "젠슨 황 키노트에서 Isaac·GR00T 등 휴머노이드 플랫폼 로드맵과 파트너 로봇이 무대에 함께 공개됨(사전 교육일 포함 시 3/14 시작)",
+      "watch": ["nvidia", "figure", "agility", "1x", "apptronik", "skild"],
+      "roles": ["strategy", "exec", "engineer"]
+    },
+    {
+      "id": "logimat-2027", "name": "LogiMAT 2027", "kind": "expo", "region": "EU",
+      "start": "2027-03-16", "end": "2027-03-18", "city": "Stuttgart", "status": "confirmed",
+      "url": "https://www.logimat-messe.de/en",
+      "why": "유럽 최대 물류 자동화 전시. 창고 피킹·토트 운반 휴머노이드의 실제 고객 수요를 확인하기 좋음",
+      "watch": ["agility", "neura", "humanoid"],
+      "roles": ["exec"]
+    },
+    {
+      "id": "hannover-2027", "name": "Hannover Messe 2027", "kind": "expo", "region": "EU",
+      "start": "2027-04-05", "end": "2027-04-08", "city": "Hannover", "status": "confirmed",
+      "url": "https://www.hannovermesse.de/en/",
+      "why": "세계 최대 산업 전시. 공장용 휴머노이드·협동로봇과 유럽 제조사 파일럿 발표",
+      "watch": ["neura", "agibot", "unitree", "doosan"],
+      "roles": ["exec", "strategy"]
+    },
+    {
+      "id": "etown-hm-2027", "name": "베이징 E-Town 휴머노이드 하프마라톤 2027", "kind": "asia", "region": "CN",
+      "start": "2027-04-18", "end": "2027-04-18", "city": "Beijing", "status": "confirmed",
+      "url": "https://english.beijing.gov.cn/beijinginfo/sci/latesttrends/202608/t20260826_4837625.html",
+      "why": "중국 휴머노이드 보행 내구성 공개 경쟁(2026년 100여 팀 참가). 중국 업체 하드웨어 성숙도를 한눈에 비교",
+      "watch": ["unitree", "ubtech", "agibot", "engineai"],
+      "roles": ["strategy", "engineer"]
+    },
+    {
+      "id": "promat-2027", "name": "ProMat 2027", "kind": "expo", "region": "US",
+      "start": "2027-04-19", "end": "2027-04-21", "city": "Chicago", "status": "confirmed",
+      "url": "https://www.promatshow.com/",
+      "src": "https://www.mmh.com/article/dates_set_for_promat_2027",
+      "why": "북미 최대 물류 전시(올해부터 3일, 4월로 이동). 물류 휴머노이드 상용 계약·RaaS 가격 발표가 나오는 자리",
+      "watch": ["agility", "apptronik", "figure"],
+      "roles": ["exec"]
+    },
+    {
+      "id": "automate-2027", "name": "Automate 2027", "kind": "expo", "region": "US",
+      "start": "2027-05-10", "end": "2027-05-13", "city": "장소 확인 필요", "status": "tentative",
+      "url": "https://www.automate.org/",
+      "why": "A3 주관 북미 자동화 전시. 산업용 휴머노이드와 부품(감속기·액추에이터) 공급사 동향",
+      "watch": ["apptronik", "agility", "doosan"],
+      "roles": ["exec", "engineer"]
+    },
+    {
+      "id": "hsummit-tokyo-2027", "name": "Humanoids Summit Tokyo 2027", "kind": "asia", "region": "JP",
+      "start": "2027-05-01", "end": "2027-05-31", "precision": "month", "city": "Tokyo", "status": "tentative",
+      "url": "https://humanoidssummit.com/",
+      "why": "아시아판 휴머노이드 서밋(2026년 첫 개최). 일본·한국 부품·로봇 업체와 아시아 투자자 동향",
+      "watch": ["rainbow", "unitree", "kepler"],
+      "roles": ["exec", "strategy"]
+    },
+    {
+      "id": "icra-2027", "name": "ICRA 2027", "kind": "academic", "region": "KR",
+      "start": "2027-05-24", "end": "2027-05-28", "city": "서울 코엑스", "status": "confirmed",
+      "url": "https://2027.ieee-icra.org/",
+      "why": "로봇 분야 최대 학회가 서울에서 열림. 국내 휴머노이드(레인보우·현대·삼성·LG) 전시·워크숍과 채용·협업 기회가 집중",
+      "watch": ["rainbow", "hyundai", "samsung", "lg", "doosan"],
+      "roles": ["engineer", "strategy", "exec"],
+      "deadlines": [
+        {"label": "저널 논문 ICRA 발표 전환 마감", "date": "2026-12-31", "url": "https://2027.ieee-icra.org/announcements/call-for-technical-papers/"}
+      ]
+    },
+    {
+      "id": "rss-summit-2027", "name": "Robotics Summit & Expo 2027", "kind": "expo", "region": "US",
+      "start": "2027-06-02", "end": "2027-06-03", "city": "Boston", "status": "tentative",
+      "url": "https://www.roboticssummit.com/",
+      "src": "https://www.therobotreport.com/robobusiness-rebrands-as-robotics-summit-expo-west/",
+      "why": "로봇 개발자 중심 산업 행사. 휴머노이드 트랙과 부품 공급망 세션",
+      "watch": ["bd", "agility"],
+      "roles": ["engineer"]
+    },
+    {
+      "id": "rss-2027", "name": "RSS 2027", "kind": "academic", "region": "EU",
+      "start": "2027-07-06", "end": "2027-07-11", "city": "Athens", "status": "confirmed",
+      "url": "https://roboticsconference.org/",
+      "why": "소수 정예 로봇 학회. 올해부터 2단계 심사 — 로봇 학습·보행 제어 핵심 논문이 먼저 공개되는 곳",
+      "watch": ["deepmind", "pi", "bd"],
+      "roles": ["engineer"],
+      "deadlines": [
+        {"label": "확장 초록 제출 마감 (AoE)", "date": "2026-12-04", "url": "https://roboticsconference.org/information/cfp/"},
+        {"label": "1단계 심사 결과", "date": "2027-02-05", "url": "https://roboticsconference.org/information/cfp/"}
+      ]
+    },
+    {
+      "id": "iros-2027", "name": "IROS 2027", "kind": "academic", "region": "EU",
+      "start": "2027-09-26", "end": "2027-10-01", "city": "Florence", "status": "tentative",
+      "url": "https://www.ieee-ras.org/events/category/important-dates/",
+      "why": "ICRA와 함께 양대 로봇 학회. 투고 마감이 6개월 안에 있어 연구 일정 계획용",
+      "watch": [],
+      "roles": ["engineer"],
+      "deadlines": [
+        {"label": "논문 투고 마감 (잠정, AoE)", "date": "2027-03-01", "url": "https://www.ieee-ras.org/events/category/important-dates/"}
+      ]
+    }
+  ]
+}

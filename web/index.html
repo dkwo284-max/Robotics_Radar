@@ -64,7 +64,7 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 
 /* 하단 탭바 */
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 7; background: color-mix(in oklab, var(--surface) 94%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.tabbar .in { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: repeat(7, 1fr); height: var(--nav-h); }
+.tabbar .in { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(8, 1fr); height: var(--nav-h); }
 .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--muted); font-size: 0.7rem; font-weight: 600; position: relative; }
 .tabbar a[aria-current="page"] { color: var(--ink); }
 .tabbar a[aria-current="page"] svg.i { stroke-width: 2.3; }
@@ -97,6 +97,39 @@ button.row:hover { background: var(--raised); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 10px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
 .chip[aria-pressed="true"] { border-color: var(--ink); font-weight: 600; }
+/* 행사(학회·전시회) */
+.ev-tools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 12px; }
+.ev-tools .lab { font-size: .74rem; color: var(--muted); margin-right: 2px; }
+.ev-gantt { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 10px 12px 12px; box-shadow: var(--card-shadow); }
+.ev-months { position: relative; height: 18px; margin-left: var(--evl); font-size: .7rem; color: var(--muted); }
+.ev-months span { position: absolute; top: 0; padding-left: 3px; border-left: 1px solid var(--line); height: 100%; white-space: nowrap; }
+.ev-g { --evl: 170px; }
+.ev-gr { display: grid; grid-template-columns: var(--evl) minmax(0, 1fr); align-items: center; gap: 0; min-height: 26px; border: 0; background: transparent; width: 100%; padding: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.ev-gr:hover .ev-nm { text-decoration: underline; }
+.ev-nm { font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px; }
+.ev-nm.dim { color: var(--muted); }
+.ev-track { position: relative; height: 16px; background: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--m, 7) - 1px), var(--line) calc(100% / var(--m, 7) - 1px) calc(100% / var(--m, 7))); border-radius: 3px; }
+.ev-bar { position: absolute; top: 3px; height: 10px; min-width: 7px; border-radius: 5px; }
+.ev-bar.tent { background-image: repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in oklab, var(--surface) 55%, transparent) 3px 6px); }
+.ev-dl { position: absolute; top: 0; width: 2px; height: 16px; background: var(--bad); }
+.ev-today { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--ink); opacity: .35; }
+.k-academic { background: var(--accent); } .k-expo { background: var(--good); } .k-keynote { background: var(--warn); } .k-asia { background: var(--bad); }
+.ev-lg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .72rem; color: var(--muted); margin-top: 8px; }
+.ev-lg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+.ev-card { padding: 12px 14px; border-top: 1px solid var(--line); display: grid; gap: 6px; align-content: start; }
+.ev-card:first-child { border-top: 0; }
+#ev-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); }
+#ev-list .ev-card { border-top: 1px solid var(--line); border-right: 1px solid var(--line); margin: 0 -1px -1px 0; }
+.ev-card.ev-pri { box-shadow: inset 3px 0 0 var(--ink); }
+.ev-h { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; justify-content: space-between; }
+.ev-h b { font-size: .95rem; }
+.ev-meta { font-size: .78rem; color: var(--muted); }
+.ev-why { font-size: .84rem; line-height: 1.5; margin: 0; }
+.ev-act { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ev-act a { font-size: .78rem; }
+.ev-dlr { font-size: .78rem; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 640px) { .ev-g { --evl: 0px; } .ev-gr { grid-template-columns: minmax(0,1fr); } .ev-nm { padding: 4px 0 2px; } .ev-months { margin-left: 0; } }
+
 .chip.co { padding: 3px 9px; font-size: 0.76rem; }
 select { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 10px; width: 100%; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
@@ -452,6 +485,11 @@ details.fold[open] > summary::after { content: "접기"; }
       <div class="chips" id="hx-parts" role="group" aria-label="관심 부품"></div>
       <div class="hx-grid" id="hx-grid"></div>
       <a class="row" id="pb-teaser" href="#top" style="text-decoration:none;color:inherit;margin-top:10px" hidden></a>
+    </section>
+    <section id="ev-teaser" hidden>
+      <h2>다가오는 학회·전시회 <a href="#events" class="chip" style="font-size:.74rem;margin-left:6px;text-decoration:none">6개월 일정 전체 →</a></h2>
+      <p class="sub" id="ev-teaser-sub"></p>
+      <div class="list" id="ev-teaser-list"></div>
     </section>
     <section id="watch-sec" hidden>
       <h2>⭐ 관심 기업</h2>
@@ -829,6 +867,30 @@ details.fold[open] > summary::after { content: "접기"; }
   </div>
 
   <!-- 전략 -->
+  <div class="panel" id="p-events" data-panel hidden>
+    <section class="full">
+      <h2>🗓 학회·전시회·발표 행사 <span class="b estimate">큐레이션 · 매주 링크 점검</span></h2>
+      <p class="sub" id="ev-sub"></p>
+      <div class="ev-tools">
+        <span class="chips" id="ev-kind" role="group" aria-label="행사 종류"></span>
+        <span class="chips" id="ev-role" role="group" aria-label="역할별 강조"><span class="lab">강조</span></span>
+        <span class="chips"><button type="button" class="chip" id="ev-far" aria-pressed="false">6개월 이후도 보기</button><button type="button" class="chip" id="ev-ics">📅 달력 파일(.ics) 받기</button></span>
+      </div>
+      <div class="ev-gantt ev-g"><div class="ev-months" id="ev-months"></div><div id="ev-rows"></div>
+        <div class="ev-lg"><span><i class="k-academic"></i>학회</span><span><i class="k-expo"></i>전시회</span><span><i class="k-keynote"></i>기업 발표</span><span><i class="k-asia"></i>한국·아시아 행사</span><span><i style="background:var(--bad);width:2px;border-radius:0"></i>논문 마감</span><span><i class="k-academic tent ev-bar" style="position:static;display:inline-block"></i>빗금 = 날짜 잠정</span></div></div>
+    </section>
+    <section class="full">
+      <h2>다가오는 마감</h2>
+      <p class="sub">논문 투고·결과 발표 등 공식 페이지에 적힌 날짜. 전시 출품 신청 마감은 행사마다 달라 각 공식 페이지에서 확인하세요.</p>
+      <div class="list" id="ev-dls"></div>
+    </section>
+    <section class="full">
+      <h2>행사별 상세</h2>
+      <p class="sub">★ 표시는 지금 고른 역할에게 우선인 행사. '주목 기업'은 이 레이더가 추적하는 기업 중 이 행사와 관련이 큰 곳으로, 참가 확정이 아닙니다.</p>
+      <div class="list" id="ev-list"></div>
+    </section>
+  </div>
+
   <div class="panel" id="p-top" data-panel hidden>
     <section class="full hx" id="pb-sec" aria-label="최상급이 되려면" hidden>
       <div class="hx-head"><h2>🏁 최상급이 되려면 <span class="b estimate">규칙 기반 · 파일럿</span></h2><button type="button" class="chip" data-pbreport>🖨 한 장 보고서</button></div>
@@ -903,6 +965,7 @@ details.fold[open] > summary::after { content: "접기"; }
     <a href="#prod"><svg class="i" viewBox="0 0 24 24"><path d="M3 21V10l5 3V10l5 3V10l5 3V5h3v16z"/></svg>양산</a>
     <a href="#capital"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/></svg>자본</a>
     <a href="#strat"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l5-5M15 4l5 5-9 9-5-5zM14 9l1 1"/><circle cx="17" cy="7" r="0.5"/></svg>전략</a>
+    <a href="#events"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h3v3H8z"/></svg>행사</a>
     <a href="#top"><svg class="i" viewBox="0 0 24 24"><path d="M5 20V10l7-6 7 6v10M9 20v-6h6v6"/><path d="M12 4v-2"/></svg>1위 전략</a>
   </div>
 </nav>
@@ -1462,6 +1525,7 @@ function renderWatch() {
 }
 function renderHome() {
   hxHome();
+  renderEvTeaser();
   pbTeaser();
   renderWatch();
   const role = store.get("role", "exec");
@@ -2513,7 +2577,92 @@ function openKpi(key) {
 function closeSheet() { $("#scrim").hidden = true; $("#sheet").hidden = true; document.body.classList.remove("locked"); }
 
 // ---------- 라우팅 · 이벤트 ----------
-const PANELS = { home: renderHome, map: renderMap, parts: renderParts, prod: renderProd, capital: renderCapital, strat: renderStrat, top: hxPlaybook };
+
+/* ===== 행사: 학회·전시회·기업 발표 (data/conferences.json → dashboard.conferences) ===== */
+const EV_KIND = { academic: "학회", expo: "전시회", keynote: "기업 발표", asia: "한국·아시아" };
+const EV_ASIA = new Set(["KR", "JP", "CN", "TW", "SG"]);
+const evToday = () => new Date().toISOString().slice(0, 10);
+const evAdd = (d, m) => { const t = new Date(d + "T00:00:00Z"); t.setUTCMonth(t.getUTCMonth() + m); return t.toISOString().slice(0, 10); };
+const evDays = (d) => Math.round((Date.parse(d + "T00:00:00Z") - Date.parse(evToday() + "T00:00:00Z")) / 864e5);
+const evMD = (d) => `${+d.slice(5, 7)}/${+d.slice(8, 10)}`;
+const evWhen = (e) => e.precision === "month" ? `${e.start.slice(0, 4)}년 ${+e.start.slice(5, 7)}월 (날짜 미정)` : e.start === e.end ? `${e.start.slice(0, 4)}. ${evMD(e.start)}` : `${e.start.slice(0, 4)}. ${evMD(e.start)} – ${evMD(e.end)}`;
+const evIsKind = (e, k) => !k || (k === "asia" ? e.kind === "asia" || EV_ASIA.has(e.region) : e.kind === k);
+function evState() { return { kind: store.get("evKind", ""), role: store.get("role", "exec"), far: store.get("evFar", "0") === "1" }; }
+function evPool(st) {
+  const C = D.conferences?.items || [], t = evToday(), lim = evAdd(t, 6);
+  return C.filter((e) => evIsKind(e, st.kind)).filter((e) => st.far || e.start <= lim || e.deadlines.some((d) => d.date <= lim));
+}
+function evLink(e) {
+  const l = e.link; if (!l) return "";
+  if (l.ok) return "";
+  return l.blocked ? '<span class="b t3" title="사이트가 자동 점검을 막아 확인하지 못함">링크 자동 확인 불가</span>' : `<span class="b H" title="주간 점검에서 응답 ${l.code || "없음"}">링크 점검 필요</span>`;
+}
+function renderEvTeaser() {
+  const sec = $("#ev-teaser"); if (!sec) return;
+  const C = D.conferences?.items || [], t = evToday(), role = store.get("role", "exec");
+  const L = C.filter((e) => e.end >= t).slice(0, 3);
+  sec.hidden = !L.length; if (!L.length) return;
+  const dl = C.flatMap((e) => e.deadlines.map((d) => ({ ...d, e }))).sort((a, b) => a.date.localeCompare(b.date))[0];
+  $("#ev-teaser-sub").textContent = dl ? `가장 가까운 마감: ${dl.e.name} ${dl.label} D-${evDays(dl.date)}` : "앞으로 열리는 행사";
+  $("#ev-teaser-list").innerHTML = L.map((e) => { const n = evDays(e.start);
+    return `<a class="row" href="#events" style="text-decoration:none;color:inherit"><span class="t">${(e.roles || []).includes(role) ? "★ " : ""}${esc(e.name)}</span><span class="r"><span class="b ${n <= 0 ? "M" : "t3"}">${n <= 0 ? "진행 중" : "D-" + n}</span></span><span class="s">${esc(evWhen(e))} · ${esc(e.city || "")} · ${EV_KIND[e.kind]}</span></a>`; }).join("");
+}
+function renderEvents() {
+  const st = evState(), C = D.conferences || { items: [] }, t = evToday();
+  $("#ev-kind").innerHTML = [["", "전체"], ...Object.entries(EV_KIND)].map(([k, v]) => `<button type="button" class="chip" data-evkind="${k}" aria-pressed="${st.kind === k}">${v}</button>`).join("");
+  $("#ev-role").innerHTML = '<span class="lab">강조</span>' + Object.entries(ROLE_NAME).map(([k, v]) => `<button type="button" class="chip" data-evrole="${k}" aria-pressed="${st.role === k}">${v}</button>`).join("");
+  $("#ev-far").setAttribute("aria-pressed", String(st.far));
+  const L = evPool(st);
+  $("#ev-sub").innerHTML = `오늘부터 ${st.far ? "1년" : "6개월"} 안의 휴머노이드·로보틱스 주요 행사 ${L.length}건 · 큐레이션 ${esc(C.as_of || "")}${C.checked ? ` · 링크 점검 ${esc(C.checked)}` : " · 링크 점검 전"} · 날짜는 공식 페이지 기준이며 빗금·'잠정'은 출처끼리 다르거나 확정 전입니다.`;
+  // 간트: 이번 달 1일부터 6(또는 12)개월
+  const months = st.far ? 13 : 7, w0 = t.slice(0, 8) + "01", w1 = evAdd(w0, months), span = Date.parse(w1) - Date.parse(w0);
+  const pct = (d) => Math.max(0, Math.min(100, ((Date.parse(d + "T00:00:00Z") - Date.parse(w0 + "T00:00:00Z")) / span) * 100));
+  $("#ev-months").innerHTML = Array.from({ length: months }, (_, i) => { const m = evAdd(w0, i); return `<span style="left:${(i / months) * 100}%">${+m.slice(5, 7)}월${i === 0 || m.slice(5, 7) === "01" ? ` '${m.slice(2, 4)}` : ""}</span>`; }).join("");
+  const track = (e) => {
+    const inWin = e.start < w1;
+    const bar = inWin ? `<span class="ev-bar k-${e.kind}${e.status !== "confirmed" ? " tent" : ""}" style="left:${pct(e.start)}%;width:${Math.max(0.6, pct(evAdd(e.end, 0)) - pct(e.start) + 100 / (months * 30))}%" title="${esc(evWhen(e))}"></span>` : "";
+    const dls = e.deadlines.filter((d) => d.date < w1).map((d) => `<span class="ev-dl" style="left:${pct(d.date)}%" title="${esc(d.label)} ${esc(d.date)}"></span>`).join("");
+    return `<span class="ev-track" style="--m:${months}">${bar}${dls}<span class="ev-today" style="left:${pct(t)}%"></span></span>`;
+  };
+  $("#ev-rows").innerHTML = L.length ? L.map((e) => `<button type="button" class="ev-gr" data-evgo="${esc(e.id)}"><span class="ev-nm${e.start >= w1 ? " dim" : ""}">${(e.roles || []).includes(st.role) ? "★ " : ""}${esc(e.name)}${e.start >= w1 ? " (마감만 표시)" : ""}</span>${track(e)}</button>`).join("") : '<div class="empty">이 조건의 행사가 없습니다</div>';
+  // 마감
+  const dls = L.flatMap((e) => e.deadlines.map((d) => ({ ...d, e }))).sort((a, b) => a.date.localeCompare(b.date));
+  $("#ev-dls").innerHTML = dls.length ? dls.map((d) => { const n = evDays(d.date);
+    return `<div class="row"><span class="t">${esc(d.e.name)} — ${esc(d.label)}</span><span class="r"><span class="b ${n <= 14 ? "H" : n <= 45 ? "M" : "t3"}">D-${n}</span> <span class="mono muted" style="font-size:.74rem">${esc(d.date)}</span></span><span class="s"><a href="${esc(d.url || d.e.url)}" target="_blank" rel="noopener">공식 안내 ↗</a> · 행사 ${esc(evWhen(d.e))}</span></div>`; }).join("") : '<div class="empty">표시 범위 안에 마감이 없습니다</div>';
+  // 상세 카드 (역할 우선 → 날짜)
+  const sorted = L.slice().sort((a, b) => ((b.roles || []).includes(st.role) - (a.roles || []).includes(st.role)) || a.start.localeCompare(b.start));
+  $("#ev-list").innerHTML = sorted.map((e) => { const n = evDays(e.start), star = (e.roles || []).includes(st.role);
+    const watch = (e.watch || []).filter((id) => byId[id]).map((id) => `<button type="button" class="chip co" data-co="${esc(id)}">${esc(byId[id].name_ko || byId[id].name || id)}</button>`).join("");
+    return `<div class="ev-card${star ? " ev-pri" : ""}" id="ev-${esc(e.id)}">
+      <div class="ev-h"><b>${star ? "★ " : ""}${esc(e.name)}</b><span><span class="b ${e.status === "confirmed" ? "official" : "estimate"}">${e.status === "confirmed" ? "확정" : "잠정"}</span> <span class="b ${n <= 0 && e.end >= evToday() ? "M" : "t3"}">${n <= 0 ? (e.end >= evToday() ? "진행 중" : "종료") : "D-" + n}</span> ${evLink(e)}</span></div>
+      <div class="ev-meta">${esc(evWhen(e))} · ${esc(e.city || "")} · ${EV_KIND[e.kind]} · 대상 ${(e.roles || []).map((r) => ROLE_NAME[r]).join("·")}</div>
+      <p class="ev-why">${esc(e.why)}</p>
+      ${watch ? `<div class="ev-act"><span class="muted" style="font-size:.74rem">주목 기업</span>${watch}</div>` : ""}
+      ${e.deadlines.length ? e.deadlines.map((d) => `<div class="ev-dlr"><span class="b ${evDays(d.date) <= 14 ? "H" : "M"}">마감 D-${evDays(d.date)}</span>${esc(d.label)} <span class="mono muted">${esc(d.date)}</span></div>`).join("") : ""}
+      <div class="ev-act"><a href="${esc(e.url)}" target="_blank" rel="noopener">공식 페이지 ↗</a>${e.src ? ` · <a href="${esc(e.src)}" target="_blank" rel="noopener">날짜 출처 ↗</a>` : ""} · <button type="button" class="chip" data-evics="${esc(e.id)}">📅 이 행사만 달력에</button></div>
+    </div>`; }).join("") || '<div class="empty">이 조건의 행사가 없습니다</div>';
+}
+function evIcs(list) {
+  const f = (d) => d.replace(/-/g, ""), nx = (d) => { const t = new Date(d + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() + 1); return t.toISOString().slice(0, 10); };
+  const x = (s) => String(s || "").replace(/[\\;,]/g, (c) => "\\" + c).replace(/\n/g, "\\n");
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z", L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Robotics Radar//Events//KO", "CALSCALE:GREGORIAN"];
+  for (const e of list) {
+    if (e.precision !== "month") L.push("BEGIN:VEVENT", `UID:${e.id}@robotics-radar`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${f(e.start)}`, `DTEND;VALUE=DATE:${f(nx(e.end))}`, `SUMMARY:${x(e.name)}${e.status !== "confirmed" ? " (잠정)" : ""}`, `LOCATION:${x(e.city)}`, `DESCRIPTION:${x(e.why + "\n" + e.url)}`, `URL:${e.url}`, "END:VEVENT");
+    for (const d of e.deadlines || []) L.push("BEGIN:VEVENT", `UID:${e.id}-${f(d.date)}@robotics-radar`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${f(d.date)}`, `DTEND;VALUE=DATE:${f(nx(d.date))}`, `SUMMARY:${x("[마감] " + e.name + " " + d.label)}`, `DESCRIPTION:${x(d.url || e.url)}`, "BEGIN:VALARM", "TRIGGER:-P3D", "ACTION:DISPLAY", `DESCRIPTION:${x("마감 3일 전: " + e.name)}`, "END:VALARM", "END:VEVENT");
+  }
+  L.push("END:VCALENDAR");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([L.join("\r\n")], { type: "text/calendar" }));
+  a.download = list.length === 1 ? `${list[0].id}.ics` : "robotics-events.ics"; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+document.addEventListener("click", (e) => {
+  const k = e.target.closest("[data-evkind]"); if (k) { store.set("evKind", k.dataset.evkind); renderEvents(); return; }
+  const r = e.target.closest("[data-evrole]"); if (r) { store.set("role", r.dataset.evrole); renderEvents(); return; }
+  if (e.target.closest("#ev-far")) { store.set("evFar", evState().far ? "0" : "1"); renderEvents(); return; }
+  if (e.target.closest("#ev-ics")) { evIcs(evPool(evState())); return; }
+  const one = e.target.closest("[data-evics]"); if (one) { const ev = (D.conferences?.items || []).find((x) => x.id === one.dataset.evics); if (ev) evIcs([ev]); return; }
+  const g = e.target.closest("[data-evgo]"); if (g) { document.getElementById("ev-" + g.dataset.evgo)?.scrollIntoView({ behavior: "smooth", block: "center" }); }
+});
+const PANELS = { home: renderHome, map: renderMap, parts: renderParts, prod: renderProd, capital: renderCapital, strat: renderStrat, events: renderEvents, top: hxPlaybook };
 // ---------- 화면 상태 링크 ----------
 // 역할·기간·기업·기술 층 같은 선택을 주소에 담아 팀에 그대로 보낼 수 있게 한다: #home?role=engineer&period=30&patCo=bd
 const SHARE_KEYS = ["role", "period", "lens", "patView", "patCo", "patCoF", "patLayer", "hubTool", "preset", "group", "cty"];

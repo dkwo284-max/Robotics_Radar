@@ -467,6 +467,34 @@ def change_log(companies: list[dict], strategy: dict, specs: dict, today: str, p
     return cur, new, [x for x in new + log_items if x["date"] >= cutoff]
 
 
+CONF_KINDS = {"academic", "expo", "keynote", "asia"}
+CONF_ROLES = {"exec", "strategy", "engineer"}
+
+
+def conferences(known: set[str], today: str, warnings: list[str]) -> dict:
+    """학회·전시회 큐레이션(data/conferences.json) + 주간 링크 점검 결과. 끝난 행사는 빼고, 지난 마감일은 표시만 끈다."""
+    raw = read_json(SRC / "conferences.json", {"items": []})
+    st = read_json(OUT / "conf_status.json", {})
+    links = st.get("items", {})
+    items = []
+    for it in raw.get("items", []):
+        need = ("id", "name", "kind", "start", "end", "url", "why")
+        if any(not it.get(k) for k in need) or it["kind"] not in CONF_KINDS or it["end"] < it["start"]:
+            warnings.append(f"행사 '{it.get('name', it.get('id'))}': 필수 항목·종류·날짜 확인 필요")
+            continue
+        for w in it.get("watch", []):
+            if w not in known:
+                warnings.append(f"행사 '{it['name']}': 주목 기업 id {w} 없음")
+        if not set(it.get("roles", [])) <= CONF_ROLES:
+            warnings.append(f"행사 '{it['name']}': 역할 값 잘못됨")
+        dls = [d for d in it.get("deadlines", []) if d.get("date", "") >= today]
+        if it["end"] < today and not dls:
+            continue
+        items.append({**it, "deadlines": dls, "link": links.get(it["id"])})
+    items.sort(key=lambda x: x["start"])
+    return {"as_of": raw.get("as_of"), "checked": st.get("checked"), "items": items}
+
+
 def build(history: dict | None = None) -> tuple[dict, list[str]]:
     raw = load("companies.json")
     import autoapply
@@ -558,6 +586,7 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "track": track_record(companies, market["as_of"]),
         "sales_board": sales_board(companies, market["bom"]["items"], nb, today),
         "korea_board": sales_board(companies, market["bom"]["items"], nb, today, limit=24),
+        "conferences": conferences({c["id"] for c in companies}, today, warnings),
         "score_history": score_history(history, companies),
         "coverage": {"news_from": min((x["date"] for x in nb), default=None), "news_to": max((x["date"] for x in nb), default=None),
                      "news_covered_from": news.get("covered_from"),
