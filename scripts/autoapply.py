@@ -146,6 +146,17 @@ def run(companies: list[dict], news: dict, llm, today: str | None = None) -> int
     return n
 
 
+def rejected(limit: int = 20) -> list[dict]:
+    """AI 재확인에서 반영하지 않기로 한 후보: [{company, field, v, date, reason}] (최근 순)."""
+    out = []
+    for key, v in (read_json(OVERLAY, {}).get("checked") or {}).items():
+        if v.get("ok"):
+            continue
+        cid, field, val = (key.split("|") + ["", "", ""])[:3]
+        out.append({"company": cid, "field": field, "v": float(val) if val.replace(".", "", 1).isdigit() else val, "date": v.get("date", ""), "reason": v.get("reason", "")})
+    return sorted(out, key=lambda x: x["date"], reverse=True)[:limit]
+
+
 def apply_overlay(companies: list[dict], overlay: dict | None = None) -> list[dict]:
     """빌드할 때: 덧씌움의 기준일이 큐레이션 기준일보다 새로울 때만 값을 바꾼다. 반영된 항목 목록을 돌려준다."""
     overlay = overlay if overlay is not None else read_json(OVERLAY, {})

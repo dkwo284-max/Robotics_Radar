@@ -407,6 +407,7 @@ details.fold[open] > summary::after { content: "접기"; }
 }
 .pb-pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; font-size: .84rem; }
 .pb-pick select { font: inherit; font-size: 16px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); max-width: 100%; }
+.pb-week { margin: 8px 0 4px; padding: 8px 10px; border-radius: 10px; background: var(--card2, rgba(127,127,127,.08)); font-size: .84rem; line-height: 1.5; }
 .pb-sum { border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--line)); background: color-mix(in oklab, var(--accent) 7%, var(--surface)); border-radius: 12px; padding: 10px 12px; font-size: .88rem; display: grid; gap: 4px; }
 .pb-sum b.big { font-size: 1.25rem; }
 .pb-gaps { display: grid; gap: 6px; margin: 10px 0; }
@@ -1608,8 +1609,10 @@ function renderExec() {
   $("#fresh-n").textContent = `${fr.stale.length}/${fr.total}건 오래됨`;
   {
     const au = D.auto_updates || [], box = document.getElementById("auto-list");
+    const unitOf = (f) => (f === "price" ? "USD" : ["cum_units", "capacity", "target_2026"].includes(f) ? "units" : "USD_M");
     if (box) box.innerHTML = `<p class="sub" style="margin:8px 0 6px">🤖 자동 반영 ${au.length}건 — 서로 다른 기사 2건 이상이 같은 값을 말하고, 제목에 그 기업이 나오며, AI 재확인을 통과한 수치만 매일 수집 때 반영합니다. 뉴스에 숫자가 나오지 않는 항목은 자동으로 갱신되지 않습니다.</p>` +
-      (au.length ? `<div class="list">${au.map((x) => `<button class="row" data-co="${esc(x.company)}"><span class="t">${esc(byId[x.company]?.name_ko || x.company)} · ${esc(FIELD[x.field] || x.field)}</span><span class="r">${fmtUnit(x.prev?.v ?? null, x.field === "price" ? "USD" : ["cum_units", "capacity", "target_2026"].includes(x.field) ? "units" : "USD_M")} → <b>${fmtUnit(x.v, x.field === "price" ? "USD" : ["cum_units", "capacity", "target_2026"].includes(x.field) ? "units" : "USD_M")}</b></span><span class="s">${esc(x.date)} 반영 · 기준 ${esc(x.as_of)} · ${x.sources.map((s) => esc(s.title)).join(" / ")}</span></button>`).join("")}</div>` : "");
+      (au.length ? `<div class="list">${au.map((x) => `<div class="row"><button type="button" class="t" data-co="${esc(x.company)}" style="all:unset;cursor:pointer;font-weight:600">${esc(byId[x.company]?.name_ko || x.company)} · ${esc(FIELD[x.field] || x.field)}</button><span class="r">${fmtUnit(x.prev?.v ?? null, unitOf(x.field))} → <b>${fmtUnit(x.v, unitOf(x.field))}</b></span><span class="s">${esc(x.date)} 반영 · 기준 ${esc(x.prev?.as_of || "?")} → ${esc(x.as_of)} · 근거 ${x.sources.map((s) => safeUrl(s.url) ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a> (${esc((s.date || "").slice(5))})` : esc(s.title)).join(" / ")}</span></div>`).join("")}</div>` : "") +
+      ((D.auto_rejected || []).length ? `<details style="margin-top:8px"><summary class="sub">🚫 AI 재확인에서 반영하지 않은 후보 ${D.auto_rejected.length}건 (왜 안 바뀌었나)</summary><div class="list">${D.auto_rejected.map((x) => `<div class="row"><span class="t">${esc(byId[x.company]?.name_ko || x.company)} · ${esc(FIELD[x.field] || x.field)}</span><span class="r">후보 ${fmtUnit(typeof x.v === "number" ? x.v : null, unitOf(x.field))}</span><span class="s">${esc(x.date)} 판정 · ${esc(x.reason)}</span></div>`).join("")}</div></details>` : "");
   }
   $("#fresh-sub").textContent = `밸류·누적 조달·출하·생산능력처럼 사람이 갱신하는 값 ${fr.total}건 중 기준일이 ${fr.threshold}개월 넘은 것이 ${fr.stale.length}건입니다. 오래된 값은 기업 상세에서도 '오래됨'으로 표시됩니다. 갱신하려면 data/companies.json 의 값과 as_of 를 고치세요.`;
   $("#fresh-list").innerHTML = fr.stale.map((x) => `<button class="row" data-co="${esc(x.company)}"><span class="t">${esc(byId[x.company]?.name_ko || x.company)} · ${esc(FIELD[x.field] || x.field)}</span><span class="r"><span class="b M">${x.months}개월</span></span><span class="s">기준일 ${esc(x.as_of)}</span></button>`).join("") || '<div class="empty">오래된 값이 없습니다</div>';
@@ -2195,9 +2198,19 @@ function pbHtml(t, forReport = false) {
       <span class="tr" title="${esc(c.name_ko)} ${g.score}/${mx} · 1위 ${esc(coLabel(g.leader))} ${g.leader_score}/${mx}"><i style="width:${(g.score / mx) * 100}%"></i><u style="left:calc(${(g.leader_score / mx) * 100}% - 1px)"></u></span>
       <span class="v"><b>${g.score}</b>/${mx} ${g.gap ? `<span class="down">−${g.gap}</span>` : '<span class="up">1위</span>'}</span>
       <small>${g.gap ? `1위 ${esc(coLabel(g.leader))} ${g.leader_score}점 — ${esc(g.leader_why || "")}` : esc(g.why || "")}</small></div>`; }).join("")}</div>`;
+  // 지난주 대비: 점수·순위·1위와의 격차 변화 + 행동 관련 소식 수(최근 7일 vs 그 전 7일)
+  const wk = t.week, gapNow = t.leader_total != null ? t.leader_total - t.total : null;
+  const n7 = t.actions.reduce((x, a) => x + (a.progress.n7 || 0), 0), np7 = t.actions.reduce((x, a) => x + (a.progress.n_prev7 || 0), 0);
+  const sgn = (v) => (v > 0 ? `+${v}` : `${v}`);
+  const weekLine = `<div class="pb-week"><b>지난주 대비</b> ${wk ? [
+      wk.total_from !== t.total ? `총점 ${wk.total_from} → ${t.total} (${sgn(t.total - wk.total_from)})` : `총점 그대로 ${t.total}점`,
+      wk.rank_from !== t.rank ? `순위 ${wk.rank_from}위 → ${t.rank}위` : `순위 그대로 ${t.rank}위`,
+      gapNow != null && wk.gap_from != null ? (gapNow === wk.gap_from ? `1위와 격차 그대로 ${gapNow}점` : `1위와 격차 ${wk.gap_from} → ${gapNow}점 ${gapNow < wk.gap_from ? "(좁혀짐)" : "(벌어짐)"}`) : "",
+    ].filter(Boolean).join(" · ") + ` <span class="muted">(${esc(wk.since)} 점수 기준)</span>` : '<span class="muted">비교할 지난 점수 기록이 아직 없습니다</span>'}
+    · 관련 소식 ${n7}건 <span class="muted">(그 전 주 ${np7}건${n7 > np7 ? ", 늘어남" : n7 < np7 ? ", 줄어듦" : ""})</span></div>`;
   const act = (a) => { const on = sim.picked.has(a.id), pr = a.progress; return `<div class="pb-act${on ? " on" : ""}">
       <label>${forReport ? `<span>${on ? "☑" : "☐"}</span>` : `<input type="checkbox" data-pbact="${a.id}"${on ? " checked" : ""}>`}<span>${esc(a.title)}</span><span class="g">+${a.gain}점</span></label>
-      <div class="tags"><span class="b t3">${P.axes[a.axis]}</span><span class="b reported">${pbHorizon(a.months)}</span>${pr.n ? `<span class="b H">최근 30일 관련 소식 ${pr.n}건</span>` : '<span class="b t3">최근 관련 소식 없음</span>'}</div>
+      <div class="tags"><span class="b t3">${P.axes[a.axis]}</span><span class="b reported">${pbHorizon(a.months)}</span>${pr.n ? `<span class="b H">최근 30일 관련 소식 ${pr.n}건</span>` : '<span class="b t3">최근 관련 소식 없음</span>'}${pr.n7 != null && (pr.n7 || pr.n_prev7) ? `<span class="b ${pr.n7 > pr.n_prev7 ? "official" : "t3"}">이번 주 ${pr.n7}건 (지난주 ${pr.n_prev7})</span>` : ""}</div>
       <p>${esc(a.detail)}</p>
       <p><b class="b official">${a.has_parent && par ? esc(par.name_ko) + "이 할 일" : "뒷받침할 일"}</b>${esc(a.support)}</p>
       <p><b class="b t3">선례</b>${esc(coLabel(a.precedent.company))} — ${esc(a.precedent.text || "")}</p>
@@ -2205,7 +2218,7 @@ function pbHtml(t, forReport = false) {
       ${pr.n && !forReport ? `<p class="muted">진척 신호: ${safeUrl(pr.url) ? `<a href="${esc(pr.url)}" target="_blank" rel="noopener">${esc(pr.title)}</a>` : esc(pr.title)} (${esc(pr.date.slice(5).replace("-", "/"))})</p>` : ""}</div>`; };
   const cols = [[6, "6개월 안"], [12, "1년 안"], [24, "2년 안"]].map(([m, l]) => { const xs = t.actions.filter((a) => a.months === m); return xs.length ? `<div><h4>${l}</h4><ul>${xs.map((a) => `<li>${esc(a.title)} <span class="muted">+${a.gain}</span></li>`).join("")}</ul></div>` : ""; }).join("");
   const rm = t.roadmap.length ? `<div><h4>이미 발표한 일정</h4><ul>${t.roadmap.map((r) => `<li>${esc(r.when)} · ${esc(r.title)}</li>`).join("")}</ul></div>` : "";
-  return `${sum}<h3 class="pb-h">① 축별 격차 <span class="muted" style="font-weight:400;font-size:.76rem">파란 막대 = ${esc(c.name_ko)}, 노란 선 = 그 축 1위</span></h3>${gaps}
+  return `${sum}${weekLine}<h3 class="pb-h">① 축별 격차 <span class="muted" style="font-weight:400;font-size:.76rem">파란 막대 = ${esc(c.name_ko)}, 노란 선 = 그 축 1위</span></h3>${gaps}
     <h3 class="pb-h">② 해야 할 행동${par ? `과 ${esc(par.name_ko)}의 지원` : ""} <span class="muted" style="font-weight:400;font-size:.76rem">${forReport ? "" : "체크하면 위 예상 점수가 바뀝니다"}</span></h3>
     <div class="pb-acts">${t.actions.map(act).join("") || '<p class="sub">모든 축에서 1위라 제안할 행동이 없습니다.</p>'}</div>
     <h3 class="pb-h">③ 실행 순서</h3><div class="pb-tl">${cols}${rm}</div>

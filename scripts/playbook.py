@@ -71,17 +71,34 @@ TEMPLATES = [
 
 
 def _progress(c: dict, parent: dict | None, kws: list[str], news: list[dict], today: str) -> dict:
-    """최근 30일 이 기업(또는 모회사) 소식 중 행동과 관련된 낱말이 든 기사 수와 가장 최근 기사."""
-    cutoff = (date.fromisoformat(today) - timedelta(days=30)).isoformat()
+    """최근 30일 이 기업(또는 모회사) 소식 중 행동과 관련된 낱말이 든 기사 수와 가장 최근 기사. n7/n_prev7 = 최근 7일 / 그 전 7일."""
+    t = date.fromisoformat(today)
+    cutoff = (t - timedelta(days=30)).isoformat()
+    d7, d14 = (t - timedelta(days=7)).isoformat(), (t - timedelta(days=14)).isoformat()
     ids = {c["id"]} | ({parent["id"]} if parent else set())
     hits = [x for x in news if x.get("date", "") >= cutoff and ids & set(x.get("companies") or [])
             and any(k.lower() in f"{x.get('title', '')} {x.get('title_ko', '')} {x.get('summary_ko', '')}".lower() for k in kws)]
     hits.sort(key=lambda x: (x.get("importance", 0), x["date"]), reverse=True)
     top = hits[0] if hits else None
-    return {"n": len(hits), "title": (top.get("title_ko") or top.get("title")) if top else "", "url": top.get("url", "") if top else "", "date": top["date"] if top else ""}
+    return {"n": len(hits), "n7": sum(1 for x in hits if x["date"] > d7), "n_prev7": sum(1 for x in hits if d14 < x["date"] <= d7), "title": (top.get("title_ko") or top.get("title")) if top else "", "url": top.get("url", "") if top else "", "date": top["date"] if top else ""}
 
 
-def for_company(c: dict, companies: list[dict], news: list[dict], today: str) -> dict:
+def _week(c: dict, companies: list[dict], history: dict | None, today: str) -> dict | None:
+    """지난주 대비: 7일 전(또는 그 이전 가장 가까운) 점수 스냅숏과 비교한 총점·순위·1위와의 격차. 스냅숏이 없으면 None."""
+    snaps = (history or {}).get("snapshots") or []
+    cut = (date.fromisoformat(today) - timedelta(days=7)).isoformat()
+    old = next((s for s in reversed(snaps) if s.get("date", "") <= cut), None)
+    if not old or c["id"] not in (old.get("scores") or {}):
+        return None
+    ids = {x["id"] for x in companies}
+    prev = {k: v[0] for k, v in old["scores"].items() if k in ids and v and v[0] is not None}
+    ranked = sorted(prev, key=lambda k: -prev[k])
+    lead = next((k for k in ranked if k != c["id"]), None)
+    return {"since": old["date"], "total_from": prev[c["id"]], "rank_from": ranked.index(c["id"]) + 1,
+            "gap_from": (prev[lead] - prev[c["id"]]) if lead else None, "leader_from": lead}
+
+
+def for_company(c: dict, companies: list[dict], news: list[dict], today: str, history: dict | None = None) -> dict:
     by_id = {x["id"]: x for x in companies}
     parent = by_id.get(c.get("parent") or "")
     total = lambda x: sum(x["scores"][k][0] for k in AXES)  # noqa: E731
@@ -116,12 +133,13 @@ def for_company(c: dict, companies: list[dict], news: list[dict], today: str) ->
     return {"id": c["id"], "parent": parent["id"] if parent else None, "total": total(c), "rank": [x["id"] for x in ranked].index(c["id"]) + 1,
             "leader": lead["id"] if lead else None, "leader_total": total(lead) if lead else None, "gaps": gaps, "actions": actions,
             "shortest": picked if acc >= need and need > 0 else [], "reachable": total(c) + sum(a["gain"] for a in actions),
-            "risks": c.get("risks", []), "roadmap": [r for r in c.get("roadmap", []) if r.get("status") == "planned"]}
+            "risks": c.get("risks", []), "roadmap": [r for r in c.get("roadmap", []) if r.get("status") == "planned"],
+            "week": _week(c, companies, history, today)}
 
 
-def build(companies: list[dict], news: list[dict], today: str) -> dict:
+def build(companies: list[dict], news: list[dict], today: str, history: dict | None = None) -> dict:
     # 로봇 본체를 만드는 기업끼리만 비교한다 (칩·모델 공급사는 사업 성격이 달라 '로봇 사업 1위' 비교 대상이 아니다)
     body = [c for c in companies if c.get("group", "body") == "body" and all(k in c.get("scores", {}) for k in AXES)]
     return {"default": DEFAULT if any(c["id"] == DEFAULT for c in body) else (body[0]["id"] if body else None), "axes": AX_KO,
             "totals": {c["id"]: sum(c["scores"][k][0] for k in AXES) for c in body},
-            "targets": {c["id"]: for_company(c, body, news, today) for c in body}}
+            "targets": {c["id"]: for_company(c, body, news, today, history) for c in body}}

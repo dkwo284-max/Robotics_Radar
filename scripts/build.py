@@ -574,7 +574,9 @@ def build(history: dict | None = None) -> tuple[dict, list[str]]:
         "news_meta": {"generated_at": news.get("generated_at"), "ai": news.get("ai"), "warnings": news.get("warnings", [])},
         "proposals": news.get("proposals", []),
         "auto_updates": auto_used,
-        "playbook": playbook.build(companies, news.get("items", []), date.today().isoformat()),
+        # AI 재확인에서 반영하지 않은 후보(최근 20건): 왜 안 바뀌었는지 화면에서 볼 수 있게
+        "auto_rejected": autoapply.rejected(),
+        "playbook": playbook.build(companies, news.get("items", []), date.today().isoformat(), history),
         "quotes": prices.get("quotes", {}),
         "alerts": alerts(companies, news, prices, moves, today),
         "strategy": strategy,
