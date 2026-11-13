@@ -1,4 +1,44 @@
 {
- "applied": {},
- "checked": {}
+ "applied": {
+  "agility|valuation": {
+   "company": "agility",
+   "field": "valuation",
+   "v": 2667,
+   "as_of": "2026-11",
+   "kind": "reported",
+   "note": "자동 반영 — 보도 2건이 같은 값(어질리티 로보틱스의 상장 시가총액 정의에 부합합니다.)",
+   "src": "https://news.google.com/rss/articles/CBMidkFVX3lxTE0ta2dlQUtULWpWV0RfOWNRekxXaG51Y3hJckxRamR3MmY2S0ZYSmxKZGZKb0ZMVVNVUDdmSl9rUFJ4YktCUk41VzdNRHJBOXp5ZVF3SW1kUUo1TGV1TUNPaWREelpmTWZGVERpalhiejUyUDRKWWc?oc=5",
+   "auto": {
+    "date": "2026-11-13",
+    "prev": {
+     "v": 2100,
+     "as_of": "2026-09"
+    },
+    "sources": [
+     {
+      "title": "어질리티 로보틱스, 나스닥 상장…시총 4천억 엔 기록",
+      "url": "https://news.google.com/rss/articles/CBMidkFVX3lxTE0ta2dlQUtULWpWV0RfOWNRekxXaG51Y3hJckxRamR3MmY2S0ZYSmxKZGZKb0ZMVVNVUDdmSl9rUFJ4YktCUk41VzdNRHJBOXp5ZVF3SW1kUUo1TGV1TUNPaWREelpmTWZGVERpalhiejUyUDRKWWc?oc=5",
+      "date": "2026-11-08"
+     },
+     {
+      "title": "엔비디아 지원 받은 어질리티, 25억 달러로 상장",
+      "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxObVZvM2ltdDFRcEFzdHJaSkhuTHl1eTlReVlQaGtyX2dyS0JJeHh4b2xESXZJeUx1Vjd5VUYxYzVaTnlMaXJFcl8zWGtOWXliRW1VbmhwN2xMTFo2OGctRDVCVDdXTzNwV1pPeldGZkdEMW4xeUJSVFVNSEN6TkRRSDladnRBWW41ZWlmalBfNURsaGwyNEl3aEJB?oc=5",
+      "date": "2026-11-05"
+     }
+    ]
+   }
+  }
+ },
+ "checked": {
+  "unitree|valuation|42254": {
+   "date": "2026-11-13",
+   "ok": false,
+   "reason": "환산된 시가총액 금액과 기사 속 수치가 일치하지 않습니다."
+  },
+  "agility|valuation|2667": {
+   "date": "2026-11-13",
+   "ok": true,
+   "reason": "어질리티 로보틱스의 상장 시가총액 정의에 부합합니다."
+  }
+ }
 }

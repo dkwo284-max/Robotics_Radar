@@ -1,3 +1,16 @@
 {
-"items":[]
+"items":[
+{
+"date":"2026-11-13",
+"kind":"fact",
+"company":"agility",
+"field":"valuation",
+"title":"어질리티 로보틱스 밸류 $2.1B → $2.7B",
+"roles":[
+"exec"
+],
+"frm":2100,
+"to":2667
+}
+]
 }
