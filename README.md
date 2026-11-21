@@ -1,6 +1,6 @@
 # 로봇 레이더 · Robotics Radar
 
-휴머노이드·피지컬 AI **27개사의 양산·자금·IPO·부품 기회**를 **한국 제조·부품사 경영진**과 **투자(비용 대비 효율)** 관점에서 정리한 대시보드입니다.
+휴머노이드·피지컬 AI **28개사의 양산·자금·IPO·부품 기회**를 **한국 제조·부품사 경영진**과 **투자(비용 대비 효율)** 관점에서 정리한 대시보드입니다.
 https://dkwo284-max.github.io/Robotics_Radar/
 
 | 화면 | 내용 |
@@ -23,7 +23,7 @@ https://dkwo284-max.github.io/Robotics_Radar/
 
 | 파일 | 누가 바꾸나 | 내용 |
 |---|---|---|
-| `data/companies.json` | 사람(분기 리서치) | 27개사. 수치는 `{v, as_of, kind, src}` (official 공식 / reported 보도 / estimate 추정), 금액 USD 백만 |
+| `data/companies.json` | 사람(분기 리서치) | 28개사. 수치는 `{v, as_of, kind, src}` (official 공식 / reported 보도 / estimate 추정), 금액 USD 백만 |
 | `data/market.json` | 사람 | 출하 통계, 시나리오, BOM, 정책, 이벤트, 인사이트 |
 | `data/strategy.json` | 사람 | 국가 경쟁력, 용도, 기술 로드맵, 신호, 진입 옵션 |
 | `data/specs.json` | 사람 | 로봇 14종 스펙(키·무게·자유도·손·가반하중·작동시간·가격·구동 방식) |

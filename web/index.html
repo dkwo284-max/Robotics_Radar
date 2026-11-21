@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>로봇 레이더 · Robotics Radar</title>
-<meta name="description" content="휴머노이드·피지컬 AI 27개사의 양산·자금·IPO·부품 기회를 한국 제조·부품사 경영진과 투자 관점에서 정리한 대시보드">
+<meta name="description" content="휴머노이드·피지컬 AI 28개사의 양산·자금·IPO·부품 기회를 한국 제조·부품사 경영진과 투자 관점에서 정리한 대시보드">
 <meta name="theme-color" content="#f4f6f9">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -948,7 +948,7 @@ details.fold[open] > summary::after { content: "접기"; }
     </section>
     <section id="s-rm" class="full">
       <h2>제품·사업 로드맵</h2>
-      <p class="sub">27개사 로드맵을 연도별로. 빨간색은 지연·변경</p>
+      <p class="sub">28개사 로드맵을 연도별로. 빨간색은 지연·변경</p>
       <div class="chips" id="rm-filter" style="margin-bottom:10px"></div>
       <div class="list" id="rm"></div>
     </section>
@@ -1754,6 +1754,7 @@ const GROUPS = [
   { id: "body", label: "하드웨어", f: (c) => c.group === "body" && !c.kr_watch },
   { id: "kr", label: "한국 워치", f: (c) => c.kr_watch || ownerCountry(c) === "KR" },
   { id: "brain", label: "두뇌·칩", f: (c) => c.group === "brain" },
+  { id: "platform", label: "현장 플랫폼", f: (c) => c.group === "platform" },
 ];
 // ---------- 점수 민감도: 경쟁력 점수의 축 가중치를 바꾸면 순위·Tier 가 어떻게 달라지는지 ----------
 const SENS_AX = [["tech", "기술"], ["scale", "양산"], ["capital", "자본"], ["execution", "실행 신뢰도"]];
@@ -1789,8 +1790,8 @@ function renderMap() {
   let group = store.get("group", "all");
   document.querySelectorAll("[data-preset]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.preset === preset)));
   const attract = preset === "attract";
-  if (attract && group === "brain") group = "all";
-  $("#groups").innerHTML = GROUPS.filter((g) => !(attract && g.id === "brain"))
+  if (attract && (group === "brain" || group === "platform")) group = "all";
+  $("#groups").innerHTML = GROUPS.filter((g) => !(attract && (g.id === "brain" || g.id === "platform")))
     .map((g) => `<button class="chip" data-group="${g.id}" aria-pressed="${g.id === group}">${g.label}</button>`).join("");
   const gf = GROUPS.find((g) => g.id === group).f;
   const list = D.companies.filter((c) => gf(c) && (!attract || c.group === "body"));
@@ -1821,7 +1822,7 @@ function renderMap() {
   g += `<text class="quad" x="${L + 4}" y="${T + 10}">${Q[0]}</text><text class="quad" x="${W - R - 4}" y="${T + 10}" text-anchor="end">${Q[1]}</text>`
     + `<text class="quad" x="${L + 4}" y="${H - B - 4}">${Q[2]}</text><text class="quad" x="${W - R - 4}" y="${H - B - 4}" text-anchor="end">${Q[3]}</text>`;
   g = ownDefs(list) + g;
-  g += pts.map((p) => `<circle class="bub${p.c.group === "brain" ? " brain" : ""}" data-co="${esc(p.c.id)}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}" style="fill:${coFill(p.c)};${p.c.group === "brain" ? `stroke:${cColor(p.c.country)}` : ownerCountry(p.c) ? `stroke:${cColor(ownerCountry(p.c))};stroke-width:2.5` : ""};opacity:.9"><title>${esc(p.c.name_ko)}${ownerCountry(p.c) ? ` — 소유 기준 ${COUNTRY[ownerCountry(p.c)]} 계열(${esc(byId[p.c.parent].name_ko)})` : ""}</title></circle>`).join("");
+  g += pts.map((p) => `<circle class="bub${p.c.group !== "body" ? " brain" : ""}" data-co="${esc(p.c.id)}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}" style="fill:${coFill(p.c)};${p.c.group === "brain" ? `stroke:${cColor(p.c.country)}` : ownerCountry(p.c) ? `stroke:${cColor(ownerCountry(p.c))};stroke-width:2.5` : ""};opacity:.9"><title>${esc(p.c.name_ko)}${ownerCountry(p.c) ? ` — 소유 기준 ${COUNTRY[ownerCountry(p.c)]} 계열(${esc(byId[p.c.parent].name_ko)})` : ""}</title></circle>`).join("");
   // 라벨: 오른쪽 → 왼쪽 → 위 → 아래 순으로 빈 자리를 찾고, 없으면 생략(아래 순위 목록에 모두 있음)
   const boxes = [];
   const hit = (b) => b.x0 < L || b.x1 > W || b.y0 < T - 4 || b.y1 > H - B

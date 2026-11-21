@@ -179,6 +179,16 @@
           "\"Skild AI\"",
           "en"
         ]
+      ],
+      "procore": [
+        [
+          "Procore DroneDeploy",
+          "en"
+        ],
+        [
+          "Procore Technologies robotics OR drone OR \"reality capture\"",
+          "en"
+        ]
       ]
     },
     "per_company_patent": 2,
@@ -280,6 +290,12 @@
           "NVIDIA robotics (patent OR patents OR lawsuit)",
           "en"
         ]
+      ],
+      "procore": [
+        [
+          "DroneDeploy patent",
+          "en"
+        ]
       ]
     },
     "lookback_days_patent": 30,
@@ -299,12 +315,14 @@
     "lg": "066570.KS",
     "rainbow": "277810.KQ",
     "doosan": "454910.KS",
-    "agibot": "688585.SS"
+    "agibot": "688585.SS",
+    "procore": "PCOR"
   },
   "ticker_notes": {
     "agibot": "Swancor(애지봇 지배 상장사)",
     "deepmind": "Alphabet",
-    "hyundai": "현대차(BD 모회사)"
+    "hyundai": "현대차(BD 모회사)",
+    "procore": "Procore(DroneDeploy 인수)"
   },
   "llm": {
     "models": [

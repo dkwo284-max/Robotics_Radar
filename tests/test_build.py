@@ -9,7 +9,7 @@ import build  # noqa: E402
 def test_data_has_no_warnings():
     out, warnings = build.build()
     assert warnings == []
-    assert len(out["companies"]) == 27
+    assert len(out["companies"]) == 28
 
 
 def test_tier_thresholds():
@@ -22,7 +22,7 @@ def test_tier_thresholds():
 def test_attractiveness_only_for_body_layer():
     out, _ = build.build()
     for c in out["companies"]:
-        if c["group"] == "brain":
+        if c["group"] != "body":
             assert c["calc"]["attract"] is None
         else:
             s = c["scores"]
