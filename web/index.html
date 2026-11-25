@@ -1971,7 +1971,19 @@ function renderKoreaBoard() {
   $("#kboard").innerHTML = foldRows(rows.map((r, i) => `<button class="row" data-co="${esc(r.company)}" style="align-items:start">
     <span class="t"><span class="muted num">${i + 1}.</span> <b>${esc(byId[r.company]?.name_ko || r.company)}</b> · ${esc(r.part_name.replace(/\(.*\)/, ""))} ${r.gap ? '<span class="b gap">국내 공백</span>' : ""}${r.swap ? '<span class="b official">비중국 대체</span>' : ""}${r.news_30d ? `<span class="b reported">최근 소식 ${r.news_30d}</span>` : ""}</span>
     <span class="r"><span class="b ${r.how.startsWith("접근") ? "t3" : "reported"}">${esc(r.how)}</span> <b class="num">${r.score}</b></span>
-    <span class="s" style="grid-column:1/-1">${r.why.map(esc).join(" · ")}</span></button>`), 12) || '<div class="empty">조건에 맞는 항목이 없습니다</div>';
+    <span class="s" style="grid-column:1/-1">${r.why.map(esc).join(" · ")}</span>${kbNext(r)}</button>`), 12) || '<div class="empty">조건에 맞는 항목이 없습니다</div>';
+}
+// 다음에 확인할 것: 이 고객사가 '주목 기업'으로 오는 가장 가까운 행사(D-day) + 최근 30일 소식 수 + 조달 방식 힌트
+function kbNext(r) {
+  const today = new Date().toISOString().slice(0, 10);
+  const ev = ((D.conferences && D.conferences.items) || []).filter((c) => (c.end || c.start) >= today && (c.watch || []).includes(r.company)).sort((a, b) => a.start.localeCompare(b.start))[0];
+  const sc = (byId[r.company] || {}).sourcing || {};
+  const src = [sc.mode, sc.note].filter(Boolean).join(" — ") || ((sc.suppliers || []).length ? "현재 공급사 " + sc.suppliers.slice(0, 3).map((x) => (typeof x === "string" ? x : x.name || "")).filter(Boolean).join(", ") : "");
+  const bits = [];
+  if (ev) { const dd = Math.round((Date.parse(ev.start) - Date.parse(today)) / 864e5); bits.push(`📅 ${esc(ev.name)} ${dd > 0 ? `D-${dd}` : "진행 중"} (${esc(ev.city || ev.region || "")})에서 만날 수 있음`); }
+  if (r.news_30d) bits.push(`📰 최근 30일 소식 ${r.news_30d}건 — 조달·양산 계획 언급 확인`);
+  if (typeof src === "string" && src) bits.push(`🤝 조달: ${esc(src.slice(0, 80))}`);
+  return bits.length ? `<span class="s kb-next" style="grid-column:1/-1">다음에 확인할 것 · ${bits.join(" · ")}</span>` : "";
 }
 function renderParts() {
   hxChain();
