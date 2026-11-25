@@ -65,6 +65,19 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 /* 하단 탭바 */
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 7; background: color-mix(in oklab, var(--surface) 94%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
 .tabbar .in { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(8, 1fr); height: var(--nav-h); }
+.tabbar .more-btn { display: none; }
+@media (max-width: 899px) {
+  .tabbar .in { grid-template-columns: repeat(5, 1fr); }
+  .tabbar a.more-only { display: none; }
+  .tabbar .more-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; background: none; color: var(--muted); font: inherit; font-size: .74rem; font-weight: 600; cursor: pointer; position: relative; }
+  .tabbar .more-btn.cur { color: var(--ink); }
+  .tabbar a { font-size: .74rem; }
+}
+.more-pop { position: absolute; right: 8px; bottom: calc(var(--nav-h) + 8px); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 30px rgb(0 0 0 / .18); padding: 6px; display: grid; min-width: 180px; }
+.tabbar .more-pop a { flex-direction: row; justify-content: flex-start; height: auto; font-size: .9rem; }
+.more-pop a svg.i { width: 20px; height: 20px; }
+.more-pop a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: var(--ink); text-decoration: none; font-weight: 600; font-size: .9rem; }
+.more-pop a:hover, .more-pop a[aria-current="page"] { background: color-mix(in oklab, var(--ink) 7%, transparent); }
 .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--muted); font-size: 0.7rem; font-weight: 600; position: relative; }
 .tabbar a[aria-current="page"] { color: var(--ink); }
 .tabbar a[aria-current="page"] svg.i { stroke-width: 2.3; }
@@ -411,7 +424,17 @@ details.fold[open] > summary::after { content: "접기"; }
 .hx-grid { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); margin-top: 10px; }
 @media (min-width: 820px) { .hx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .hx-col { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px 12px; min-width: 0; }
-.hx-col h3 { margin: 0 0 6px; font-size: .86rem; }
+.hx-col h3 { margin: 0 0 6px; font-size: .86rem; display: flex; align-items: center; gap: 6px; }
+.foldable > h2 { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.foldable > h2::after { content: "▴"; margin-left: auto; color: var(--muted); font-size: .8rem; }
+.foldable.folded > h2::after { content: "▾"; }
+.foldable.folded > :not(h2) { display: none !important; }
+.foldable.folded { padding-bottom: 4px; }
+.hx-ic { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; font-size: .9rem; }
+.hx-col.c-news { border-top: 3px solid #2563eb; } .hx-col.c-news .hx-ic { background: #dbe7ff; } .hx-col.c-news .hx-it .n { background: #2563eb; }
+.hx-col.c-co { border-top: 3px solid #0f9d6b; } .hx-col.c-co .hx-ic { background: #d5f3e6; } .hx-col.c-co .hx-it .n { background: #0f9d6b; }
+.hx-col.c-mile { border-top: 3px solid #d97706; } .hx-col.c-mile .hx-ic { background: #fdebd0; } .hx-col.c-mile .hx-it .n { background: #d97706; }
+.hx-col.c-co .hx-it > span:last-child { font-weight: 600; }
 .hx-it { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: .84rem; text-align: left; width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; font-family: inherit; cursor: pointer; }
 .hx-it:first-of-type { border-top: 0; } .hx-it .n { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-size: .72rem; font-weight: 700; }
 .hx-it small { display: block; color: var(--muted); font-size: .74rem; margin-top: 1px; } .hx-it a { color: inherit; text-decoration: none; }
@@ -960,14 +983,16 @@ details.fold[open] > summary::after { content: "접기"; }
 <nav class="tabbar" aria-label="화면">
   <div class="in">
     <a href="#home"><svg class="i" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>개요</a>
-    <a href="#map"><svg class="i" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><circle cx="9" cy="14" r="2"/><circle cx="15" cy="9" r="3"/><circle cx="18" cy="16" r="1.5"/></svg>지형</a>
+    <a class="more-only" href="#map"><svg class="i" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><circle cx="9" cy="14" r="2"/><circle cx="15" cy="9" r="3"/><circle cx="18" cy="16" r="1.5"/></svg>지형</a>
     <a href="#parts"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>부품</a>
     <a href="#prod"><svg class="i" viewBox="0 0 24 24"><path d="M3 21V10l5 3V10l5 3V10l5 3V5h3v16z"/></svg>양산</a>
-    <a href="#capital"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/></svg>자본</a>
-    <a href="#strat"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l5-5M15 4l5 5-9 9-5-5zM14 9l1 1"/><circle cx="17" cy="7" r="0.5"/></svg>전략</a>
+    <a class="more-only" href="#capital"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/></svg>자본</a>
+    <a class="more-only" href="#strat"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l5-5M15 4l5 5-9 9-5-5zM14 9l1 1"/><circle cx="17" cy="7" r="0.5"/></svg>전략</a>
     <a href="#events"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h3v3H8z"/></svg>행사</a>
-    <a href="#top"><svg class="i" viewBox="0 0 24 24"><path d="M5 20V10l7-6 7 6v10M9 20v-6h6v6"/><path d="M12 4v-2"/></svg>1위 전략</a>
+    <a class="more-only" href="#top"><svg class="i" viewBox="0 0 24 24"><path d="M5 20V10l7-6 7 6v10M9 20v-6h6v6"/><path d="M12 4v-2"/></svg>1위 전략</a>
+    <button type="button" class="more-btn" id="more-btn" aria-expanded="false" aria-controls="more-pop"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더보기</button>
   </div>
+  <div class="more-pop" id="more-pop" hidden></div>
 </nav>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -2093,12 +2118,12 @@ function hxHome() {
   const d = hxData();
   $("#hx-parts").innerHTML = HX_PARTS.map(([k, l]) => `<button class="chip" data-hxpart="${k}" aria-pressed="${k === d.part}">${l}</button>`).join("");
   $("#hx-sub").textContent = `최근 7일 소식 ${d.n}건에서 추렸습니다${d.part === "all" ? "" : ` (관심 부품: ${HX_PARTS.find((x) => x[0] === d.part)[1]})`}. 관심 부품을 고르면 결론·기업이 그 부품 기준으로 바뀌고, 선택은 이 기기에만 저장됩니다.`;
-  const col = (title, rows, empty) => `<div class="hx-col"><h3>${title}</h3>${rows.join("") || `<p class="sub" style="margin:0">${empty}</p>`}</div>`;
+  const col = (title, rows, empty, k, ic) => `<div class="hx-col ${k || ""}"><h3><span class="hx-ic" aria-hidden="true">${ic || ""}</span>${title}</h3>${rows.join("") || `<p class="sub" style="margin:0">${empty}</p>`}</div>`;
   $("#hx-grid").innerHTML =
     col("가장 중요한 변화 3", d.changes.map((x, i) => `<div class="hx-it"><span class="n">${i + 1}</span><span>${safeUrl(x.url) ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${newsTitle(x)}</a>` : newsTitle(x)}
-      <small>${esc(x.date.slice(5).replace("-", "/"))}${x.type && TYPE[x.type] ? " · " + TYPE[x.type] : ""}${(x.companies || []).slice(0, 2).map((id) => " · " + esc(coLabel(id))).join("")}${x.n_src > 1 ? ` · ${x.n_src}곳 보도` : ""}${propChip(x)}</small></span></div>`), "이 기간에 해당 소식이 없습니다") +
-    col("지금 주목할 기업 3", d.cos.map((o, i) => `<button class="hx-it" data-co="${esc(o.id)}"><span class="n">${i + 1}</span><span>${esc(byId[o.id].name_ko)} ${tierB(byId[o.id])}<small>${esc(o.why)}</small></span></button>`), "해당 기업이 없습니다") +
-    col("다음 마일스톤 3", d.miles.map((m, i) => `<button class="hx-it" data-co="${esc(m.c.id)}"><span class="n">${i + 1}</span><span>${esc(m.title)}<small>${esc(m.c.name_ko)} · ${esc(m.when)} · ${TYPE_RM[m.type] || ""}</small></span></button>`), "예정된 일정이 없습니다");
+      <small>${esc(x.date.slice(5).replace("-", "/"))}${x.type && TYPE[x.type] ? " · " + TYPE[x.type] : ""}${(x.companies || []).slice(0, 2).map((id) => " · " + esc(coLabel(id))).join("")}${x.n_src > 1 ? ` · ${x.n_src}곳 보도` : ""}${propChip(x)}</small></span></div>`), "이 기간에 해당 소식이 없습니다", "c-news", "📰") +
+    col("지금 주목할 기업 3", d.cos.map((o, i) => `<button class="hx-it" data-co="${esc(o.id)}"><span class="n">${i + 1}</span><span>${esc(byId[o.id].name_ko)} ${tierB(byId[o.id])}<small>${esc(o.why)}</small></span></button>`), "해당 기업이 없습니다", "c-co", "🏢") +
+    col("다음 마일스톤 3", d.miles.map((m, i) => `<button class="hx-it" data-co="${esc(m.c.id)}"><span class="n">${i + 1}</span><span>${esc(m.title)}<small>${esc(m.c.name_ko)} · ${esc(m.when)} · ${TYPE_RM[m.type] || ""}</small></span></button>`), "예정된 일정이 없습니다", "c-mile", "🎯");
 }
 // 소식 → 수치 영향: 같은 기사에서 나온 '검증 대기 수치'가 있으면 표시
 let propIdx = null;
@@ -2705,6 +2730,7 @@ function route() {
   const key = PANELS[id] ? id : "home";
   document.querySelectorAll("[data-panel]").forEach((p) => (p.hidden = p.id !== `p-${key}`));
   document.querySelectorAll(".tabbar a").forEach((a) => (a.getAttribute("href") === `#${key}` ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
+  { const mb = document.getElementById("more-btn"); if (mb) mb.classList.toggle("cur", ["map", "capital", "strat", "top"].includes(key)); const mp = document.getElementById("more-pop"); if (mp) mp.hidden = true; }
   if (D) PANELS[key]();
   window.scrollTo(0, 0);
 }
@@ -2846,6 +2872,27 @@ $("#theme").addEventListener("click", () => {
 });
 
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+
+// 휴대폰 화면 정리: 아래 탭 '더보기'(지형·자본·전략·1위 전략) + 개요의 긴 섹션은 제목을 눌러 펼치기
+(() => {
+  const btn = document.getElementById("more-btn"), pop = document.getElementById("more-pop");
+  if (btn && pop) {
+    btn.addEventListener("click", () => {
+      if (pop.hidden) pop.innerHTML = [...document.querySelectorAll(".tabbar a.more-only")].map((a) => a.outerHTML.replace(' class="more-only"', "")).join("");
+      pop.hidden = !pop.hidden; btn.setAttribute("aria-expanded", String(!pop.hidden));
+    });
+    document.addEventListener("click", (e) => { if (!pop.hidden && !e.target.closest("#more-pop, #more-btn")) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); } });
+  }
+  const KEEP_OPEN = new Set(["hx-sec", "ev-teaser", "watch-sec"]);
+  const small = matchMedia("(max-width: 899px)").matches;
+  document.querySelectorAll("#p-home > section, #p-home > div > section").forEach((sec) => {
+    const h = sec.querySelector(":scope > h2"); if (!h || KEEP_OPEN.has(sec.id)) return;
+    sec.classList.add("foldable"); if (small) sec.classList.add("folded");
+    h.setAttribute("role", "button"); h.tabIndex = 0; h.setAttribute("aria-expanded", String(!sec.classList.contains("folded")));
+    const tg = (e) => { if (e.target.closest("a, button")) return; sec.classList.toggle("folded"); h.setAttribute("aria-expanded", String(!sec.classList.contains("folded"))); };
+    h.addEventListener("click", tg); h.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tg(e); } });
+  });
+})();
 </script>
 <div id="tipbox" class="tipbox" role="tooltip" hidden></div>
 </body>
